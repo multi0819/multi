@@ -9,45 +9,39 @@
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { font-family: sans-serif; padding: 0 10px 80px; margin: 0; background-color: #f4f7f6; min-height: 101vh; overflow-x: hidden; width: 100%; }
         
-        /* 상단 바: 검색창과 버튼이 한 줄에 쏙 들어오게 설정 */
         .header { position: sticky; top: 0; background: #f4f7f6; padding: 10px 0; z-index: 100; border-bottom: 1px solid #ddd; width: 100%; }
         .status-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; width: 100%; }
         .title { font-size: 16px; font-weight: bold; }
         
         .search-box { display: flex; gap: 4px; width: 100%; align-items: center; }
         #searchInput { flex: 1; padding: 8px; border: 1px solid #bbb; border-radius: 5px; font-size: 13px; min-width: 0; width: 100%; }
-        
-        /* 🔥 다음 찾기 버튼: 폭을 줄이고 글자 크기를 줄여 한 줄에 맞춤 */
         .find-btn { padding: 8px 8px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 11px; white-space: nowrap; flex-shrink: 0; min-width: 65px; text-align: center; }
 
-        /* 입력 영역: 너비를 100%로 설정 */
         .input-group { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 10px; width: 100%; }
         input[type="number"], textarea { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #007bff; border-radius: 8px; font-size: 16px; outline: none; }
         
-        /* 🔥 특수문자 패드: 좁은 화면에서는 버튼 크기를 더 줄여 한 행에 쏙 들어오게 함 */
         .symbol-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 3px; margin: 8px 0; background: #e9ecef; padding: 5px; border-radius: 8px; width: 100%; }
         .sym-btn { aspect-ratio: 1.1; background: white; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; font-weight: bold; display: flex; align-items: center; justify-content: center; width: 100%; }
         .sym-btn.sup { color: #ff5722; font-size: 16px; }
 
         button#saveBtn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; }
         
-        /* 기록 리스트: 너비를 100%로 설정 및 자동 줄바꿈 추가 */
         .record-item { background: white; padding: 12px; margin-top: 10px; border-radius: 10px; border-left: 5px solid #007bff; position: relative; width: 100%; word-break: break-all; overflow: hidden; }
         .record-date { font-size: 11px; color: #888; margin-bottom: 5px; }
         .memo-text { white-space: pre-wrap; font-size: 15px; line-height: 1.5; padding-bottom: 45px; word-wrap: break-word; }
         
-        /* 하단 수정/삭제 버튼: 기록 영역 바깥으로 나가지 않게 조절 */
         .action-btns { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 5px; }
         .act-btn { padding: 6px 12px; border: none; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .edit-btn { background: #ffc107; color: black; }
         .del-btn { background: #dc3545; color: white; }
 
-        /* 🔥 매우 좁은 화면용 추가 보정 (접은 화면) */
+        /* 찾기 강조색 */
+        mark.match { background-color: yellow; color: black; border-radius: 2px; }
+        mark.current-match { background-color: orange !important; border: 1px solid red; }
+
         @media (max-width: 320px) {
             .sym-btn { font-size: 12px; padding: 4px 0; }
             .find-btn { font-size: 10px; min-width: 60px; padding: 8px 6px; }
-            .title { font-size: 14px; }
-            #totalTime { font-size: 13px; }
         }
     </style>
 </head>
@@ -59,7 +53,7 @@
             <span id="totalTime" style="color:#007bff; font-weight:bold;">총 0시간 0분</span>
         </div>
         <div class="search-box">
-            <input type="text" id="searchInput" placeholder="단어 검색..." oninput="displayRecords()">
+            <input type="text" id="searchInput" placeholder="단어 검색..." oninput="handleSearchInput()">
             <button class="find-btn" onclick="findNext()">다음 찾기 ▼</button>
         </div>
     </div>
@@ -97,6 +91,11 @@
             memo.setSelectionRange(start + sym.length, start + sym.length);
         }
 
+        function handleSearchInput() {
+            currentMatchIndex = -1; // 검색어 바뀌면 인덱스 초기화
+            displayRecords();
+        }
+
         function saveRecord() {
             const timeInput = document.getElementById('studyTime');
             const memoInput = document.getElementById('memo');
@@ -121,7 +120,7 @@
         }
 
         function displayRecords() {
-            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const searchTerm = document.getElementById('searchInput').value.trim();
             const list = document.getElementById('recordList');
             const records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
             
@@ -131,10 +130,13 @@
             list.innerHTML = records.slice().reverse().map((r, revIdx) => {
                 const actualIndex = records.length - 1 - revIdx;
                 let text = r.memo;
-                if (searchTerm && text.toLowerCase().includes(searchTerm)) {
-                    const regex = new RegExp(`(${searchTerm})`, 'gi');
-                    text = text.replace(regex, `<mark class="match" style="background:yellow; color:black;">$1</mark>`);
+                
+                if (searchTerm) {
+                    // 대소문자 구분 없이 찾기 위해 정규식 사용
+                    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+                    text = text.replace(regex, `<mark class="match">$1</mark>`);
                 }
+
                 return `
                     <div class="record-item">
                         <div class="record-date">${r.date} | ${r.time}분</div>
@@ -146,6 +148,25 @@
                     </div>
                 `;
             }).join('');
+        }
+
+        function findNext() {
+            const matches = document.querySelectorAll('mark.match');
+            if (matches.length === 0) {
+                alert("찾는 단어가 없습니다.");
+                return;
+            }
+            
+            // 기존 강조 제거
+            matches.forEach(m => m.classList.remove('current-match'));
+            
+            // 다음 위치 계산
+            currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+            
+            // 새 위치 강조 및 이동
+            const current = matches[currentMatchIndex];
+            current.classList.add('current-match');
+            current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         function editRecord(index) {
@@ -165,15 +186,6 @@
             records.splice(index, 1);
             localStorage.setItem('studyRecords', JSON.stringify(records));
             displayRecords();
-        }
-
-        function findNext() {
-            const matches = document.querySelectorAll('.match');
-            if (matches.length === 0) return;
-            currentMatchIndex = (currentMatchIndex + 1) % matches.length;
-            matches.forEach(m => m.style.backgroundColor = "yellow");
-            matches[currentMatchIndex].style.backgroundColor = "orange";
-            matches[currentMatchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
         window.onload = displayRecords;
