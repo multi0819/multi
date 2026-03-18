@@ -7,40 +7,45 @@
     <title>학습 기록 앱</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: sans-serif; padding: 0 15px 80px; margin: 0; background-color: #f4f7f6; min-height: 101vh; }
+        body { font-family: sans-serif; padding: 0 10px 80px; margin: 0; background-color: #f4f7f6; min-height: 101vh; overflow-x: hidden; }
         
-        /* 상단 고정 바 */
+        /* 상단 바: 검색창과 버튼이 한 줄에 쏙 들어오게 설정 */
         .header { position: sticky; top: 0; background: #f4f7f6; padding: 10px 0; z-index: 100; border-bottom: 1px solid #ddd; }
         .status-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .title { font-size: 16px; font-weight: bold; }
         
-        /* 검색 영역 */
-        .search-box { display: flex; gap: 5px; margin-bottom: 5px; }
-        #searchInput { flex: 1; padding: 8px; border: 1px solid #bbb; border-radius: 5px; font-size: 14px; }
-        .find-btn { padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .search-box { display: flex; gap: 5px; width: 100%; }
+        #searchInput { flex: 1; padding: 8px; border: 1px solid #bbb; border-radius: 5px; font-size: 14px; min-width: 0; }
+        .find-btn { padding: 8px 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; white-space: nowrap; flex-shrink: 0; }
 
         /* 입력 영역 */
-        .input-group { background: white; padding: 12px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 10px; }
+        .input-group { background: white; padding: 10px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 10px; width: 100%; }
         input[type="number"], textarea { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #007bff; border-radius: 8px; font-size: 16px; outline: none; }
         
-        /* 특수문자 패드 (복구 완료) */
-        .symbol-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0; background: #e9ecef; padding: 8px; border-radius: 10px; }
-        .sym-btn { aspect-ratio: 1.3; background: white; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
-        .sym-btn.sup { color: #ff5722; font-size: 20px; }
+        /* 특수문자 패드: 좁은 화면에서는 버튼 크기를 줄임 */
+        .symbol-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; margin: 8px 0; background: #e9ecef; padding: 6px; border-radius: 8px; width: 100%; }
+        .sym-btn { aspect-ratio: 1.2; background: white; border: 1px solid #ccc; border-radius: 5px; font-size: 16px; font-weight: bold; display: flex; align-items: center; justify-content: center; width: 100%; }
+        .sym-btn.sup { color: #ff5722; font-size: 18px; }
 
-        button#saveBtn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; }
+        button#saveBtn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; }
         
         /* 기록 리스트 */
-        .record-item { background: white; padding: 12px; margin-top: 10px; border-radius: 10px; border-left: 5px solid #007bff; position: relative; }
+        .record-item { background: white; padding: 12px; margin-top: 10px; border-radius: 10px; border-left: 5px solid #007bff; position: relative; width: 100%; word-break: break-all; }
         .record-date { font-size: 11px; color: #888; margin-bottom: 5px; }
         .memo-text { white-space: pre-wrap; font-size: 15px; line-height: 1.5; padding-bottom: 45px; }
-        mark { background-color: yellow; color: black; font-weight: bold; }
-
+        
         /* 하단 수정/삭제 버튼 */
-        .action-btns { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 8px; }
-        .act-btn { padding: 8px 15px; border: none; border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .action-btns { position: absolute; bottom: 8px; right: 8px; display: flex; gap: 5px; }
+        .act-btn { padding: 6px 12px; border: none; border-radius: 5px; font-size: 12px; font-weight: bold; cursor: pointer; }
         .edit-btn { background: #ffc107; color: black; }
         .del-btn { background: #dc3545; color: white; }
+
+        /* 아주 좁은 화면용 추가 보정 */
+        @media (max-width: 350px) {
+            .sym-btn { font-size: 14px; padding: 5px 0; }
+            .title { font-size: 14px; }
+            #totalTime { font-size: 14px; }
+        }
     </style>
 </head>
 <body>
@@ -80,7 +85,6 @@
         let currentMatchIndex = -1;
         let editingIndex = -1;
 
-        // 특수문자 삽입 함수
         function insertSymbol(sym) {
             const memo = document.getElementById('memo');
             const start = memo.selectionStart;
@@ -126,7 +130,7 @@
                 let text = r.memo;
                 if (searchTerm && text.toLowerCase().includes(searchTerm)) {
                     const regex = new RegExp(`(${searchTerm})`, 'gi');
-                    text = text.replace(regex, `<mark class="match">${searchTerm}</mark>`);
+                    text = text.replace(regex, `<mark class="match" style="background:yellow; color:black;">$1</mark>`);
                 }
                 return `
                     <div class="record-item">
