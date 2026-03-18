@@ -2,111 +2,174 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>학습 기록장</title>
+    <title>학습 기록 앱</title>
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Apple SD Gothic Neo', sans-serif; padding: 8px 15px; margin: 0; background-color: #f4f7f6; }
-        .status-bar { display: flex; justify-content: space-between; align-items: center; padding: 5px 2px; margin-bottom: 5px; border-bottom: 1px solid #ddd; }
-        .status-title { font-size: 14px; font-weight: 800; color: #222; }
-        .status-time { font-size: 13px; color: #007bff; font-weight: bold; }
-        input, textarea { width: 100%; padding: 12px; margin: 4px 0; border: 2px solid #007bff; border-radius: 8px; font-size: 15px; outline: none; background: #fff; }
-        .symbol-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 5px 0 10px; background: #e0e6ed; padding: 6px; border-radius: 10px; }
-        .sym-btn { aspect-ratio: 1.3 / 1; background: white; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold; }
-        .sym-btn:active { background: #d0d8e0; transform: scale(0.95); }
-        button#saveBtn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; cursor: pointer; margin-top: 5px; }
-        .record-item { background: #fff; padding: 12px; margin-top: 12px; border-radius: 10px; border: 1px solid #eee; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .item-info { font-size: 13px; color: #666; margin-bottom: 8px; display: flex; justify-content: space-between; }
-        .memo-text { white-space: pre-wrap; padding: 10px; background: #fcfcfc; border-radius: 6px; font-size: 14px; border: 1px solid #f0f0f0; color: #333; line-height: 1.6; }
-        .controls { display: flex; gap: 6px; margin-top: 10px; }
-        .btn-sub { flex: 1; padding: 10px; border: none; border-radius: 6px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        body { font-family: sans-serif; padding: 0 15px 80px; margin: 0; background-color: #f4f7f6; min-height: 101vh; }
+        
+        /* 상단 고정 바 */
+        .header { position: sticky; top: 0; background: #f4f7f6; padding: 10px 0; z-index: 100; border-bottom: 1px solid #ddd; }
+        .status-line { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .title { font-size: 16px; font-weight: bold; }
+        
+        /* 검색 영역 */
+        .search-box { display: flex; gap: 5px; margin-bottom: 5px; }
+        #searchInput { flex: 1; padding: 8px; border: 1px solid #bbb; border-radius: 5px; font-size: 14px; }
+        .find-btn { padding: 8px 12px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 12px; }
+
+        /* 입력 영역 */
+        .input-group { background: white; padding: 12px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); margin-top: 10px; }
+        input[type="number"], textarea { width: 100%; padding: 12px; margin: 5px 0; border: 1px solid #007bff; border-radius: 8px; font-size: 16px; outline: none; }
+        
+        /* 특수문자 패드 (복구 완료) */
+        .symbol-pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 10px 0; background: #e9ecef; padding: 8px; border-radius: 10px; }
+        .sym-btn { aspect-ratio: 1.3; background: white; border: 1px solid #ccc; border-radius: 6px; font-size: 18px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        .sym-btn.sup { color: #ff5722; font-size: 20px; }
+
+        button#saveBtn { width: 100%; padding: 15px; background: #007bff; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: bold; }
+        
+        /* 기록 리스트 */
+        .record-item { background: white; padding: 12px; margin-top: 10px; border-radius: 10px; border-left: 5px solid #007bff; position: relative; }
+        .record-date { font-size: 11px; color: #888; margin-bottom: 5px; }
+        .memo-text { white-space: pre-wrap; font-size: 15px; line-height: 1.5; padding-bottom: 45px; }
+        mark { background-color: yellow; color: black; font-weight: bold; }
+
+        /* 하단 수정/삭제 버튼 */
+        .action-btns { position: absolute; bottom: 10px; right: 10px; display: flex; gap: 8px; }
+        .act-btn { padding: 8px 15px; border: none; border-radius: 5px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .edit-btn { background: #ffc107; color: black; }
+        .del-btn { background: #dc3545; color: white; }
     </style>
 </head>
 <body>
-    <div class="status-bar"><span class="status-title">학습 기록</span><span class="status-time" id="totalTime">총 0시간 0분</span></div>
-    <input type="number" id="studyTime" placeholder="공부 시간 (분)">
-    <div class="symbol-pad">
-        <button class="sym-btn" onclick="insertSymbol('Δ')">Δ</button>
-        <button class="sym-btn" onclick="insertSymbol('η')">η</button>
-        <button class="sym-btn" onclick="insertSymbol('ρ')">ρ</button>
-        <button class="sym-btn" onclick="insertSymbol('℃')">℃</button>
-        <button class="sym-btn" onclick="insertSymbol('×')">×</button>
-        <button class="sym-btn" onclick="insertSymbol('÷')">÷</button>
-        <button class="sym-btn" onclick="insertSymbol('π')">π</button>
-        <button class="sym-btn" onclick="insertSymbol('ε')">ε</button>
-        <button class="sym-btn" onclick="insertSymbol('φ')">φ</button>
-        <button class="sym-btn" onclick="insertSymbol('√')">√</button>
+
+    <div class="header">
+        <div class="status-line">
+            <span class="title">학습 기록</span>
+            <span id="totalTime" style="color:#007bff; font-weight:bold;">총 0시간 0분</span>
+        </div>
+        <div class="search-box">
+            <input type="text" id="searchInput" placeholder="단어 검색..." oninput="displayRecords()">
+            <button class="find-btn" onclick="findNext()">다음 찾기 ▼</button>
+        </div>
     </div>
-    <textarea id="memo" rows="6" placeholder="계산식 및 암기 내용"></textarea>
-    <button id="saveBtn" onclick="saveRecord()">기록 저장</button>
-    <button id="cancelBtn" style="background:#dc3545; display:none; margin-top:8px; padding:15px; border:none; color:#fff; border-radius:10px; width:100%; font-weight:bold;" onclick="cancelEdit()">수정 취소</button>
+
+    <div class="input-group">
+        <input type="number" id="studyTime" placeholder="공부 시간 (분)">
+        <div class="symbol-pad">
+            <button class="sym-btn" onclick="insertSymbol('Δ')">Δ</button>
+            <button class="sym-btn" onclick="insertSymbol('η')">η</button>
+            <button class="sym-btn" onclick="insertSymbol('ρ')">ρ</button>
+            <button class="sym-btn" onclick="insertSymbol('℃')">℃</button>
+            <button class="sym-btn" onclick="insertSymbol('×')">×</button>
+            <button class="sym-btn" onclick="insertSymbol('÷')">÷</button>
+            <button class="sym-btn sup" onclick="insertSymbol('²')">²</button>
+            <button class="sym-btn sup" onclick="insertSymbol('³')">³</button>
+            <button class="sym-btn" onclick="insertSymbol('π')">π</button>
+            <button class="sym-btn" onclick="insertSymbol('√')">√</button>
+        </div>
+        <textarea id="memo" rows="4" placeholder="내용을 입력하세요"></textarea>
+        <button id="saveBtn" onclick="saveRecord()">기록 저장</button>
+    </div>
+
     <div id="recordList"></div>
+
     <script>
-        let editIndex = -1;
+        let currentMatchIndex = -1;
+        let editingIndex = -1;
+
+        // 특수문자 삽입 함수
         function insertSymbol(sym) {
             const memo = document.getElementById('memo');
             const start = memo.selectionStart;
             const end = memo.selectionEnd;
             memo.value = memo.value.substring(0, start) + sym + memo.value.substring(end);
             memo.focus();
-            const newPos = start + sym.length;
-            memo.setSelectionRange(newPos, newPos);
+            memo.setSelectionRange(start + sym.length, start + sym.length);
         }
-        function displayRecords() {
-            const list = document.getElementById('recordList');
-            const records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
-            const totalMinutes = records.reduce((sum, r) => sum + parseInt(r.time || 0), 0);
-            document.getElementById('totalTime').innerText = `총 ${Math.floor(totalMinutes/60)}시간 ${totalMinutes%60}분`;
-            list.innerHTML = records.slice().reverse().map((r, i) => {
-                const actualIdx = records.length - 1 - i;
-                return `<div class="record-item"><div class="item-info"><span>📅 ${r.date}</span><span>⏱️ ${r.time || 0}분</span></div><div class="memo-text">${r.memo || ''}</div><div class="controls"><button class="btn-sub" style="background:#ffc107;" onclick="editRecord(${actualIdx})">수정</button><button class="btn-sub" style="background:#efefef;" onclick="deleteRecord(${actualIdx})">삭제</button></div></div>`;
-            }).join('');
-        }
+
         function saveRecord() {
-            const time = document.getElementById('studyTime').value;
-            const memo = document.getElementById('memo').value;
-            if(!time && !memo) return alert("내용을 입력하세요.");
+            const timeInput = document.getElementById('studyTime');
+            const memoInput = document.getElementById('memo');
+            const time = timeInput.value;
+            const memo = memoInput.value;
+            if(!time && !memo) return;
+            
             let records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
-            if (editIndex > -1) {
-                records[editIndex] = { ...records[editIndex], time, memo };
-                editIndex = -1;
+            if (editingIndex >= 0) {
+                records[editingIndex] = { ...records[editingIndex], time: time || 0, memo };
+                editingIndex = -1;
                 document.getElementById('saveBtn').innerText = '기록 저장';
-                document.getElementById('cancelBtn').style.display = 'none';
+                document.getElementById('saveBtn').style.background = '#007bff';
             } else {
-                records.push({ time: time || 0, memo, date: new Date().toLocaleDateString() });
+                records.push({ time: time || 0, memo, date: new Date().toLocaleString() });
             }
+            
             localStorage.setItem('studyRecords', JSON.stringify(records));
-            document.getElementById('studyTime').value = '';
-            document.getElementById('memo').value = '';
+            timeInput.value = '';
+            memoInput.value = '';
             displayRecords();
         }
+
+        function displayRecords() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const list = document.getElementById('recordList');
+            const records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
+            
+            const totalMinutes = records.reduce((sum, r) => sum + parseInt(r.time || 0), 0);
+            document.getElementById('totalTime').innerText = `총 ${Math.floor(totalMinutes/60)}시간 ${totalMinutes%60}분`;
+
+            list.innerHTML = records.slice().reverse().map((r, revIdx) => {
+                const actualIndex = records.length - 1 - revIdx;
+                let text = r.memo;
+                if (searchTerm && text.toLowerCase().includes(searchTerm)) {
+                    const regex = new RegExp(`(${searchTerm})`, 'gi');
+                    text = text.replace(regex, `<mark class="match">${searchTerm}</mark>`);
+                }
+                return `
+                    <div class="record-item">
+                        <div class="record-date">${r.date} | ${r.time}분</div>
+                        <div class="memo-text">${text}</div>
+                        <div class="action-btns">
+                            <button class="act-btn edit-btn" onclick="editRecord(${actualIndex})">수정</button>
+                            <button class="act-btn del-btn" onclick="deleteRecord(${actualIndex})">삭제</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
         function editRecord(index) {
-            let records = JSON.parse(localStorage.getItem('studyRecords'));
-            document.getElementById('studyTime').value = records[index].time;
-            document.getElementById('memo').value = records[index].memo;
-            editIndex = index;
+            const records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
+            const record = records[index];
+            document.getElementById('studyTime').value = record.time;
+            document.getElementById('memo').value = record.memo;
+            editingIndex = index;
             document.getElementById('saveBtn').innerText = '수정 완료';
-            document.getElementById('cancelBtn').style.display = 'block';
+            document.getElementById('saveBtn').style.background = '#ffc107';
             window.scrollTo({top: 0, behavior: 'smooth'});
         }
+
         function deleteRecord(index) {
-            if(confirm("기록을 삭제할까요?")) {
-                let records = JSON.parse(localStorage.getItem('studyRecords'));
-                records.splice(index, 1);
-                localStorage.setItem('studyRecords', JSON.stringify(records));
-                displayRecords();
-            }
+            if(!confirm("삭제하시겠습니까?")) return;
+            let records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
+            records.splice(index, 1);
+            localStorage.setItem('studyRecords', JSON.stringify(records));
+            displayRecords();
         }
-        function cancelEdit() {
-            editIndex = -1;
-            document.getElementById('studyTime').value = '';
-            document.getElementById('memo').value = '';
-            document.getElementById('saveBtn').innerText = '기록 저장';
-            document.getElementById('cancelBtn').style.display = 'none';
+
+        function findNext() {
+            const matches = document.querySelectorAll('.match');
+            if (matches.length === 0) return;
+            currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+            matches.forEach(m => m.style.backgroundColor = "yellow");
+            matches[currentMatchIndex].style.backgroundColor = "orange";
+            matches[currentMatchIndex].scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
-        displayRecords();
+
+        window.onload = displayRecords;
     </script>
 </body>
 </html>
