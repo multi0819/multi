@@ -472,10 +472,19 @@
       <div class="mt-3 space-y-3">
         <div class="flex gap-2 overflow-x-auto" id="specialButtons"></div>
         <div class="flex gap-2 overflow-x-auto" id="tagButtons"></div>
-        <div class="flex gap-2">
-          <input id="customTagInput" class="flex-1 h-10 rounded-xl px-3 text-sm" placeholder="새 태그 추가" />
-          <button onclick="addCustomTag()" class="press h-10 px-3 rounded-xl bg-slate-900 text-white text-sm font-bold">추가</button>
-        </div>
+        <div class="flex gap-2 items-center min-w-0">
+  <input
+    id="customTagInput"
+    class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
+    placeholder="새 태그 추가"
+  />
+  <button
+    onclick="addCustomTag()"
+    class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
+  >
+    추가
+  </button>
+</div>
         <label class="inline-flex items-center gap-2 text-slate-300 text-sm font-medium">
           <input type="checkbox" id="needsReviewInput" /> 복습 필요
         </label>
