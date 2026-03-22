@@ -10,13 +10,18 @@
   html { scroll-padding-top: 110px; }
 
   body{
+    margin:0;
+    width:100%;
+    max-width:100%;
+    overflow-x:hidden;
+    box-sizing:border-box;
     font-family:"Pretendard","Noto Sans KR",sans-serif;
     background:
       radial-gradient(circle at top left, rgba(79,125,243,.14), transparent 26%),
       radial-gradient(circle at top right, rgba(201,169,107,.10), transparent 18%),
       linear-gradient(180deg, #09111d 0%, #0b1322 45%, #08101b 100%);
     color:#edf3fb;
-    padding:16px 16px 32px;
+    padding:8px 2px 24px;
   }
 
   .card{
@@ -64,26 +69,25 @@
   }
 
   .stat-kicker{ font-size:11px; font-weight:800; opacity:.95; }
-.stat-value{ font-size:16px; font-weight:900; line-height:1.1; margin-top:4px; }
-.stat-sub{ font-size:9px; font-weight:700; opacity:.9; margin-top:4px; }
-  
+  .stat-value{ font-size:16px; font-weight:900; line-height:1.1; margin-top:4px; }
+  .stat-sub{ font-size:9px; font-weight:700; opacity:.9; margin-top:4px; }
 
   .stat-blue{ background:linear-gradient(135deg,#2563eb,#60a5fa); }
   .stat-green{ background:linear-gradient(135deg,#16a34a,#4ade80); }
   .stat-purple{ background:linear-gradient(135deg,#7c3aed,#a78bfa); }
   .stat-slate{ background:linear-gradient(135deg,#475569,#94a3b8); }
 
-  input, textarea, select{
+  input, select{
     background:#0e1626 !important;
-    color:#edf3fb !important;
+    color:#edf3fb;
     border:1px solid rgba(255,255,255,.10) !important;
   }
 
-  input::placeholder, textarea::placeholder{
+  input::placeholder{
     color:#7f8ea3 !important;
   }
 
-  input:focus, textarea:focus, select:focus{
+  input:focus, select:focus{
     border-color:#5f84dd !important;
     box-shadow:0 0 0 3px rgba(95,132,221,.16) !important;
     outline:none !important;
@@ -108,7 +112,8 @@
 
   #quickMinuteButtons{
     display:flex;
-    gap:8px;
+    gap:6px !important;
+    flex-wrap:nowrap;
   }
 
   #quickMinuteButtons button,
@@ -121,11 +126,14 @@
     min-width:64px;
   }
 
-  #specialButtons{
-    display:flex;
-    gap:8px;
+  #quickMinuteButtons button{
+    min-width:56px !important;
+    padding-left:10px !important;
+    padding-right:10px !important;
+    font-size:12px !important;
   }
 
+  #specialButtons,
   #tagButtons{
     display:flex;
     gap:8px;
@@ -191,7 +199,6 @@
     border:1px solid rgba(255,255,255,.08);
   }
 
-  /* 조회영역 */
   #querySection{
     padding:16px;
   }
@@ -240,7 +247,6 @@
     justify-content:flex-end;
   }
 
-  /* 가독성 */
   .text-slate-900,
   .text-slate-800{
     color:#f3f7ff !important;
@@ -288,7 +294,6 @@
     line-height:1.4 !important;
   }
 
-  /* 달력 숫자 */
   #calendarHeatmap button{
     font-weight:900 !important;
     font-size:18px !important;
@@ -304,17 +309,12 @@
     -webkit-text-fill-color:#0f172a !important;
   }
 
-  #calendarHeatmap .bg-blue-400{
-    color:#ffffff !important;
-    -webkit-text-fill-color:#ffffff !important;
-  }
-
+  #calendarHeatmap .bg-blue-400,
   #calendarHeatmap .bg-blue-700{
     color:#ffffff !important;
     -webkit-text-fill-color:#ffffff !important;
   }
 
-  /* 백업 버튼 */
   #restoreLatestBtn{
     background:#e8ddb2 !important;
     color:#8a4b12 !important;
@@ -335,8 +335,6 @@
     -webkit-text-fill-color:#f8fbff !important;
   }
 
-
-  /* 버튼 간격 축소 */
   .flex.gap-2{
     gap:8px !important;
   }
@@ -348,74 +346,113 @@
   canvas{
     filter:brightness(1.05) contrast(1.03);
   }
-  /* 빠른 시간 줄 잘림 방지 */
-#quickMinuteButtons{
-  display:flex;
-  gap:6px !important;
-  flex-wrap:nowrap;
-}
 
-#quickMinuteButtons button{
-  min-width:56px !important;
-  padding-left:10px !important;
-  padding-right:10px !important;
-  font-size:12px !important;
-}
+  .action-chip{
+    padding:9px 11px !important;
+    border-radius:14px !important;
+    font-size:12px !important;
+  }
 
-/* 상단 네비 버튼도 살짝 압축 */
-.action-chip{
-  padding:9px 11px !important;
-  border-radius:14px !important;
-  font-size:12px !important;
-}
-.paste-thumb{
-  width:100%;
-  height:140px;
-  object-fit:cover;
-  display:block;
-}
+  .paste-thumb{
+    width:100%;
+    height:140px;
+    object-fit:cover;
+    display:block;
+  }
 
-.zoomable-image{
-  cursor:pointer;
-}
+  .zoomable-image{
+    cursor:pointer;
+  }
 
-#imagePreviewModal{
-  position:fixed;
-  inset:0;
-  background:rgba(0,0,0,.82);
-  display:none;
-  align-items:center;
-  justify-content:center;
-  padding:16px;
-  z-index:9999;
-}
+  #imagePreviewModal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.82);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:16px;
+    z-index:9999;
+  }
 
-#imagePreviewModal.show{
-  display:flex;
-}
+  #imagePreviewModal.show{
+    display:flex;
+  }
 
-#imagePreviewModal img{
-  max-width:100%;
-  max-height:85vh;
-  border-radius:16px;
-  box-shadow:0 10px 30px rgba(0,0,0,.45);
-}
+  #imagePreviewModal img{
+    max-width:100%;
+    max-height:85vh;
+    border-radius:16px;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+  }
 
-#imagePreviewClose{
-  position:absolute;
-  top:16px;
-  right:16px;
-  width:44px;
-  height:44px;
-  border-radius:999px;
-  border:1px solid rgba(255,255,255,.22);
-  background:rgba(255,255,255,.08);
-  color:#fff;
-  font-size:22px;
-  font-weight:900;
-}
+  #imagePreviewClose{
+    position:absolute;
+    top:16px;
+    right:16px;
+    width:44px;
+    height:44px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    background:rgba(255,255,255,.08);
+    color:#fff;
+    font-size:22px;
+    font-weight:900;
+  }
 
-</style>
+  .color-palette{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding-bottom:2px;
+  }
+
+  .color-dot{
+    width:28px;
+    height:28px;
+    border-radius:999px;
+    border:2px solid rgba(255,255,255,.22);
+    flex:0 0 auto;
+  }
+
+  .color-dot.active{
+    box-shadow:0 0 0 3px rgba(255,255,255,.18);
+    transform:scale(1.05);
+  }
+
+  .color-label{
+    font-size:12px;
+    font-weight:700;
+    color:#b8c6da;
+  }
+
+  #contentEditor{
+    width:100%;
+    min-height:260px;
+    background:#0a1220 !important;
+    border:2px solid rgba(95,132,221,.55) !important;
+    box-shadow:
+      inset 0 0 0 1px rgba(255,255,255,.04),
+      0 0 0 2px rgba(95,132,221,.10);
+    border-radius:18px;
+    padding:16px;
+    font-size:18px;
+    line-height:1.8;
+    outline:none;
+    color:#edf3fb;
+    white-space:pre-wrap;
+    word-break:break-word;
+  }
+
+  #contentEditor[data-placeholder]:empty:before{
+    content:attr(data-placeholder);
+    color:#7f90a7;
+  }
+
+  #contentEditor .editor-token{
+    font-weight:800;
+  }
+  </style>
 </head>
 <body class="space-y-2">
 
@@ -468,30 +505,59 @@
     </div>
 
     <details class="rounded-2xl p-3">
-      <summary class="cursor-pointer text-sm font-bold text-slate-300">기호 / 태그 / 복습 설정</summary>
+      <summary class="cursor-pointer text-sm font-bold text-slate-300">기호 / 태그 설정</summary>
       <div class="mt-3 space-y-3">
         <div class="flex gap-2 overflow-x-auto" id="specialButtons"></div>
         <div class="flex gap-2 overflow-x-auto" id="tagButtons"></div>
+
         <div class="flex gap-2 items-center min-w-0">
-  <input
-    id="customTagInput"
-    class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
-    placeholder="새 태그 추가"
-  />
-  <button
-    onclick="addCustomTag()"
-    class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
-  >
-    추가
-  </button>
-</div>
-        <label class="inline-flex items-center gap-2 text-slate-300 text-sm font-medium">
-          <input type="checkbox" id="needsReviewInput" /> 복습 필요
-        </label>
+          <input
+            id="customTagInput"
+            class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
+            placeholder="새 태그 추가"
+          />
+          <button
+            onclick="addCustomTag()"
+            class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
+          >
+            태그 추가
+          </button>
+        </div>
+
+        <div class="flex gap-2 items-center min-w-0">
+          <input
+            id="customSymbolInput"
+            class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
+            placeholder="새 기호 추가"
+          />
+          <button
+            onclick="addCustomSymbol()"
+            class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
+          >
+            기호 추가
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <div class="color-label">강조 색상</div>
+          <div class="color-palette" id="colorPalette">
+            <button type="button" class="color-dot active" data-color="#edf3fb" style="background:#edf3fb" onclick="applyEditorColor('#edf3fb')"></button>
+            <button type="button" class="color-dot" data-color="#93c5fd" style="background:#93c5fd" onclick="applyEditorColor('#93c5fd')"></button>
+            <button type="button" class="color-dot" data-color="#86efac" style="background:#86efac" onclick="applyEditorColor('#86efac')"></button>
+            <button type="button" class="color-dot" data-color="#fde68a" style="background:#fde68a" onclick="applyEditorColor('#fde68a')"></button>
+            <button type="button" class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4" onclick="applyEditorColor('#f9a8d4')"></button>
+          </div>
+        </div>
       </div>
     </details>
 
-    <textarea id="contentInput" spellcheck="true" autocorrect="on" autocomplete="on" class="w-full min-h-[240px] rounded-2xl px-4 py-4 text-base resize-none leading-relaxed" placeholder="내용을 입력하세요&#10;&#10;사진은 아래 버튼으로 추가할 수 있습니다."></textarea>
+    <div
+      id="contentEditor"
+      contenteditable="true"
+      data-placeholder="내용을 입력하세요
+
+사진은 아래 버튼으로 추가할 수 있습니다."
+    ></div>
 
     <div class="paste-box p-3 space-y-3">
       <div class="flex items-center justify-between gap-2">
@@ -506,17 +572,22 @@
       >
         사진 파일 선택
       </button>
-<button onclick="pasteFromClipboard()" class="press h-11 w-full rounded-xl border text-sm font-bold">
-  클립보드 이미지 붙여넣기
-</button>
 
-  <input
-  id="imageFileInput"
-  type="file"
-  accept="image/*"
-  class="hidden"
-  onchange="handleImageFileSelect(event)"
-/>
+      <button
+        onclick="pasteFromClipboard()"
+        class="press h-11 w-full rounded-xl border text-sm font-bold"
+      >
+        클립보드 이미지 붙여넣기
+      </button>
+
+      <input
+        id="imageFileInput"
+        type="file"
+        accept="image/*"
+        class="hidden"
+        onchange="handleImageFileSelect(event)"
+      />
+
       <div id="pastePreview" class="grid grid-cols-2 gap-2">
         <div class="paste-empty col-span-2">추가된 사진이 없습니다.</div>
       </div>
@@ -529,7 +600,6 @@
       <button id="saveBtn" onclick="saveRecord()" class="press h-10 rounded-xl bg-blue-600 text-white text-base font-black">기록 저장</button>
     </div>
   </div>
-  
   <div class="card p-4">
     <div class="text-xl font-black text-slate-900 mb-3">검색 / 필터 / 정렬</div>
 
@@ -554,8 +624,6 @@
     </div>
   </div>
 
-  
-
   <div id="calendarSection" class="card p-4">
     <div class="text-2xl font-black text-slate-900 mb-2">달력형 학습 보기</div>
 
@@ -577,28 +645,28 @@
     <div id="calendarDetail" class="text-sm text-slate-600">날짜를 누르면 그날의 학습 기록을 아래에서 바로 볼 수 있습니다.</div>
   </div>
 
-  <!-- 일자조회와 전체조회가 같은 페이지 스크롤 안에서 이어지도록 배치 -->
-<div id="querySection" class="card p-4">
-  <div class="query-topbar mb-3">
-    <div id="queryTitle" class="text-xl font-black text-slate-900">전체 조회</div>
+  <div id="querySection" class="card p-4">
+    <div class="query-topbar mb-3">
+      <div id="queryTitle" class="text-xl font-black text-slate-900">전체 조회</div>
 
-    <div class="query-actions">
-      <button type="button" onclick="showAllRecordsView()" class="press speak-btn">전체조회 보기</button>
-      <button type="button" onclick="readFilteredRecords()" class="press speak-btn">조회결과 읽기</button>
-      <button type="button" onclick="readAllRecords()" class="press speak-btn">전체 읽기</button>
-      <button type="button" onclick="stopSpeech()" class="press speak-btn stop">읽기 중지</button>
+      <div class="query-actions">
+        <button type="button" onclick="showAllRecordsView()" class="press speak-btn">전체조회 보기</button>
+        <button type="button" onclick="readFilteredRecords()" class="press speak-btn">조회결과 읽기</button>
+        <button type="button" onclick="readAllRecords()" class="press speak-btn">전체 읽기</button>
+        <button type="button" onclick="stopSpeech()" class="press speak-btn stop">읽기 중지</button>
+      </div>
+    </div>
+
+    <div id="queryScrollArea">
+      <div id="selectedDayRecords" class="hidden"></div>
+
+      <div id="recentSection">
+        <div id="recordList" class="space-y-3"></div>
+      </div>
     </div>
   </div>
 
-  <div id="queryScrollArea">
-    <div id="selectedDayRecords" class="hidden"></div>
-
-    <div id="recentSection">
-      <div id="recordList" class="space-y-3"></div>
-    </div>
-  </div>
-</div>
-<div id="goalSection" class="card p-4">
+  <div id="goalSection" class="card p-4">
     <div class="flex items-center justify-between mb-3">
       <div class="text-xl font-black text-slate-900">오늘의 목표</div>
       <div class="flex items-center gap-2">
@@ -657,14 +725,19 @@
       <button id="restoreLatestBtn" onclick="restoreLatestTrash()" class="press h-11 rounded-xl bg-amber-100 text-amber-800 font-bold border">최근 삭제 1건 복구</button>
       <button onclick="exportJson()" class="press h-11 rounded-xl bg-slate-900 text-white font-bold">JSON 백업</button>
       <button onclick="exportCsv()" class="press h-11 rounded-xl border font-bold text-slate-700">CSV 내보내기</button>
-     <button onclick="showStorageKeys()" class="press h-11 rounded-xl border font-bold text-slate-700">
-  저장 키 확인
-</button>
 
-<button onclick="clearAllStudyStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
-  학습기록 저장공간 전체 비우기
-</button>
- <button onclick="document.getElementById('importFile').click()" class="press h-11 rounded-xl border font-bold text-slate-700">백업 불러오기</button>
+      <button onclick="showStorageKeys()" class="press h-11 rounded-xl border font-bold text-slate-700">
+        저장 키 확인
+      </button>
+
+      <button onclick="clearAllStudyStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
+        학습기록 저장공간 전체 비우기
+      </button>
+
+      <button onclick="document.getElementById('importFile').click()" class="press h-11 rounded-xl border font-bold text-slate-700">
+        백업 불러오기
+      </button>
+
       <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importJson(event)" />
     </div>
   </div>
@@ -672,1127 +745,1427 @@
   <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 px-5 py-3 rounded-2xl opacity-0 pointer-events-none transition-all duration-200"></div>
 
   <script>
-    const STORAGE_KEY = 'study_log_html_clean_scroll_v1';
-    const DRAFT_KEY = 'study_log_html_clean_scroll_draft_v1';
-    const TRASH_KEY = 'study_log_html_clean_scroll_trash_v1';
-    const GOAL_KEY = 'study_goal_minutes_clean_scroll_v1';
+  const STORAGE_KEY = 'study_log_html_rich_v1';
+  const DRAFT_KEY = 'study_log_html_rich_draft_v1';
+  const TRASH_KEY = 'study_log_html_rich_trash_v1';
+  const GOAL_KEY = 'study_goal_minutes_rich_v1';
+  const TAG_MASTER_KEY = 'study_tag_master_rich_v1';
+  const SYMBOL_MASTER_KEY = 'study_symbol_master_rich_v1';
 
-    const PREVIEW_LENGTH = 90;
-    const quickMinutes = [10,20,30,60,90,120];
-    const specialChars = ['Δ','η','ρ','℃','×','÷','π','√','h₁','h₂','COP','Q','W'];
-    const defaultTags = ['냉동공학','공조','열역학','공식','암기','복습필요'];
+  const PREVIEW_LENGTH = 90;
+  const quickMinutes = [10,20,30,60,90,120];
+  const defaultSymbols = ['Δ','η','ρ','℃','×','÷','π','√','h₁','h₂','COP','Q','W'];
+  const defaultTags = ['냉동공학','공조','열역학','공식','암기','복습필요'];
 
-    let editingId = null;
-    let dailyChart = null;
-    let tagChart = null;
-    const expanded = {};
-    let pastedImages = [];
-    let currentCalendarDate = new Date();
-    let currentDaySpeechItems = [];
-    let liveTimer = null;
-let autoTimeMode = true;
+  let editingId = null;
+  let dailyChart = null;
+  let tagChart = null;
+  const expanded = {};
+  let pastedImages = [];
+  let currentCalendarDate = new Date();
+  let currentDaySpeechItems = [];
+  let liveTimer = null;
+  let autoTimeMode = true;
+  let longPressTimer = null;
+  let editorSelectionRange = null;
+  let currentEditorColor = '#edf3fb';
 
-    function uid(){ return 'id_' + Math.random().toString(36).slice(2) + Date.now(); }
-    function escapeHtml(str){
-      return String(str)
-        .replaceAll('&','&amp;')
-        .replaceAll('<','&lt;')
-        .replaceAll('>','&gt;')
-        .replaceAll('"','&quot;')
-        .replaceAll("'",'&#39;');
-    }
-    function highlightText(text, query){
-      if(!query.trim()) return escapeHtml(text);
-      const safe = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      return escapeHtml(text).replace(new RegExp(safe,'gi'), m => `<span class="mark-hit">${m}</span>`);
-    }
-    function getLocalDateTimeValue(){
-      const now = new Date();
-      const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
-      return local.toISOString().slice(0,19);
-    }
-    function formatDateTime(value){
-      const d = new Date(value);
-      const ampm = d.getHours() >= 12 ? '오후' : '오전';
-      const hh = d.getHours() % 12 || 12;
-      return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. ${ampm} ${hh}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
-    }
-    function sameDay(a,b){
-      return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
-    }
-    function diffDays(a,b){
-      const dayA=new Date(a.getFullYear(),a.getMonth(),a.getDate()).getTime();
-      const dayB=new Date(b.getFullYear(),b.getMonth(),b.getDate()).getTime();
-      return Math.round((dayA-dayB)/86400000);
-    }
-    function getDateKey(value){
-      const d = new Date(value);
-      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-    }
-    function formatMinutes(total){ return `${Math.floor(total/60)}시간 ${total%60}분`; }
+  function uid(){ return 'id_' + Math.random().toString(36).slice(2) + Date.now(); }
 
-    function loadRecords(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
-    function saveRecords(){
-  try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-    return true;
-  }catch(e){
-    console.error('saveRecords error:', e);
-    return false;
+  function escapeHtml(str){
+    return String(str)
+      .replaceAll('&','&amp;')
+      .replaceAll('<','&lt;')
+      .replaceAll('>','&gt;')
+      .replaceAll('"','&quot;')
+      .replaceAll("'",'&#39;');
   }
-}
-    function loadTrash(){ try { return JSON.parse(localStorage.getItem(TRASH_KEY) || '[]'); } catch(e){ return []; } }
-    function saveTrash(){ localStorage.setItem(TRASH_KEY, JSON.stringify(trash)); }
-    function loadGoal(){ const n = Number(localStorage.getItem(GOAL_KEY) || 120); return Number.isFinite(n) && n >= 0 ? n : 120; }
-    function saveGoal(v){ localStorage.setItem(GOAL_KEY, String(v)); goalMinutes = v; }
-    function loadDraft(){
-      try{
-        return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') || {
-          minutes:'',
-          content:'',
-          tags:[],
-          studiedAt:getLocalDateTimeValue(),
-          customTag:'',
-          needsReview:false,
-          images:[]
-        };
-      }catch(e){
-        return {
-          minutes:'',
-          content:'',
-          tags:[],
-          studiedAt:getLocalDateTimeValue(),
-          customTag:'',
-          needsReview:false,
-          images:[]
-        };
-      }
+
+  function stripHtml(html){
+    const div = document.createElement('div');
+    div.innerHTML = html || '';
+    return (div.textContent || div.innerText || '').trim();
+  }
+
+  function highlightText(text, query){
+    if(!query.trim()) return escapeHtml(text);
+    const safe = query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    return escapeHtml(text).replace(new RegExp(safe,'gi'), m => `<span class="mark-hit">${m}</span>`);
+  }
+
+  function getLocalDateTimeValue(){
+    const now = new Date();
+    const local = new Date(now.getTime() - now.getTimezoneOffset()*60000);
+    return local.toISOString().slice(0,19);
+  }
+
+  function formatDateTime(value){
+    const d = new Date(value);
+    const ampm = d.getHours() >= 12 ? '오후' : '오전';
+    const hh = d.getHours() % 12 || 12;
+    return `${d.getFullYear()}. ${d.getMonth()+1}. ${d.getDate()}. ${ampm} ${hh}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}`;
+  }
+
+  function sameDay(a,b){
+    return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate();
+  }
+
+  function diffDays(a,b){
+    const dayA=new Date(a.getFullYear(),a.getMonth(),a.getDate()).getTime();
+    const dayB=new Date(b.getFullYear(),b.getMonth(),b.getDate()).getTime();
+    return Math.round((dayA-dayB)/86400000);
+  }
+
+  function getDateKey(value){
+    const d = new Date(value);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  }
+
+  function formatMinutes(total){
+    return `${Math.floor(total/60)}시간 ${total%60}분`;
+  }
+
+  function loadRecords(){
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function saveRecords(){
+    try{
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+      return true;
+    }catch(e){
+      console.error('saveRecords error:', e);
+      return false;
     }
-    function saveDraft(){
-  try{
-    const slimDraft = {
-      minutes: draft.minutes,
-      content: draft.content,
-      tags: draft.tags,
-      studiedAt: draft.studiedAt,
-      customTag: draft.customTag,
-      needsReview: draft.needsReview,
-      images: [] // 사진 제외
+  }
+
+  function loadTrash(){
+    try { return JSON.parse(localStorage.getItem(TRASH_KEY) || '[]'); }
+    catch(e){ return []; }
+  }
+
+  function saveTrash(){
+    localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
+  }
+
+  function loadGoal(){
+    const n = Number(localStorage.getItem(GOAL_KEY) || 120);
+    return Number.isFinite(n) && n >= 0 ? n : 120;
+  }
+
+  function saveGoal(v){
+    localStorage.setItem(GOAL_KEY, String(v));
+    goalMinutes = v;
+  }
+
+  function loadTagMaster(){
+    try{
+      return JSON.parse(localStorage.getItem(TAG_MASTER_KEY) || '[]');
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveTagMaster(list){
+    localStorage.setItem(TAG_MASTER_KEY, JSON.stringify(list));
+  }
+
+  function loadSymbolMaster(){
+    try{
+      return JSON.parse(localStorage.getItem(SYMBOL_MASTER_KEY) || '[]');
+    }catch(e){
+      return [];
+    }
+  }
+
+  function saveSymbolMaster(list){
+    localStorage.setItem(SYMBOL_MASTER_KEY, JSON.stringify(list));
+  }
+
+  function initDefaultMasters(){
+    if(!localStorage.getItem(TAG_MASTER_KEY)){
+      saveTagMaster([...defaultTags]);
+    }
+
+    if(!localStorage.getItem(SYMBOL_MASTER_KEY)){
+      saveSymbolMaster([...defaultSymbols]);
+    }
+  }
+
+  function loadDraft(){
+    try{
+      return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') || {
+        minutes:'10',
+        contentHtml:'',
+        contentText:'',
+        tags:[],
+        studiedAt:getLocalDateTimeValue(),
+        customTag:'',
+        customSymbol:'',
+        textColor:'#edf3fb',
+        images:[]
+      };
+    }catch(e){
+      return {
+        minutes:'10',
+        contentHtml:'',
+        contentText:'',
+        tags:[],
+        studiedAt:getLocalDateTimeValue(),
+        customTag:'',
+        customSymbol:'',
+        textColor:'#edf3fb',
+        images:[]
+      };
+    }
+  }
+
+  function saveDraft(){
+    try{
+      const slimDraft = {
+        minutes: draft.minutes,
+        contentHtml: draft.contentHtml,
+        contentText: draft.contentText,
+        tags: draft.tags,
+        studiedAt: draft.studiedAt,
+        customTag: draft.customTag,
+        customSymbol: draft.customSymbol,
+        textColor: draft.textColor,
+        images: []
+      };
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(slimDraft));
+      return true;
+    }catch(e){
+      console.error('saveDraft error:', e);
+      return false;
+    }
+  }
+
+  let records = loadRecords();
+  let trash = loadTrash();
+  let goalMinutes = loadGoal();
+  let draft = loadDraft();
+  pastedImages = Array.isArray(draft.images) ? [...draft.images] : [];
+
+  function showToast(message){
+    const el = document.getElementById('toast');
+    el.textContent = message;
+    el.classList.remove('opacity-0','pointer-events-none');
+    el.classList.add('opacity-100');
+    clearTimeout(showToast.timer);
+    showToast.timer = setTimeout(()=>{
+      el.classList.add('opacity-0','pointer-events-none');
+      el.classList.remove('opacity-100');
+    }, 1800);
+  }
+
+  function startLiveTime(){
+    stopLiveTime();
+    autoTimeMode = true;
+
+    const input = document.getElementById('studiedAtInput');
+    if(!input) return;
+
+    const tick = () => {
+      if(editingId) return;
+      const nowValue = getLocalDateTimeValue();
+      input.value = nowValue;
+      draft.studiedAt = nowValue;
     };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(slimDraft));
+
+    tick();
+    liveTimer = setInterval(tick, 1000);
+  }
+
+  function stopLiveTime(){
+    if(liveTimer){
+      clearInterval(liveTimer);
+      liveTimer = null;
+    }
+  }
+  function openImagePreview(src){
+    const modal = document.getElementById('imagePreviewModal');
+    const target = document.getElementById('imagePreviewTarget');
+    if(!modal || !target) return;
+    target.src = src;
+    modal.classList.add('show');
+  }
+
+  function closeImagePreview(){
+    const modal = document.getElementById('imagePreviewModal');
+    const target = document.getElementById('imagePreviewTarget');
+    if(!modal || !target) return;
+    modal.classList.remove('show');
+    target.src = '';
+  }
+
+  function startLongPressDelete(type, value){
+    clearTimeout(longPressTimer);
+
+    longPressTimer = setTimeout(()=>{
+      if(!confirm(`${value} 삭제하시겠습니까?`)) return;
+
+      if(type === 'tag'){
+        const list = loadTagMaster();
+        saveTagMaster(list.filter(v => v !== value));
+        draft.tags = draft.tags.filter(v => v !== value);
+        saveDraft();
+        renderTagButtons();
+      }
+
+      if(type === 'symbol'){
+        const list = loadSymbolMaster();
+        saveSymbolMaster(list.filter(v => v !== value));
+        renderSpecialButtons();
+      }
+
+      showToast('삭제되었습니다');
+    }, 2000);
+  }
+
+  function cancelLongPress(){
+    clearTimeout(longPressTimer);
+  }
+
+  function scrollToSection(id){
+    const el = document.getElementById(id);
+    if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function getAllTags(){
+    return loadTagMaster();
+  }
+
+  function getAllSymbols(){
+    return loadSymbolMaster();
+  }
+
+  function getEditor(){
+    return document.getElementById('contentEditor');
+  }
+
+  function getEditorHtml(){
+    return getEditor().innerHTML;
+  }
+
+  function getEditorText(){
+    return stripHtml(getEditor().innerHTML);
+  }
+
+  function rememberEditorSelection(){
+    const sel = window.getSelection();
+    if(!sel || sel.rangeCount === 0) return;
+    editorSelectionRange = sel.getRangeAt(0).cloneRange();
+  }
+
+  function restoreEditorSelection(){
+    const sel = window.getSelection();
+    if(!sel || !editorSelectionRange) return false;
+    sel.removeAllRanges();
+    sel.addRange(editorSelectionRange);
     return true;
-  }catch(e){
-    console.error('saveDraft error:', e);
-    return false;
-  }
-}
-
-    let records = loadRecords();
-    let trash = loadTrash();
-    let goalMinutes = loadGoal();
-    let draft = loadDraft();
-    pastedImages = Array.isArray(draft.images) ? [...draft.images] : [];
-
-    function showToast(message){
-      const el = document.getElementById('toast');
-      el.textContent = message;
-      el.classList.remove('opacity-0','pointer-events-none');
-      el.classList.add('opacity-100');
-      clearTimeout(showToast.timer);
-      showToast.timer = setTimeout(()=>{
-        el.classList.add('opacity-0','pointer-events-none');
-        el.classList.remove('opacity-100');
-      }, 1800);
-    }
-function startLiveTime(){
-  stopLiveTime();
-  autoTimeMode = true;
-
-  const input = document.getElementById('studiedAtInput');
-  if(!input) return;
-
-  const tick = () => {
-    if(editingId) return;
-    const nowValue = getLocalDateTimeValue();
-    input.value = nowValue;
-    draft.studiedAt = nowValue;
-  };
-
-  tick();
-  liveTimer = setInterval(tick, 1000);
-}
-
-function stopLiveTime(){
-  if(liveTimer){
-    clearInterval(liveTimer);
-    liveTimer = null;
-  }
-}
-
-function openImagePreview(src){
-  const modal = document.getElementById('imagePreviewModal');
-  const target = document.getElementById('imagePreviewTarget');
-  if(!modal || !target) return;
-  target.src = src;
-  modal.classList.add('show');
-}
-
-function closeImagePreview(){
-  const modal = document.getElementById('imagePreviewModal');
-  const target = document.getElementById('imagePreviewTarget');
-  if(!modal || !target) return;
-  modal.classList.remove('show');
-  target.src = '';
-}
-
-    function scrollToSection(id){
-      const el = document.getElementById(id);
-      if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
-    }
-
-    function getAllTags(){
-      const set = new Set(defaultTags);
-      records.forEach(r => (r.tags || []).forEach(t => set.add(t)));
-      (draft.tags || []).forEach(t => set.add(t));
-      return Array.from(set);
-    }
-
-    function syncFormFromDraft(){
-      document.getElementById('minutesInput').value = draft.minutes || '';
-      document.getElementById('contentInput').value = draft.content || '';
-      document.getElementById('studiedAtInput').value = draft.studiedAt || getLocalDateTimeValue();
-      document.getElementById('customTagInput').value = draft.customTag || '';
-      document.getElementById('needsReviewInput').checked = !!draft.needsReview;
-      renderPastePreview();
-    }
-
-    function persistDraftFromDom(){
-  draft.minutes = document.getElementById('minutesInput').value;
-  draft.content = document.getElementById('contentInput').value;
-  draft.studiedAt = document.getElementById('studiedAtInput').value;
-  draft.customTag = document.getElementById('customTagInput').value;
-  draft.needsReview = document.getElementById('needsReviewInput').checked;
-  draft.images = []; // draft에는 사진 저장하지 않음
-  saveDraft();
-}
-
-    function renderQuickButtons(){
-      document.getElementById('quickMinuteButtons').innerHTML =
-        quickMinutes.map(min => `<button class="press h-10 min-w-[68px] rounded-xl border border-slate-300 font-bold bg-white px-3 text-sm shrink-0" onclick="setQuickMinute(${min})">${min}분</button>`).join('');
-    }
-
-    function setQuickMinute(min){
-      document.getElementById('minutesInput').value = min;
-      persistDraftFromDom();
-    }
-
-    function renderSpecialButtons(){
-      document.getElementById('specialButtons').innerHTML =
-        specialChars.map(ch => `<button class="press h-10 min-w-[58px] rounded-xl border border-slate-300 bg-white text-lg font-bold shrink-0" onclick="insertChar('${ch.replaceAll("'","\\'")}')">${ch}</button>`).join('');
-    }
-
-    function insertChar(ch){
-      const el = document.getElementById('contentInput');
-      el.value += ch;
-      persistDraftFromDom();
-      el.focus();
-    }
-
-    function renderTagButtons(){
-      const tags = getAllTags();
-      document.getElementById('tagButtons').innerHTML =
-        tags.map(tag => `<button class="chip ${draft.tags.includes(tag)?'active':''} shrink-0" onclick="toggleTag('${tag.replaceAll("'","\\'")}')">#${tag}</button>`).join('');
-
-      const select = document.getElementById('tagFilter');
-      const current = select.value || 'all';
-      select.innerHTML = `<option value="all">전체 태그</option>` + tags.map(tag => `<option value="${escapeHtml(tag)}">${tag}</option>`).join('');
-      select.value = tags.includes(current) || current === 'all' ? current : 'all';
-    }
-
-    function toggleTag(tag){
-      draft.tags = draft.tags.includes(tag)
-        ? draft.tags.filter(t=>t!==tag)
-        : [...draft.tags, tag];
-      saveDraft();
-      renderTagButtons();
-    }
-
-    function addCustomTag(){
-      const tag = document.getElementById('customTagInput').value.trim();
-      if(!tag) return;
-      if(!draft.tags.includes(tag)) draft.tags.push(tag);
-      draft.customTag = '';
-      saveDraft();
-      syncFormFromDraft();
-      renderTagButtons();
-    }
-
-    function resetForm(){
-  editingId = null;
-  pastedImages = [];
-  draft = {
-    minutes:'',
-    content:'',
-    tags:[],
-    studiedAt:getLocalDateTimeValue(),
-    customTag:'',
-    needsReview:false,
-    images:[]
-  };
-  saveDraft();
-  syncFormFromDraft();
-  renderTagButtons();
-  renderPastePreview();
-  startLiveTime();
-
-  const contentEl = document.getElementById('contentInput');
-  if(contentEl){
-    setTimeout(() => {
-      contentEl.focus();
-    }, 100);
-  }
-}
-
-    function renderPastePreview(){
-  const box = document.getElementById('pastePreview');
-  if(!box) return;
-
-  if(!pastedImages.length){
-    box.innerHTML = '<div class="paste-empty col-span-2">추가된 사진이 없습니다.</div>';
-    return;
   }
 
-  box.innerHTML = pastedImages.map((src, idx)=>`
-    <div class="rounded-2xl overflow-hidden border border-slate-600 bg-white/5">
-      <img src="${src}" class="paste-thumb zoomable-image" onclick="openImagePreview('${src}')" />
-      <button
-        type="button"
-        onclick="removePastedImage(${idx})"
-        class="w-full h-10 border-t border-slate-600 text-sm font-bold text-red-300 bg-white/5"
-      >
-        사진 삭제
-      </button>
-    </div>
-  `).join('');
-}
+  function placeCaretAtEnd(el){
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(range);
+    rememberEditorSelection();
+  }
 
-    function removePastedImage(index){
-      pastedImages.splice(index, 1);
-      draft.images = [...pastedImages];
-      saveDraft();
-      renderPastePreview();
-      showToast('사진을 삭제했습니다.');
+  function setEditorHtml(html){
+    const editor = getEditor();
+    editor.innerHTML = html || '';
+  }
+
+  function syncFormFromDraft(){
+    document.getElementById('minutesInput').value = draft.minutes || '10';
+    setEditorHtml(draft.contentHtml || '');
+    document.getElementById('studiedAtInput').value = draft.studiedAt || getLocalDateTimeValue();
+    document.getElementById('customTagInput').value = draft.customTag || '';
+    document.getElementById('customSymbolInput').value = draft.customSymbol || '';
+    currentEditorColor = draft.textColor || '#edf3fb';
+    renderColorPalette();
+    renderPastePreview();
+  }
+
+  function persistDraftFromDom(){
+    draft.minutes = document.getElementById('minutesInput').value || '10';
+    draft.contentHtml = getEditorHtml();
+    draft.contentText = getEditorText();
+    draft.studiedAt = document.getElementById('studiedAtInput').value;
+    draft.customTag = document.getElementById('customTagInput').value;
+    draft.customSymbol = document.getElementById('customSymbolInput').value;
+    draft.textColor = currentEditorColor || '#edf3fb';
+    draft.images = [];
+    saveDraft();
+  }
+
+  function renderQuickButtons(){
+    document.getElementById('quickMinuteButtons').innerHTML =
+      quickMinutes.map(min => `<button class="press h-10 min-w-[68px] rounded-xl border border-slate-300 font-bold bg-white px-3 text-sm shrink-0" onclick="setQuickMinute(${min})">${min}분</button>`).join('');
+  }
+
+  function setQuickMinute(min){
+    document.getElementById('minutesInput').value = min;
+    persistDraftFromDom();
+  }
+
+  function renderSpecialButtons(){
+    const symbols = getAllSymbols();
+    document.getElementById('specialButtons').innerHTML =
+      symbols.map(ch => `
+        <button
+          class="press h-10 min-w-[58px] rounded-xl border border-slate-300 bg-white text-lg font-bold shrink-0"
+          onclick="insertChar('${ch.replaceAll("'","\\'")}')"
+          ontouchstart="startLongPressDelete('symbol','${ch.replaceAll("'","\\'")}')"
+          ontouchend="cancelLongPress()"
+          onmousedown="startLongPressDelete('symbol','${ch.replaceAll("'","\\'")}')"
+          onmouseup="cancelLongPress()"
+          onmouseleave="cancelLongPress()"
+        >${ch}</button>
+      `).join('');
+  }
+
+  function insertChar(ch){
+    const editor = getEditor();
+    editor.focus();
+
+    if(!restoreEditorSelection()){
+      placeCaretAtEnd(editor);
     }
 
-   function openImagePicker(){
-  const input = document.getElementById('imageFileInput');
-  if(!input){
-    showToast('사진 입력창을 찾을 수 없습니다.');
-    return;
+    document.execCommand('insertText', false, ch);
+    rememberEditorSelection();
+    persistDraftFromDom();
   }
-  input.value = '';
-  input.click();
-}
-async function pasteFromClipboard(){
-  try{
-    const items = await navigator.clipboard.read();
 
-    for(const item of items){
-      for(const type of item.types){
-        if(type.startsWith('image/')){
-          const blob = await item.getType(type);
+  function renderTagButtons(){
+    const tags = getAllTags();
+    document.getElementById('tagButtons').innerHTML =
+      tags.map(tag => `
+        <button
+          class="chip ${draft.tags.includes(tag)?'active':''} shrink-0"
+          onclick="toggleTag('${tag.replaceAll("'","\\'")}')"
+          ontouchstart="startLongPressDelete('tag','${tag.replaceAll("'","\\'")}')"
+          ontouchend="cancelLongPress()"
+          onmousedown="startLongPressDelete('tag','${tag.replaceAll("'","\\'")}')"
+          onmouseup="cancelLongPress()"
+          onmouseleave="cancelLongPress()"
+        >#${tag}</button>
+      `).join('');
 
-          const reader = new FileReader();
-          reader.onload = function(e){
-            const result = e.target.result;
+    const select = document.getElementById('tagFilter');
+    const current = select.value || 'all';
+    select.innerHTML = `<option value="all">전체 태그</option>` +
+      tags.map(tag => `<option value="${escapeHtml(tag)}">${tag}</option>`).join('');
 
-            const img = new Image();
-            img.onload = function(){
-              const canvas = document.createElement('canvas');
-              let w = img.width;
-              let h = img.height;
-              const max = 900;
+    select.value = tags.includes(current) || current === 'all' ? current : 'all';
+  }
 
-              if(w > max){
-                const r = max / w;
-                w *= r;
-                h *= r;
-              }
+  function renderColorPalette(){
+    const dots = document.querySelectorAll('#colorPalette .color-dot');
+    dots.forEach(dot => {
+      if(dot.dataset.color === (currentEditorColor || '#edf3fb')) dot.classList.add('active');
+      else dot.classList.remove('active');
+    });
+  }
 
-              canvas.width = w;
-              canvas.height = h;
+  function applyEditorColor(color){
+    currentEditorColor = color;
+    const editor = getEditor();
+    editor.focus();
 
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, w, h);
+    restoreEditorSelection();
 
-              const compressed = canvas.toDataURL('image/jpeg', 0.7);
+    const sel = window.getSelection();
+    if(sel && sel.rangeCount > 0 && !sel.isCollapsed){
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('foreColor', false, color);
+      rememberEditorSelection();
+    }else{
+      document.execCommand('styleWithCSS', false, true);
+      document.execCommand('foreColor', false, color);
+      rememberEditorSelection();
+    }
 
-              pastedImages = [compressed];
-              renderPastePreview();
-              showToast('클립보드 이미지 추가됨');
+    draft.textColor = color;
+    saveDraft();
+    renderColorPalette();
+    persistDraftFromDom();
+  }
+
+  function toggleTag(tag){
+    draft.tags = draft.tags.includes(tag)
+      ? draft.tags.filter(t=>t!==tag)
+      : [...draft.tags, tag];
+    saveDraft();
+    renderTagButtons();
+  }
+
+  function addCustomTag(){
+    const input = document.getElementById('customTagInput');
+    const tag = input.value.trim();
+    if(!tag) return;
+
+    const master = loadTagMaster();
+    if(!master.includes(tag)){
+      master.push(tag);
+      saveTagMaster(master);
+    }
+
+    if(!draft.tags.includes(tag)){
+      draft.tags.push(tag);
+    }
+
+    draft.customTag = '';
+    input.value = '';
+    saveDraft();
+    renderTagButtons();
+    showToast('태그를 추가했습니다.');
+  }
+
+  function addCustomSymbol(){
+    const input = document.getElementById('customSymbolInput');
+    const symbol = input.value.trim();
+    if(!symbol) return;
+
+    const master = loadSymbolMaster();
+    if(!master.includes(symbol)){
+      master.push(symbol);
+      saveSymbolMaster(master);
+    }
+
+    draft.customSymbol = '';
+    input.value = '';
+    saveDraft();
+    renderSpecialButtons();
+    showToast('기호를 추가했습니다.');
+  }
+
+  function resetForm(){
+    editingId = null;
+    pastedImages = [];
+    draft = {
+      minutes:'10',
+      contentHtml:'',
+      contentText:'',
+      tags:[],
+      studiedAt:getLocalDateTimeValue(),
+      customTag:'',
+      customSymbol:'',
+      textColor:'#edf3fb',
+      images:[]
+    };
+    currentEditorColor = '#edf3fb';
+    saveDraft();
+    syncFormFromDraft();
+    renderTagButtons();
+    renderSpecialButtons();
+    renderPastePreview();
+    startLiveTime();
+
+    if(document.activeElement && typeof document.activeElement.blur === 'function'){
+      document.activeElement.blur();
+    }
+  }
+
+  function renderPastePreview(){
+    const box = document.getElementById('pastePreview');
+    if(!box) return;
+
+    if(!pastedImages.length){
+      box.innerHTML = '<div class="paste-empty col-span-2">추가된 사진이 없습니다.</div>';
+      return;
+    }
+
+    box.innerHTML = pastedImages.map((src, idx)=>`
+      <div class="rounded-2xl overflow-hidden border border-slate-600 bg-white/5">
+        <img src="${src}" class="paste-thumb zoomable-image" onclick="openImagePreview('${src}')" />
+        <button
+          type="button"
+          onclick="removePastedImage(${idx})"
+          class="w-full h-10 border-t border-slate-600 text-sm font-bold text-red-300 bg-white/5"
+        >
+          사진 삭제
+        </button>
+      </div>
+    `).join('');
+  }
+
+  function removePastedImage(index){
+    pastedImages.splice(index, 1);
+    draft.images = [...pastedImages];
+    saveDraft();
+    renderPastePreview();
+    showToast('사진을 삭제했습니다.');
+  }
+
+  function openImagePicker(){
+    const input = document.getElementById('imageFileInput');
+    if(!input){
+      showToast('사진 입력창을 찾을 수 없습니다.');
+      return;
+    }
+    input.value = '';
+    input.click();
+  }
+
+  async function pasteFromClipboard(){
+    try{
+      const items = await navigator.clipboard.read();
+
+      for(const item of items){
+        for(const type of item.types){
+          if(type.startsWith('image/')){
+            const blob = await item.getType(type);
+
+            const reader = new FileReader();
+            reader.onload = function(e){
+              const result = e.target.result;
+              const img = new Image();
+
+              img.onload = function(){
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                const max = 900;
+
+                if(w > max){
+                  const r = max / w;
+                  w *= r;
+                  h *= r;
+                }
+
+                canvas.width = w;
+                canvas.height = h;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                pastedImages = [compressed];
+                renderPastePreview();
+                showToast('클립보드 이미지 추가됨');
+              };
+
+              img.src = result;
             };
 
-            img.src = result;
-          };
-
-          reader.readAsDataURL(blob);
-          return;
+            reader.readAsDataURL(blob);
+            return;
+          }
         }
       }
+
+      showToast('클립보드에 이미지가 없습니다.');
+    }catch(e){
+      console.error(e);
+      showToast('클립보드 접근 실패 (HTTPS 필요)');
     }
-
-    showToast('클립보드에 이미지가 없습니다.');
-
-  }catch(e){
-    console.error(e);
-    showToast('클립보드 접근 실패 (HTTPS 필요)');
-  }
-}
-
- function handleImageFileSelect(event){
-  const input = event.target;
-  const file = input.files && input.files[0];
-
-  if(!file){
-    showToast('선택이 취소되었습니다.');
-    input.value = '';
-    return;
   }
 
-  if(!file.type || !file.type.startsWith('image/')){
-    showToast('이미지 파일만 선택할 수 있습니다.');
-    input.value = '';
-    return;
-  }
+  function handleImageFileSelect(event){
+    const input = event.target;
+    const file = input.files && input.files[0];
 
-  const reader = new FileReader();
-
-  reader.onload = function(e){
-    const result = e.target && e.target.result ? String(e.target.result) : '';
-    if(!result){
-      showToast('사진 읽기에 실패했습니다.');
+    if(!file){
+      showToast('선택이 취소되었습니다.');
       input.value = '';
       return;
     }
 
-    const img = new Image();
-
-    img.onload = function(){
-      let width = img.width;
-      let height = img.height;
-      const maxWidth = 900;
-
-      if(width > maxWidth){
-        const ratio = maxWidth / width;
-        width = Math.round(width * ratio);
-        height = Math.round(height * ratio);
-      }
-
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(img, 0, 0, width, height);
-
-      try{
-        const compressed = canvas.toDataURL('image/jpeg', 0.72);
-        pastedImages = [compressed]; // 1장만 유지
-        renderPastePreview();
-        showToast('사진 1장 추가 완료');
-      }catch(err){
-        console.error(err);
-        showToast('사진 압축에 실패했습니다.');
-      }
-
+    if(!file.type || !file.type.startsWith('image/')){
+      showToast('이미지 파일만 선택할 수 있습니다.');
       input.value = '';
-    };
-
-    img.onerror = function(){
-      showToast('사진 처리 실패');
-      input.value = '';
-    };
-
-    img.src = result;
-  };
-
-  reader.onerror = function(){
-    showToast('사진 읽기 실패');
-    input.value = '';
-  };
-
-  reader.readAsDataURL(file);
-}
-
-    function isDuplicateRecord(payload){
-      return records.some(r => r.id !== editingId && r.studiedAt === payload.studiedAt && r.content === payload.content);
+      return;
     }
 
-    function saveRecord(){
-  draft.minutes = document.getElementById('minutesInput').value;
-  draft.content = document.getElementById('contentInput').value;
-  draft.studiedAt = document.getElementById('studiedAtInput').value;
-  draft.customTag = document.getElementById('customTagInput').value;
-  draft.needsReview = document.getElementById('needsReviewInput').checked;
-  draft.images = [...pastedImages];
+    const reader = new FileReader();
 
-  if(!draft.minutes || !draft.content.trim() || !draft.studiedAt){
-    showToast('공부 시간, 내용, 날짜를 입력해 주세요.');
-    return;
+    reader.onload = function(e){
+      const result = e.target && e.target.result ? String(e.target.result) : '';
+      if(!result){
+        showToast('사진 읽기에 실패했습니다.');
+        input.value = '';
+        return;
+      }
+
+      const img = new Image();
+
+      img.onload = function(){
+        let width = img.width;
+        let height = img.height;
+        const maxWidth = 900;
+
+        if(width > maxWidth){
+          const ratio = maxWidth / width;
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        try{
+          const compressed = canvas.toDataURL('image/jpeg', 0.72);
+          pastedImages = [compressed];
+          renderPastePreview();
+          showToast('사진 1장 추가 완료');
+        }catch(err){
+          console.error(err);
+          showToast('사진 압축에 실패했습니다.');
+        }
+
+        input.value = '';
+      };
+
+      img.onerror = function(){
+        showToast('사진 처리 실패');
+        input.value = '';
+      };
+
+      img.src = result;
+    };
+
+    reader.onerror = function(){
+      showToast('사진 읽기 실패');
+      input.value = '';
+    };
+
+    reader.readAsDataURL(file);
   }
 
-  const prev = editingId ? records.find(r => r.id === editingId) : null;
-
-  const payload = {
-    id: editingId || uid(),
-    createdAt: prev?.createdAt || new Date().toISOString(),
-    studiedAt: draft.studiedAt,
-    minutes: Number(draft.minutes),
-    content: draft.content.trim(),
-    tags: [...draft.tags],
-    images: [...pastedImages],
-    favorite: prev?.favorite || false,
-    needsReview: draft.needsReview,
-    updatedAt: new Date().toISOString()
-  };
-
-  if(isDuplicateRecord(payload)){
-    showToast('같은 시간과 같은 내용의 중복 기록이 있어 저장하지 않았습니다.');
-    return;
+  function isDuplicateRecord(payload){
+    return records.some(r => r.id !== editingId && r.studiedAt === payload.studiedAt && r.contentText === payload.contentText);
   }
+  function saveRecord(){
+    draft.minutes = document.getElementById('minutesInput').value || '10';
+    draft.contentHtml = getEditorHtml();
+    draft.contentText = getEditorText();
+    draft.studiedAt = document.getElementById('studiedAtInput').value;
+    draft.customTag = document.getElementById('customTagInput').value;
+    draft.customSymbol = document.getElementById('customSymbolInput').value;
+    draft.images = [...pastedImages];
 
-  if(editingId){
-    records = records.map(r => r.id === editingId ? payload : r);
-  }else{
-    records.unshift(payload);
-  }
+    if(!draft.minutes || !draft.contentText.trim() || !draft.studiedAt){
+      showToast('공부 시간, 내용, 날짜를 입력해 주세요.');
+      return;
+    }
 
-  const savedRecords = saveRecords();
-  if(!savedRecords){
+    const prev = editingId ? records.find(r => r.id === editingId) : null;
+
+    const payload = {
+      id: editingId || uid(),
+      createdAt: prev?.createdAt || new Date().toISOString(),
+      studiedAt: draft.studiedAt,
+      minutes: Number(draft.minutes),
+      contentHtml: draft.contentHtml.trim(),
+      contentText: draft.contentText.trim(),
+      tags: [...draft.tags],
+      images: [...pastedImages],
+      favorite: prev?.favorite || false,
+      updatedAt: new Date().toISOString()
+    };
+
+    if(isDuplicateRecord(payload)){
+      showToast('같은 시간과 같은 내용의 중복 기록이 있어 저장하지 않았습니다.');
+      return;
+    }
+
     if(editingId){
-      records = prev
-        ? records.map(r => r.id === editingId ? prev : r)
-        : records.filter(r => r.id !== editingId);
+      records = records.map(r => r.id === editingId ? payload : r);
     }else{
-      records.shift();
+      records.unshift(payload);
     }
-    showToast('기록 저장에 실패했습니다. 저장공간을 확인해 주세요.');
-    return;
+
+    const savedRecords = saveRecords();
+    if(!savedRecords){
+      if(editingId){
+        records = prev
+          ? records.map(r => r.id === editingId ? prev : r)
+          : records.filter(r => r.id !== editingId);
+      }else{
+        records.shift();
+      }
+      showToast('기록 저장에 실패했습니다. 저장공간을 확인해 주세요.');
+      return;
+    }
+
+    saveDraft();
+
+    const wasEditing = !!editingId;
+    showToast(wasEditing ? '기록이 수정되었습니다.' : '기록이 저장되었습니다.');
+    resetForm();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
   }
 
-  saveDraft();
+  function editRecord(id){
+    const record = records.find(r=>r.id===id);
+    if(!record) return;
 
-  const wasEditing = !!editingId;
-  showToast(wasEditing ? '기록이 수정되었습니다.' : '기록이 저장되었습니다.');
-  resetForm();
-  renderRecords();
-  renderStats();
-  renderQuickInsights();
-}
+    stopLiveTime();
+    autoTimeMode = false;
+    editingId = id;
 
-    function editRecord(id){
-  const record = records.find(r=>r.id===id);
-  if(!record) return;
+    draft.minutes = String(record.minutes);
+    draft.contentHtml = record.contentHtml || '';
+    draft.contentText = record.contentText || stripHtml(record.contentHtml || '');
+    draft.tags = [...(record.tags || [])];
+    draft.studiedAt = record.studiedAt.slice(0,19);
+    draft.customTag = '';
+    draft.customSymbol = '';
+    pastedImages = Array.isArray(record.images) ? [...record.images] : [];
+    draft.images = [...pastedImages];
+    saveDraft();
 
-  stopLiveTime();
-  autoTimeMode = false;
-  editingId = id;
+    syncFormFromDraft();
+    renderTagButtons();
+    renderSpecialButtons();
 
-  draft.minutes = String(record.minutes);
-  draft.content = record.content;
-  draft.tags = [...(record.tags || [])];
-  draft.studiedAt = record.studiedAt.slice(0,19);
-  draft.needsReview = record.needsReview;
-  pastedImages = Array.isArray(record.images) ? [...record.images] : [];
-  draft.images = [...pastedImages];
-  saveDraft();
-
-  syncFormFromDraft();
-  renderTagButtons();
-
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-
-  setTimeout(() => {
-    const el = document.getElementById('contentInput');
+    const el = getEditor();
     if(el){
-      el.focus();
-      const len = el.value.length;
-      el.setSelectionRange(len, len);
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(() => {
+        placeCaretAtEnd(el);
+      }, 250);
     }
-  }, 250);
-}
-
-    function deleteRecord(id){
-      const target = records.find(r=>r.id===id);
-      if(!target) return;
-      trash.unshift({ ...target, deletedAt:new Date().toISOString() });
-      records = records.filter(r=>r.id!==id);
-      saveRecords();
-      saveTrash();
-      renderRecords();
-      renderStats();
-      renderQuickInsights();
-      showToast('기록이 삭제되었습니다.');
-    }
-
-    function toggleFavorite(id){
-      records = records.map(r=>r.id===id ? {...r, favorite:!r.favorite} : r);
-      saveRecords();
-      renderRecords();
-      renderQuickInsights();
-    }
-
-    function toggleReview(id){
-      records = records.map(r=>r.id===id ? {...r, needsReview:!r.needsReview} : r);
-      saveRecords();
-      renderRecords();
-      renderQuickInsights();
-    }
-
-    function toggleExpand(id){
-      expanded[id] = !expanded[id];
-      renderRecords();
-    }
-
-    function getFilteredRecords(){
-      const q = document.getElementById('searchInput').value.trim().toLowerCase();
-      const tagFilter = document.getElementById('tagFilter').value;
-      const dateFilter = document.getElementById('dateFilter').value;
-      const sortMode = document.getElementById('sortMode').value;
-      const favoritesOnly = document.getElementById('favoriteOnly').checked;
-      const reviewOnly = document.getElementById('reviewOnly').checked;
-      const now = new Date();
-
-      let result = records.filter(record=>{
-        const matchQuery = !q || record.content.toLowerCase().includes(q) || (record.tags || []).some(tag=>tag.toLowerCase().includes(q));
-        const matchTag = tagFilter==='all' || (record.tags || []).includes(tagFilter);
-        const matchFavorite = !favoritesOnly || record.favorite;
-        const matchReview = !reviewOnly || record.needsReview;
-
-        let matchDate = true;
-        const d = new Date(record.studiedAt);
-        if(dateFilter==='today') matchDate = sameDay(d,now);
-        if(dateFilter==='week') matchDate = diffDays(now,d) >= 0 && diffDays(now,d) < 7;
-        if(dateFilter==='month') matchDate = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
-
-        return matchQuery && matchTag && matchFavorite && matchReview && matchDate;
-      });
-
-      if(sortMode==='latest') result.sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
-      if(sortMode==='oldest') result.sort((a,b)=>+new Date(a.studiedAt)-+new Date(b.studiedAt));
-      if(sortMode==='minutes') result.sort((a,b)=>b.minutes-a.minutes);
-
-      return result;
-    }
-    function renderRecords(){
-  const q = document.getElementById('searchInput').value.trim();
-  const items = getFilteredRecords();
-  const container = document.getElementById('recordList');
-
-  if (!items.length) {
-    container.innerHTML = '<div class="text-sm text-slate-400">기록이 없습니다.</div>';
-    return;
   }
 
-  container.innerHTML = items.map(record => {
-    const isExpanded = !!expanded[record.id];
-    const isLong = record.content.length > PREVIEW_LENGTH;
-    const text = isExpanded
-      ? record.content
-      : (isLong ? record.content.slice(0, PREVIEW_LENGTH) + '...' : record.content);
+  function deleteRecord(id){
+    const target = records.find(r=>r.id===id);
+    if(!target) return;
+    trash.unshift({ ...target, deletedAt:new Date().toISOString() });
+    records = records.filter(r=>r.id!==id);
+    saveRecords();
+    saveTrash();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    showToast('기록이 삭제되었습니다.');
+  }
 
-    return `
-      <div class="card p-4 query-card">
-        <div class="query-card-body">
-          <div class="text-sm text-slate-400">${formatDateTime(record.studiedAt)} | ${record.minutes}분</div>
+  function toggleFavorite(id){
+    records = records.map(r=>r.id===id ? {...r, favorite:!r.favorite} : r);
+    saveRecords();
+    renderRecords();
+    renderQuickInsights();
+  }
 
-          <div class="text-xl font-black leading-[1.4] text-slate-100 break-words">
-            ${highlightText(text, q)}
-          </div>
+  function toggleReview(id){
+    records = records.map(r=>{
+      if(r.id !== id) return r;
+      const tags = Array.isArray(r.tags) ? [...r.tags] : [];
+      const hasReview = tags.includes('복습필요');
+      return {
+        ...r,
+        tags: hasReview ? tags.filter(t => t !== '복습필요') : [...tags, '복습필요']
+      };
+    });
+    saveRecords();
+    renderRecords();
+    renderQuickInsights();
+  }
 
-       ${(record.images && record.images.length) ? `
-  <div class="grid grid-cols-2 gap-2">
-    ${record.images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
-  </div>
-` : ''}
+  function toggleExpand(id){
+    expanded[id] = !expanded[id];
+    renderRecords();
+  }
 
-          <div class="flex flex-wrap gap-2">
-            ${(record.tags || []).map(tag => `
-              <span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">
-                #${escapeHtml(tag)}
-              </span>
-            `).join('')}
-            ${record.favorite ? `<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>` : ''}
-            ${record.needsReview ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
-          </div>
+  function getFilteredRecords(){
+    const q = document.getElementById('searchInput').value.trim().toLowerCase();
+    const tagFilter = document.getElementById('tagFilter').value;
+    const dateFilter = document.getElementById('dateFilter').value;
+    const sortMode = document.getElementById('sortMode').value;
+    const favoritesOnly = document.getElementById('favoriteOnly').checked;
+    const reviewOnly = document.getElementById('reviewOnly').checked;
+    const now = new Date();
 
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-2">
-              ${isLong
-                ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${record.id}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
-                : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
-              }
+    let result = records.filter(record=>{
+      const plain = (record.contentText || stripHtml(record.contentHtml || '')).toLowerCase();
+      const matchQuery = !q || plain.includes(q) || (record.tags || []).some(tag=>tag.toLowerCase().includes(q));
+      const matchTag = tagFilter==='all' || (record.tags || []).includes(tagFilter);
+      const matchFavorite = !favoritesOnly || record.favorite;
+      const matchReview = !reviewOnly || (record.tags || []).includes('복습필요');
 
-              <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${record.id}')">${record.favorite ? '⭐' : '☆'}</button>
-              <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${record.id}')">${record.needsReview ? '⚠️' : '✓'}</button>
+      let matchDate = true;
+      const d = new Date(record.studiedAt);
+      if(dateFilter==='today') matchDate = sameDay(d,now);
+      if(dateFilter==='week') matchDate = diffDays(now,d) >= 0 && diffDays(now,d) < 7;
+      if(dateFilter==='month') matchDate = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
+
+      return matchQuery && matchTag && matchFavorite && matchReview && matchDate;
+    });
+
+    if(sortMode==='latest') result.sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
+    if(sortMode==='oldest') result.sort((a,b)=>+new Date(a.studiedAt)-+new Date(b.studiedAt));
+    if(sortMode==='minutes') result.sort((a,b)=>b.minutes-a.minutes);
+
+    return result;
+  }
+
+  function getPreviewHtml(html, expandedFlag){
+    const text = stripHtml(html || '');
+    if(expandedFlag || text.length <= PREVIEW_LENGTH) return html || '';
+    return highlightText(text.slice(0, PREVIEW_LENGTH) + '...', '');
+  }
+
+  function renderRecords(){
+    const q = document.getElementById('searchInput').value.trim();
+    const items = getFilteredRecords();
+    const container = document.getElementById('recordList');
+
+    if (!items.length) {
+      container.innerHTML = '<div class="text-sm text-slate-400">기록이 없습니다.</div>';
+      return;
+    }
+
+    container.innerHTML = items.map(record => {
+      const isExpanded = !!expanded[record.id];
+      const text = record.contentText || stripHtml(record.contentHtml || '');
+      const isLong = text.length > PREVIEW_LENGTH;
+      const bodyHtml = isExpanded || !isLong
+        ? (record.contentHtml || escapeHtml(text))
+        : highlightText(text.slice(0, PREVIEW_LENGTH) + '...', q);
+
+      return `
+        <div class="card p-4 query-card">
+          <div class="query-card-body">
+            <div class="text-sm text-slate-400">${formatDateTime(record.studiedAt)} | ${record.minutes}분</div>
+
+            <div class="text-xl font-black leading-[1.6] break-words">
+              ${bodyHtml}
             </div>
 
-            <div class="flex items-center gap-2">
-              <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${record.id}')">수정</button>
-              <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${record.id}')">삭제</button>
+            ${(record.images && record.images.length) ? `
+              <div class="grid grid-cols-2 gap-2">
+                ${record.images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
+              </div>
+            ` : ''}
+
+            <div class="flex flex-wrap gap-2">
+              ${(record.tags || []).map(tag => `
+                <span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">
+                  #${escapeHtml(tag)}
+                </span>
+              `).join('')}
+              ${record.favorite ? `<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>` : ''}
+              ${(record.tags || []).includes('복습필요') ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
+            </div>
+
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <div class="flex flex-wrap items-center gap-2">
+                ${isLong
+                  ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${record.id}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
+                  : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
+                }
+
+                <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${record.id}')">${record.favorite ? '⭐' : '☆'}</button>
+                <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${record.id}')">${(record.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${record.id}')">수정</button>
+                <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${record.id}')">삭제</button>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-    `;
-  }).join('');
-}
-
-    function computeStats(){
-      const totalMinutes = records.reduce((sum,r)=>sum + Number(r.minutes || 0),0);
-      const todayMinutes = records.filter(r=>sameDay(new Date(r.studiedAt), new Date())).reduce((sum,r)=>sum + Number(r.minutes || 0),0);
-      const weekMinutes = records.filter(r=>diffDays(new Date(), new Date(r.studiedAt)) >=0 && diffDays(new Date(), new Date(r.studiedAt)) <7).reduce((sum,r)=>sum + Number(r.minutes || 0),0);
-
-      const daySet = new Set(records.map(r=>new Date(r.studiedAt).toDateString()));
-      let streak = 0;
-      const today = new Date();
-      for(let i=0;i<365;i++){
-        const d=new Date(today);
-        d.setDate(today.getDate()-i);
-        if(daySet.has(d.toDateString())) streak++;
-        else break;
-      }
-
-      const tagMinutesMap = {};
-      records.forEach(r=>(r.tags || []).forEach(tag=>{
-        tagMinutesMap[tag] = (tagMinutesMap[tag]||0)+Number(r.minutes || 0);
-      }));
-      const topTags = Object.entries(tagMinutesMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([tag,minutes])=>({tag,minutes}));
-
-      return { totalMinutes, todayMinutes, weekMinutes, streak, topTags };
-    }
-
-    function renderStats(){
-      const stats=computeStats();
-      const totalToday=stats.todayMinutes;
-      const goal=Number(goalMinutes||0);
-      const pct = goal > 0 ? Math.min(100, Math.round((totalToday/goal)*100)) : 0;
-
-      document.getElementById('goalInput').value = goal;
-      document.getElementById('totalTimeText').textContent = formatMinutes(stats.totalMinutes);
-      document.getElementById('todayMinutesText').textContent = `${totalToday}분`;
-      document.getElementById('goalTodayMinutesText').textContent = `${totalToday}분`;
-      document.getElementById('goalMinutesText').textContent = `${goal}분`;
-      document.getElementById('goalRateText').textContent = `${pct}%`;
-      document.getElementById('goalStat').textContent = `오늘 ${totalToday}분 / 목표 ${goal}분 (${pct}%)`;
-      document.getElementById('goalBar').style.width = `${pct}%`;
-      document.getElementById('weekMinutesText').textContent = `${stats.weekMinutes}분`;
-      document.getElementById('streakText').textContent = `${stats.streak}일`;
-
-      renderCalendarHeatmap();
-      renderCharts(stats.topTags);
-    }
-
-    function applyGoal(){
-      const v = Number(document.getElementById('goalInput').value);
-      if(!Number.isFinite(v) || v < 0){
-        showToast('목표 시간을 올바르게 입력하세요.');
-        return;
-      }
-      saveGoal(v);
-      renderStats();
-      showToast('목표 시간이 저장되었습니다.');
-    }
-
-    function changeMonth(offset){
-      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
-      renderCalendarHeatmap();
-    }
-
-    function renderCalendarHeatmap(){
-      const box = document.getElementById('calendarHeatmap');
-      const title = document.getElementById('calendarTitle');
-
-      const year = currentCalendarDate.getFullYear();
-      const month = currentCalendarDate.getMonth();
-      title.textContent = `${year}년 ${month + 1}월`;
-
-      const firstDay = new Date(year, month, 1);
-      const lastDate = new Date(year, month + 1, 0).getDate();
-      const startDay = firstDay.getDay();
-      const labels = ['일','월','화','수','목','금','토'];
-
-      const map = {};
-      records.forEach(r=>{
-        const key = getDateKey(r.studiedAt);
-        map[key] = (map[key] || 0) + Number(r.minutes || 0);
-      });
-
-      let html = labels.map(day => `<div class="text-xs font-bold text-slate-400 py-1">${day}</div>`).join('');
-      for(let i = 0; i < startDay; i++) html += `<div></div>`;
-
-      for(let d = 1; d <= lastDate; d++){
-        const date = new Date(year, month, d);
-        const key = getDateKey(date);
-        const mins = map[key] || 0;
-
-        let cls = 'bg-slate-100 border-slate-200 text-slate-500';
-        if(mins >= 180) cls = 'bg-blue-700 border-blue-700 text-white';
-        else if(mins >= 60) cls = 'bg-blue-400 border-blue-400 text-white';
-        else if(mins > 0) cls = 'bg-blue-200 border-blue-200 text-blue-900';
-
-        html += `<button onclick="showDayRecords('${key}')" class="press h-11 rounded-xl border ${cls} font-bold">${d}</button>`;
-      }
-
-      box.innerHTML = html;
-    }
-function showAllRecordsView(){
-  document.getElementById('queryTitle').textContent = '전체 조회';
-  document.getElementById('selectedDayRecords').classList.add('hidden');
-  document.getElementById('selectedDayRecords').innerHTML = '';
-  document.getElementById('recentSection').classList.remove('hidden');
-
-  const area = document.getElementById('queryScrollArea');
-  if(area) area.scrollTop = 0;
-}
-    
-     function showDayRecords(dateKey){
-  const items = records
-    .filter(r => getDateKey(r.studiedAt) === dateKey)
-    .sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
-
-  currentDaySpeechItems = items.slice();
-
-  const total = items.reduce((s,r)=>s+Number(r.minutes||0),0);
-  document.getElementById('calendarDetail').textContent = `${dateKey} · 총 ${total}분`;
-
-  const panel = document.getElementById('selectedDayRecords');
-  const recent = document.getElementById('recentSection');
-  const title = document.getElementById('queryTitle');
-  const area = document.getElementById('queryScrollArea');
-
-  title.textContent = `${dateKey} 학습 기록`;
-  recent.classList.add('hidden');
-  panel.classList.remove('hidden');
-
-  if(!items.length){
-    panel.innerHTML = '<div class="text-sm text-slate-400">해당 날짜 기록이 없습니다.</div>';
-    if(area) area.scrollTop = 0;
-    return;
+      `;
+    }).join('');
   }
 
-  panel.innerHTML = `
-    <div class="space-y-3">
-      ${items.map(item => {
-        const isExpanded = !!expanded[item.id];
-        const isLong = item.content.length > PREVIEW_LENGTH;
-        const text = isExpanded
-          ? item.content
-          : (isLong ? item.content.slice(0, PREVIEW_LENGTH) + '...' : item.content);
+  function computeStats(){
+    const totalMinutes = records.reduce((sum,r)=>sum + Number(r.minutes || 0),0);
+    const todayMinutes = records.filter(r=>sameDay(new Date(r.studiedAt), new Date())).reduce((sum,r)=>sum + Number(r.minutes || 0),0);
+    const weekMinutes = records.filter(r=>diffDays(new Date(), new Date(r.studiedAt)) >=0 && diffDays(new Date(), new Date(r.studiedAt)) <7).reduce((sum,r)=>sum + Number(r.minutes || 0),0);
 
-        return `
-          <div class="card p-4 query-card">
-            <div class="query-card-body">
-              <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
+    const daySet = new Set(records.map(r=>new Date(r.studiedAt).toDateString()));
+    let streak = 0;
+    const today = new Date();
+    for(let i=0;i<365;i++){
+      const d=new Date(today);
+      d.setDate(today.getDate()-i);
+      if(daySet.has(d.toDateString())) streak++;
+      else break;
+    }
 
-              <div class="text-xl font-black leading-[1.4] text-slate-100 break-words">
-                ${escapeHtml(text)}
-              </div>
+    const tagMinutesMap = {};
+    records.forEach(r=>(r.tags || []).forEach(tag=>{
+      tagMinutesMap[tag] = (tagMinutesMap[tag]||0)+Number(r.minutes || 0);
+    }));
+    const topTags = Object.entries(tagMinutesMap).sort((a,b)=>b[1]-a[1]).slice(0,5).map(([tag,minutes])=>({tag,minutes}));
 
-           ${(item.images && item.images.length) ? `
-  <div class="grid grid-cols-2 gap-2">
-    ${item.images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
-  </div>
-` : ''}
+    return { totalMinutes, todayMinutes, weekMinutes, streak, topTags };
+  }
 
-              <div class="flex flex-wrap gap-2">
-                ${(item.tags || []).map(tag => `
-                  <span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">
-                    #${escapeHtml(tag)}
-                  </span>
-                `).join('')}
-                ${item.favorite ? `<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>` : ''}
-                ${item.needsReview ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
-              </div>
+  function renderStats(){
+    const stats=computeStats();
+    const totalToday=stats.todayMinutes;
+    const goal=Number(goalMinutes||0);
+    const pct = goal > 0 ? Math.min(100, Math.round((totalToday/goal)*100)) : 0;
 
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2">
-                  ${isLong
-                    ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${item.id}'); showDayRecords('${dateKey}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
-                    : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
-                  }
+    document.getElementById('goalInput').value = goal;
+    document.getElementById('totalTimeText').textContent = formatMinutes(stats.totalMinutes);
+    document.getElementById('todayMinutesText').textContent = `${totalToday}분`;
+    document.getElementById('goalTodayMinutesText').textContent = `${totalToday}분`;
+    document.getElementById('goalMinutesText').textContent = `${goal}분`;
+    document.getElementById('goalRateText').textContent = `${pct}%`;
+    document.getElementById('goalStat').textContent = `오늘 ${totalToday}분 / 목표 ${goal}분 (${pct}%)`;
+    document.getElementById('goalBar').style.width = `${pct}%`;
+    document.getElementById('weekMinutesText').textContent = `${stats.weekMinutes}분`;
+    document.getElementById('streakText').textContent = `${stats.streak}일`;
 
-                  <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${item.id}'); showDayRecords('${dateKey}')">${item.favorite ? '⭐' : '☆'}</button>
-                  <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${item.id}'); showDayRecords('${dateKey}')">${item.needsReview ? '⚠️' : '✓'}</button>
+    renderCalendarHeatmap();
+    renderCharts(stats.topTags);
+  }
+
+  function applyGoal(){
+    const v = Number(document.getElementById('goalInput').value);
+    if(!Number.isFinite(v) || v < 0){
+      showToast('목표 시간을 올바르게 입력하세요.');
+      return;
+    }
+    saveGoal(v);
+    renderStats();
+    showToast('목표 시간이 저장되었습니다.');
+  }
+
+  function changeMonth(offset){
+    currentCalendarDate.setMonth(currentCalendarDate.getMonth() + offset);
+    renderCalendarHeatmap();
+  }
+
+  function renderCalendarHeatmap(){
+    const box = document.getElementById('calendarHeatmap');
+    const title = document.getElementById('calendarTitle');
+
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    title.textContent = `${year}년 ${month + 1}월`;
+
+    const firstDay = new Date(year, month, 1);
+    const lastDate = new Date(year, month + 1, 0).getDate();
+    const startDay = firstDay.getDay();
+    const labels = ['일','월','화','수','목','금','토'];
+
+    const map = {};
+    records.forEach(r=>{
+      const key = getDateKey(r.studiedAt);
+      map[key] = (map[key] || 0) + Number(r.minutes || 0);
+    });
+
+    let html = labels.map(day => `<div class="text-xs font-bold text-slate-400 py-1">${day}</div>`).join('');
+    for(let i = 0; i < startDay; i++) html += `<div></div>`;
+
+    for(let d = 1; d <= lastDate; d++){
+      const date = new Date(year, month, d);
+      const key = getDateKey(date);
+      const mins = map[key] || 0;
+
+      let cls = 'bg-slate-100 border-slate-200 text-slate-500';
+      if(mins >= 180) cls = 'bg-blue-700 border-blue-700 text-white';
+      else if(mins >= 60) cls = 'bg-blue-400 border-blue-400 text-white';
+      else if(mins > 0) cls = 'bg-blue-200 border-blue-200 text-blue-900';
+
+      html += `<button onclick="showDayRecords('${key}')" class="press h-11 rounded-xl border ${cls} font-bold">${d}</button>`;
+    }
+
+    box.innerHTML = html;
+  }
+
+  function showAllRecordsView(){
+    document.getElementById('queryTitle').textContent = '전체 조회';
+    document.getElementById('selectedDayRecords').classList.add('hidden');
+    document.getElementById('selectedDayRecords').innerHTML = '';
+    document.getElementById('recentSection').classList.remove('hidden');
+
+    const area = document.getElementById('queryScrollArea');
+    if(area) area.scrollTop = 0;
+  }
+
+  function showDayRecords(dateKey){
+    const items = records
+      .filter(r => getDateKey(r.studiedAt) === dateKey)
+      .sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
+
+    currentDaySpeechItems = items.slice();
+
+    const total = items.reduce((s,r)=>s+Number(r.minutes||0),0);
+    document.getElementById('calendarDetail').textContent = `${dateKey} · 총 ${total}분`;
+
+    const panel = document.getElementById('selectedDayRecords');
+    const recent = document.getElementById('recentSection');
+    const title = document.getElementById('queryTitle');
+    const area = document.getElementById('queryScrollArea');
+
+    title.textContent = `${dateKey} 학습 기록`;
+    recent.classList.add('hidden');
+    panel.classList.remove('hidden');
+
+    if(!items.length){
+      panel.innerHTML = '<div class="text-sm text-slate-400">해당 날짜 기록이 없습니다.</div>';
+      if(area) area.scrollTop = 0;
+      return;
+    }
+
+    panel.innerHTML = `
+      <div class="space-y-3">
+        ${items.map(item => {
+          const isExpanded = !!expanded[item.id];
+          const text = item.contentText || stripHtml(item.contentHtml || '');
+          const isLong = text.length > PREVIEW_LENGTH;
+          const bodyHtml = isExpanded || !isLong
+            ? (item.contentHtml || escapeHtml(text))
+            : escapeHtml(text.slice(0, PREVIEW_LENGTH) + '...');
+
+          return `
+            <div class="card p-4 query-card">
+              <div class="query-card-body">
+                <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
+
+                <div class="text-xl font-black leading-[1.6] break-words">
+                  ${bodyHtml}
                 </div>
 
-                <div class="flex items-center gap-2">
-                  <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${item.id}')">수정</button>
-                  <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${item.id}'); showDayRecords('${dateKey}')">삭제</button>
+                ${(item.images && item.images.length) ? `
+                  <div class="grid grid-cols-2 gap-2">
+                    ${item.images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
+                  </div>
+                ` : ''}
+
+                <div class="flex flex-wrap gap-2">
+                  ${(item.tags || []).map(tag => `
+                    <span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">
+                      #${escapeHtml(tag)}
+                    </span>
+                  `).join('')}
+                  ${item.favorite ? `<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>` : ''}
+                  ${(item.tags || []).includes('복습필요') ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                  <div class="flex flex-wrap items-center gap-2">
+                    ${isLong
+                      ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${item.id}'); showDayRecords('${dateKey}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
+                      : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
+                    }
+
+                    <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${item.id}'); showDayRecords('${dateKey}')">${item.favorite ? '⭐' : '☆'}</button>
+                    <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${item.id}'); showDayRecords('${dateKey}')">${(item.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
+                  </div>
+
+                  <div class="flex items-center gap-2">
+                    <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${item.id}')">수정</button>
+                    <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${item.id}'); showDayRecords('${dateKey}')">삭제</button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
+          `;
+        }).join('')}
+      </div>
+    `;
 
-  if(area) area.scrollTop = 0;
-}
+    if(area) area.scrollTop = 0;
+  }
 
-    function renderCharts(topTags){
-      const map={};
-      records.forEach(r=>{
-        const d=new Date(r.studiedAt);
-        const key=`${d.getMonth()+1}/${d.getDate()}`;
-        map[key]=(map[key]||0)+Number(r.minutes || 0);
-      });
+  function renderCharts(topTags){
+    const map={};
+    records.forEach(r=>{
+      const d=new Date(r.studiedAt);
+      const key=`${d.getMonth()+1}/${d.getDate()}`;
+      map[key]=(map[key]||0)+Number(r.minutes || 0);
+    });
 
-      const dailyLabels=Object.keys(map).slice(-10);
-      const dailyValues=dailyLabels.map(k=>map[k]);
+    const dailyLabels=Object.keys(map).slice(-10);
+    const dailyValues=dailyLabels.map(k=>map[k]);
 
-      if(dailyChart) dailyChart.destroy();
-      dailyChart = new Chart(document.getElementById('dailyChart'), {
-        type:'bar',
-        data:{ labels:dailyLabels, datasets:[{ data:dailyValues, borderRadius:8, backgroundColor:'#2563eb' }] },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
-      });
+    if(dailyChart) dailyChart.destroy();
+    dailyChart = new Chart(document.getElementById('dailyChart'), {
+      type:'bar',
+      data:{ labels:dailyLabels, datasets:[{ data:dailyValues, borderRadius:8, backgroundColor:'#2563eb' }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
+    });
 
-      if(tagChart) tagChart.destroy();
-      tagChart = new Chart(document.getElementById('tagChart'), {
-        type:'line',
-        data:{ labels:topTags.map(t=>t.tag), datasets:[{ data:topTags.map(t=>t.minutes), tension:.3, fill:false, borderColor:'#2563eb', backgroundColor:'#2563eb' }] },
-        options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
-      });
-    }
-
-    function renderQuickInsights(){
-  document.getElementById('saveCountText').textContent = `현재 ${records.length}건`;
-
-  const latest = records.slice().sort((a,b)=>+new Date(b.updatedAt||b.studiedAt)-+new Date(a.updatedAt||a.studiedAt))[0];
-  document.getElementById('lastSavedText').textContent = latest
-    ? `최근 저장 ${formatDateTime(latest.updatedAt||latest.studiedAt)}`
-    : '저장 기록 없음';
-
-  const longest = records.slice().sort((a,b)=>b.minutes-a.minutes)[0];
-  document.getElementById('topStudyText').textContent = longest
-    ? `${longest.minutes}분 · ${longest.content.slice(0,18)}${longest.content.length>18?'...':''}`
-    : '-';
-
-  const btn = document.getElementById('restoreLatestBtn');
-  btn.disabled = !trash.length;
-  btn.textContent = trash.length ? `최근 삭제 1건 복구 (${trash.length})` : '복구할 삭제 기록 없음';
-}
-
-    function restoreLatestTrash(){
-      if(!trash.length){
-        showToast('복구할 삭제 기록이 없습니다.');
-        return;
-      }
-      const item = trash.shift();
-      const restored = { ...item };
-      delete restored.deletedAt;
-      records.unshift(restored);
-      saveRecords();
-      saveTrash();
-      renderRecords();
-      renderStats();
-      renderQuickInsights();
-      showToast('가장 최근 삭제 기록을 복구했습니다.');
-    }
-
-    function clearAllRecords(){
-      if(!records.length){
-        showToast('삭제할 기록이 없습니다.');
-        return;
-      }
-      if(!confirm('전체 기록이 삭제됩니다. 계속하시겠습니까?')) return;
-
-      const deletedAt=new Date().toISOString();
-      trash = records.map(r=>({ ...r, deletedAt })).concat(trash);
-      records=[];
-      saveRecords();
-      saveTrash();
-      renderRecords();
-      renderStats();
-      renderQuickInsights();
-      resetForm();
-      showToast('전체 기록이 삭제되었습니다.');
-    }
-
-    function exportJson(){
-      const blob=new Blob([JSON.stringify(records,null,2)], {type:'application/json'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download='study-log-backup.json';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('백업 파일을 저장했습니다.');
-    }
-
-    function exportCsv(){
-      const rows=[['studiedAt','minutes','tags','favorite','needsReview','imageCount','content'],
-        ...records.map(r=>[r.studiedAt,r.minutes,(r.tags || []).join('|'),r.favorite,r.needsReview,(r.images||[]).length,r.content])];
-      const csv='\uFEFF'+rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n');
-      const blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
-      const url=URL.createObjectURL(blob);
-      const a=document.createElement('a');
-      a.href=url;
-      a.download='study-log.csv';
-      a.click();
-      URL.revokeObjectURL(url);
-      showToast('CSV를 저장했습니다.');
-    }
-
-    function importJson(event){
-      const file=event.target.files?.[0];
-      if(!file) return;
-      const reader=new FileReader();
-      reader.onload=()=>{
-        try{
-          const parsed=JSON.parse(String(reader.result));
-          if(!Array.isArray(parsed)) throw new Error();
-          records=parsed;
-          saveRecords();
-          renderTagButtons();
-          renderRecords();
-          renderStats();
-          renderQuickInsights();
-          showToast('백업 파일을 불러왔습니다.');
-        }catch(e){
-          showToast('불러오기 형식이 올바르지 않습니다.');
-        }
-      };
-      reader.readAsText(file,'utf-8');
-    }
-
-    function stopSpeech(){
-      if('speechSynthesis' in window) window.speechSynthesis.cancel();
-    }
-
-    function buildSpeechText(items, mode='filtered'){
-      if(!items.length) return '읽어드릴 학습 기록이 없습니다.';
-
-      const introMap = {
-        filtered: `조회 결과 ${items.length}건을 읽어드립니다.`,
-        all: `전체 기록 ${items.length}건을 읽어드립니다.`,
-        day: `선택한 날짜 기록 ${items.length}건을 읽어드립니다.`
-      };
-
-      const body = items.map((r, i)=>{
-        const tags = (r.tags && r.tags.length) ? `태그는 ${r.tags.join(', ')}.` : '';
-        const fav = r.favorite ? '중요 표시된 기록입니다.' : '';
-        const review = r.needsReview ? '복습이 필요한 기록입니다.' : '';
-        const content = r.content.length > 120 ? r.content.slice(0,120) + ' 이하 생략.' : r.content;
-        return `${i+1}번. ${r.minutes}분 공부. 내용은 ${content}. ${tags} ${fav} ${review}`;
-      }).join(' ');
-
-      return `${introMap[mode] || introMap.filtered} ${body}`;
-    }
-
-    function speakText(text){
-      if(!('speechSynthesis' in window)){
-        showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
-        return;
-      }
-      stopSpeech();
-      const utter = new SpeechSynthesisUtterance(text);
-      utter.lang = 'ko-KR';
-      window.speechSynthesis.speak(utter);
-    }
-
-    function readFilteredRecords(){
-      const items = getFilteredRecords();
-      if(!items.length){
-        showToast('조회 결과가 없습니다.');
-        return;
-      }
-      speakText(buildSpeechText(items, 'filtered'));
-    }
-
-    function readAllRecords(){
-      if(!records.length){
-        showToast('전체 기록이 없습니다.');
-        return;
-      }
-      speakText(buildSpeechText(records, 'all'));
-    }
-
-    function readSelectedDayRecords(){
-      if(!currentDaySpeechItems.length){
-        showToast('선택된 날짜 기록이 없습니다.');
-        return;
-      }
-      speakText(buildSpeechText(currentDaySpeechItems, 'day'));
-    }
-
-    window.addEventListener('load', ()=>{
-  renderQuickButtons();
-  renderSpecialButtons();
-  renderTagButtons();
-  syncFormFromDraft();
-  document.getElementById('goalInput').value = goalMinutes;
-
-  ['minutesInput','contentInput','customTagInput','needsReviewInput','studiedAtInput'].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el) el.addEventListener(id==='needsReviewInput' ? 'change' : 'input', persistDraftFromDom);
-  });
-
-  const timeInput = document.getElementById('studiedAtInput');
-  if(timeInput){
-    timeInput.addEventListener('input', () => {
-      if(!editingId){
-        autoTimeMode = false;
-        stopLiveTime();
-      }
-      persistDraftFromDom();
+    if(tagChart) tagChart.destroy();
+    tagChart = new Chart(document.getElementById('tagChart'), {
+      type:'line',
+      data:{ labels:topTags.map(t=>t.tag), datasets:[{ data:topTags.map(t=>t.minutes), tension:.3, fill:false, borderColor:'#2563eb', backgroundColor:'#2563eb' }] },
+      options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{ display:false } } }
     });
   }
 
-  renderRecords();
-  renderStats();
-  renderQuickInsights();
-  renderPastePreview();
-  startLiveTime();
-});
-function clearAllStudyStorage(){
-  const keysToRemove = [];
+  function renderQuickInsights(){
+    document.getElementById('saveCountText').textContent = `현재 ${records.length}건`;
 
-  for(let i = 0; i < localStorage.length; i++){
-    const key = localStorage.key(i);
-    if(
-      key &&
-      (
-        key.includes('study_log') ||
-        key.includes('study_goal') ||
-        key.includes('clean_scroll') ||
-        key.includes('clean_v') ||
-        key.includes('final_v')
-      )
-    ){
-      keysToRemove.push(key);
+    const latest = records.slice().sort((a,b)=>+new Date(b.updatedAt||b.studiedAt)-+new Date(a.updatedAt||a.studiedAt))[0];
+    document.getElementById('lastSavedText').textContent = latest
+      ? `최근 저장 ${formatDateTime(latest.updatedAt||latest.studiedAt)}`
+      : '저장 기록 없음';
+
+    const longest = records.slice().sort((a,b)=>b.minutes-a.minutes)[0];
+    const longestText = longest ? (longest.contentText || stripHtml(longest.contentHtml || '')) : '';
+    document.getElementById('topStudyText').textContent = longest
+      ? `${longest.minutes}분 · ${longestText.slice(0,18)}${longestText.length>18?'...':''}`
+      : '-';
+
+    const btn = document.getElementById('restoreLatestBtn');
+    btn.disabled = !trash.length;
+    btn.textContent = trash.length ? `최근 삭제 1건 복구 (${trash.length})` : '복구할 삭제 기록 없음';
+  }
+  function restoreLatestTrash(){
+    if(!trash.length){
+      showToast('복구할 삭제 기록이 없습니다.');
+      return;
     }
+    const item = trash.shift();
+    const restored = { ...item };
+    delete restored.deletedAt;
+    records.unshift(restored);
+    saveRecords();
+    saveTrash();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    showToast('가장 최근 삭제 기록을 복구했습니다.');
   }
 
-  keysToRemove.forEach(key => localStorage.removeItem(key));
-  showToast(`학습기록 관련 저장공간 ${keysToRemove.length}개를 비웠습니다.`);
-}
+  function clearAllRecords(){
+    if(!records.length){
+      showToast('삭제할 기록이 없습니다.');
+      return;
+    }
+    if(!confirm('전체 기록이 삭제됩니다. 계속하시겠습니까?')) return;
 
-function showStorageKeys(){
-  const keys = [];
-  for(let i = 0; i < localStorage.length; i++){
-    keys.push(localStorage.key(i));
+    const deletedAt=new Date().toISOString();
+    trash = records.map(r=>({ ...r, deletedAt })).concat(trash);
+    records=[];
+    saveRecords();
+    saveTrash();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    resetForm();
+    showToast('전체 기록이 삭제되었습니다.');
   }
-  console.log('localStorage keys:', keys);
-  showToast(`저장된 키 ${keys.length}개. 콘솔에서 확인하세요.`);
-}
+
+  function exportJson(){
+    const blob=new Blob([JSON.stringify(records,null,2)], {type:'application/json'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='study-log-backup.json';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('백업 파일을 저장했습니다.');
+  }
+
+  function exportCsv(){
+    const rows=[['studiedAt','minutes','tags','favorite','imageCount','contentText'],
+      ...records.map(r=>[
+        r.studiedAt,
+        r.minutes,
+        (r.tags || []).join('|'),
+        r.favorite,
+        (r.images||[]).length,
+        r.contentText || stripHtml(r.contentHtml || '')
+      ])];
+    const csv='\uFEFF'+rows.map(row=>row.map(cell=>`"${String(cell).replaceAll('"','""')}"`).join(',')).join('\n');
+    const blob=new Blob([csv], {type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='study-log.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('CSV를 저장했습니다.');
+  }
+
+  function importJson(event){
+    const file=event.target.files?.[0];
+    if(!file) return;
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const parsed=JSON.parse(String(reader.result));
+        if(!Array.isArray(parsed)) throw new Error();
+        records=parsed.map(item => ({
+          ...item,
+          contentText: item.contentText || stripHtml(item.contentHtml || item.content || ''),
+          contentHtml: item.contentHtml || escapeHtml(item.contentText || item.content || '')
+        }));
+        saveRecords();
+        renderTagButtons();
+        renderRecords();
+        renderStats();
+        renderQuickInsights();
+        showToast('백업 파일을 불러왔습니다.');
+      }catch(e){
+        showToast('불러오기 형식이 올바르지 않습니다.');
+      }
+    };
+    reader.readAsText(file,'utf-8');
+  }
+
+  function stopSpeech(){
+    if('speechSynthesis' in window) window.speechSynthesis.cancel();
+  }
+
+  function buildSpeechText(items, mode='filtered'){
+    if(!items.length) return '읽어드릴 학습 기록이 없습니다.';
+
+    const introMap = {
+      filtered: `조회 결과 ${items.length}건을 읽어드립니다.`,
+      all: `전체 기록 ${items.length}건을 읽어드립니다.`,
+      day: `선택한 날짜 기록 ${items.length}건을 읽어드립니다.`
+    };
+
+    const body = items.map((r, i)=>{
+      const tags = (r.tags && r.tags.length) ? `태그는 ${r.tags.join(', ')}.` : '';
+      const fav = r.favorite ? '중요 표시된 기록입니다.' : '';
+      const review = (r.tags || []).includes('복습필요') ? '복습이 필요한 기록입니다.' : '';
+      const baseText = r.contentText || stripHtml(r.contentHtml || '');
+      const content = baseText.length > 120 ? baseText.slice(0,120) + ' 이하 생략.' : baseText;
+      return `${i+1}번. ${r.minutes}분 공부. 내용은 ${content}. ${tags} ${fav} ${review}`;
+    }).join(' ');
+
+    return `${introMap[mode] || introMap.filtered} ${body}`;
+  }
+
+  function speakText(text){
+    if(!('speechSynthesis' in window)){
+      showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
+      return;
+    }
+    stopSpeech();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ko-KR';
+    window.speechSynthesis.speak(utter);
+  }
+
+  function readFilteredRecords(){
+    const items = getFilteredRecords();
+    if(!items.length){
+      showToast('조회 결과가 없습니다.');
+      return;
+    }
+    speakText(buildSpeechText(items, 'filtered'));
+  }
+
+  function readAllRecords(){
+    if(!records.length){
+      showToast('전체 기록이 없습니다.');
+      return;
+    }
+    speakText(buildSpeechText(records, 'all'));
+  }
+
+  function readSelectedDayRecords(){
+    if(!currentDaySpeechItems.length){
+      showToast('선택된 날짜 기록이 없습니다.');
+      return;
+    }
+    speakText(buildSpeechText(currentDaySpeechItems, 'day'));
+  }
+
+  window.addEventListener('load', ()=>{
+    initDefaultMasters();
+    renderQuickButtons();
+    renderSpecialButtons();
+    renderTagButtons();
+    syncFormFromDraft();
+    document.getElementById('goalInput').value = goalMinutes;
+
+    ['minutesInput','customTagInput','customSymbolInput','studiedAtInput'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.addEventListener('input', persistDraftFromDom);
+    });
+
+    const editor = getEditor();
+    if(editor){
+      ['input','keyup','mouseup','touchend'].forEach(evt => {
+        editor.addEventListener(evt, () => {
+          rememberEditorSelection();
+          persistDraftFromDom();
+        });
+      });
+
+      editor.addEventListener('focus', () => {
+        rememberEditorSelection();
+      });
+    }
+
+    const timeInput = document.getElementById('studiedAtInput');
+    if(timeInput){
+      timeInput.addEventListener('input', () => {
+        if(!editingId){
+          autoTimeMode = false;
+          stopLiveTime();
+        }
+        persistDraftFromDom();
+      });
+    }
+
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    renderPastePreview();
+    startLiveTime();
+  });
+
+  function clearAllStudyStorage(){
+    const keysToRemove = [];
+
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i);
+      if(
+        key &&
+        (
+          key.includes('study_log') ||
+          key.includes('study_goal') ||
+          key.includes('clean_scroll') ||
+          key.includes('clean_v') ||
+          key.includes('final_v') ||
+          key.includes('study_tag_master') ||
+          key.includes('study_symbol_master') ||
+          key.includes('study_log_html_rich') ||
+          key.includes('study_goal_minutes_rich')
+        )
+      ){
+        keysToRemove.push(key);
+      }
+    }
+
+    keysToRemove.forEach(key => localStorage.removeItem(key));
+    showToast(`학습기록 관련 저장공간 ${keysToRemove.length}개를 비웠습니다.`);
+  }
+
+  function showStorageKeys(){
+    const keys = [];
+    for(let i = 0; i < localStorage.length; i++){
+      keys.push(localStorage.key(i));
+    }
+    console.log('localStorage keys:', keys);
+    showToast(`저장된 키 ${keys.length}개. 콘솔에서 확인하세요.`);
+  }
   </script>
+
   <div id="imagePreviewModal" onclick="closeImagePreview()">
-  <button id="imagePreviewClose" type="button" onclick="closeImagePreview()">×</button>
-  <img id="imagePreviewTarget" src="" alt="확대 이미지" onclick="event.stopPropagation()" />
-</div>
-  
+    <button id="imagePreviewClose" type="button" onclick="closeImagePreview()">×</button>
+    <img id="imagePreviewTarget" src="" alt="확대 이미지" onclick="event.stopPropagation()" />
+  </div>
+
 </body>
-</html>
+  </html>
