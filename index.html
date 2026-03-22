@@ -6,8 +6,6 @@
   <title>학습기록</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
   <style>
   html { scroll-padding-top: 110px; }
 
@@ -665,18 +663,6 @@
   <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 px-5 py-3 rounded-2xl opacity-0 pointer-events-none transition-all duration-200"></div>
 
   <script>
-    const firebaseConfig = {
-  apiKey: "AIzaSyALtl4x10PGg4Jzou06uainotf7TGn0vI4",
-  authDomain: "multi-3eb14.firebaseapp.com",
-  projectId: "multi-3eb14",
-  storageBucket: "multi-3eb14.appspot.com",
-  messagingSenderId: "827651752503",
-  appId: "1:827651752503:web:abf127e5468d80e5d7f5b2",
-  measurementId: "G-HKEJCLR7BF"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
     const STORAGE_KEY = 'study_log_html_clean_scroll_v1';
     const DRAFT_KEY = 'study_log_html_clean_scroll_draft_v1';
     const TRASH_KEY = 'study_log_html_clean_scroll_trash_v1';
@@ -736,24 +722,10 @@ let autoTimeMode = true;
     }
     function formatMinutes(total){ return `${Math.floor(total/60)}시간 ${total%60}분`; }
 
-    async function loadRecords(){
+    function loadRecords(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
+    function saveRecords(){
   try{
-    const doc = await db.collection('study_records').doc('main').get();
-    if(doc.exists){
-      return doc.data().data || [];
-    }
-    return [];
-  }catch(e){
-    console.error('loadRecords error:', e);
-    return [];
-  }
-}
-
-async function saveRecords(){
-  try{
-    await db.collection('study_records').doc('main').set({
-      data: records
-    });
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
     return true;
   }catch(e){
     console.error('saveRecords error:', e);
