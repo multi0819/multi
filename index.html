@@ -736,10 +736,24 @@ let autoTimeMode = true;
     }
     function formatMinutes(total){ return `${Math.floor(total/60)}시간 ${total%60}분`; }
 
-    function loadRecords(){ try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } }
-    function saveRecords(){
+    async function loadRecords(){
   try{
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    const doc = await db.collection('study_records').doc('main').get();
+    if(doc.exists){
+      return doc.data().data || [];
+    }
+    return [];
+  }catch(e){
+    console.error('loadRecords error:', e);
+    return [];
+  }
+}
+
+async function saveRecords(){
+  try{
+    await db.collection('study_records').doc('main').set({
+      data: records
+    });
     return true;
   }catch(e){
     console.error('saveRecords error:', e);
