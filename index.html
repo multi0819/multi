@@ -665,6 +665,18 @@
   <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 px-5 py-3 rounded-2xl opacity-0 pointer-events-none transition-all duration-200"></div>
 
   <script>
+    const firebaseConfig = {
+  apiKey: "AIzaSyALtl4x10PGg4Jzou06uainotf7TGn0vI4",
+  authDomain: "multi-3eb14.firebaseapp.com",
+  projectId: "multi-3eb14",
+  storageBucket: "multi-3eb14.appspot.com",
+  messagingSenderId: "827651752503",
+  appId: "1:827651752503:web:abf127e5468d80e5d7f5b2",
+  measurementId: "G-HKEJCLR7BF"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
     const STORAGE_KEY = 'study_log_html_clean_scroll_v1';
     const DRAFT_KEY = 'study_log_html_clean_scroll_draft_v1';
     const TRASH_KEY = 'study_log_html_clean_scroll_trash_v1';
