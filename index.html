@@ -2189,7 +2189,6 @@ renderQuickInsights();
   }
 
     async function showRemainingStorage(){
-  ifasync function showRemainingStorage(){
   try{
     let localBytes = 0;
 
@@ -2223,7 +2222,8 @@ renderQuickInsights();
     showToast('저장용량 조회에 실패했습니다.');
   }
 }
-   function warnStorageUsage(){
+
+function warnStorageUsage(){
   try{
     let bytes = 0;
 
@@ -2243,7 +2243,7 @@ renderQuickInsights();
   }catch(e){
     console.error('warnStorageUsage error:', e);
   }
-   }
+}
     
     function showStorageKeys(){
     const keys = [];
