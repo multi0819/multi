@@ -826,9 +826,36 @@
   }
 
   function loadRecords(){
-    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); }
-    catch(e){ return []; }
+  try{
+    // 1. 새 데이터 먼저 확인
+    let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+    // 2. 새 데이터 없으면 → 옛 데이터 자동 사용
+    if(!data.length){
+      const legacy = JSON.parse(localStorage.getItem('study_log_html_clean_scroll_v2') || '[]');
+
+      if(Array.isArray(legacy) && legacy.length){
+        data = legacy.map(item => {
+          const text = item.content || item.contentText || '';
+          const color = item.textColor || '#edf3fb';
+
+          return {
+            ...item,
+            contentHtml: `<span style="color:${color}">${text.replace(/\n/g,'<br>')}</span>`,
+            contentText: text
+          };
+        });
+
+        // 1회 변환 후 저장
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      }
+    }
+
+    return data;
+  }catch(e){
+    return [];
   }
+}
 
   function saveRecords(){
     try{
