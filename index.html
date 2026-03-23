@@ -2189,28 +2189,35 @@ renderQuickInsights();
   }
 
     async function showRemainingStorage(){
-  if(!navigator.storage || !navigator.storage.estimate){
-    showToast('이 브라우저는 저장용량 조회를 지원하지 않습니다.');
-    return;
-  }
-
+  ifasync function showRemainingStorage(){
   try{
-    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
-    const remain = Math.max(0, quota - usage);
+    let localBytes = 0;
 
-    const toMB = (bytes) => (bytes / 1024 / 1024).toFixed(2);
-    const toGB = (bytes) => (bytes / 1024 / 1024 / 1024).toFixed(2);
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i) || '';
+      const value = localStorage.getItem(key) || '';
+      localBytes += (key.length + value.length) * 2;
+    }
 
-    const remainMB = Number(toMB(remain));
-    const remainText = remainMB >= 1024
-      ? `${toGB(remain)} GB`
-      : `${toMB(remain)} MB`;
+    const localKB = (localBytes / 1024).toFixed(2);
+    const localMB = (localBytes / 1024 / 1024).toFixed(4);
 
-    alert(
-      `남은 예상 저장용량: ${remainText}\n` +
-      `현재 사용량: ${toMB(usage)} MB\n` +
-      `전체 한도: ${toMB(quota)} MB`
-    );
+    let msg =
+      `localStorage 사용량: ${localBytes.toLocaleString()} bytes\n` +
+      `localStorage 사용량: ${localKB} KB\n` +
+      `localStorage 사용량: ${localMB} MB`;
+
+    if(navigator.storage && navigator.storage.estimate){
+      const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+      const remain = Math.max(0, quota - usage);
+
+      msg +=
+        `\n\n브라우저 예상 남은 저장용량: ${(remain / 1024 / 1024 / 1024).toFixed(2)} GB` +
+        `\n브라우저 현재 사용량: ${usage.toLocaleString()} bytes` +
+        `\n브라우저 전체 한도: ${(quota / 1024 / 1024).toFixed(2)} MB`;
+    }
+
+    alert(msg);
   }catch(e){
     console.error(e);
     showToast('저장용량 조회에 실패했습니다.');
