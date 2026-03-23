@@ -734,6 +734,10 @@
         저장 키 확인
       </button>
 
+      <button onclick="showRemainingStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
+        남은 저장용량 확인
+      </button>
+      
       <button onclick="clearAllStudyStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
         학습기록 저장공간 전체 비우기
       </button>
@@ -1536,10 +1540,11 @@
 
     const wasEditing = !!editingId;
     showToast(wasEditing ? '기록이 수정되었습니다.' : '기록이 저장되었습니다.');
-    resetForm();
-    renderRecords();
-    renderStats();
-    renderQuickInsights();
+warnStorageUsage();
+resetForm();
+renderRecords();
+renderStats();
+renderQuickInsights();
   }
 
   function editRecord(id){
@@ -2183,7 +2188,57 @@
     showToast(`학습기록 관련 저장공간 ${keysToRemove.length}개를 비웠습니다.`);
   }
 
-  function showStorageKeys(){
+    async function showRemainingStorage(){
+  if(!navigator.storage || !navigator.storage.estimate){
+    showToast('이 브라우저는 저장용량 조회를 지원하지 않습니다.');
+    return;
+  }
+
+  try{
+    const { usage = 0, quota = 0 } = await navigator.storage.estimate();
+    const remain = Math.max(0, quota - usage);
+
+    const toMB = (bytes) => (bytes / 1024 / 1024).toFixed(2);
+    const toGB = (bytes) => (bytes / 1024 / 1024 / 1024).toFixed(2);
+
+    const remainMB = Number(toMB(remain));
+    const remainText = remainMB >= 1024
+      ? `${toGB(remain)} GB`
+      : `${toMB(remain)} MB`;
+
+    alert(
+      `남은 예상 저장용량: ${remainText}\n` +
+      `현재 사용량: ${toMB(usage)} MB\n` +
+      `전체 한도: ${toMB(quota)} MB`
+    );
+  }catch(e){
+    console.error(e);
+    showToast('저장용량 조회에 실패했습니다.');
+  }
+}
+   function warnStorageUsage(){
+  try{
+    let bytes = 0;
+
+    for(let i = 0; i < localStorage.length; i++){
+      const key = localStorage.key(i) || '';
+      const value = localStorage.getItem(key) || '';
+      bytes += (key.length + value.length) * 2;
+    }
+
+    const usedMB = bytes / 1024 / 1024;
+
+    if(usedMB >= 4.5){
+      showToast(`저장공간이 거의 가득 찼습니다 (${usedMB.toFixed(2)} MB)`);
+    }else if(usedMB >= 3.5){
+      showToast(`저장공간 사용량이 높습니다 (${usedMB.toFixed(2)} MB)`);
+    }
+  }catch(e){
+    console.error('warnStorageUsage error:', e);
+  }
+   }
+    
+    function showStorageKeys(){
     const keys = [];
     for(let i = 0; i < localStorage.length; i++){
       keys.push(localStorage.key(i));
