@@ -251,6 +251,85 @@
     justify-content:flex-end;
   }
 
+  .speech-rate-box{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    padding:7px 10px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+  }
+
+  .speech-rate-label{
+    font-size:12px;
+    font-weight:800;
+    color:#dbe6f6;
+    white-space:nowrap;
+  }
+
+  .speech-rate-select{
+    min-width:78px;
+    height:34px;
+    border-radius:10px;
+    padding:0 8px;
+    font-size:13px;
+    font-weight:800;
+    background:#0e1626 !important;
+    color:#f8fbff !important;
+  }
+
+  .record-actions{
+    display:flex;
+    width:100%;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+  }
+
+  .record-actions-left,
+  .record-actions-right{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .record-pill-btn{
+    min-height:40px;
+    padding:0 14px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .record-pill-btn.primary{
+    border-color:rgba(96,165,250,.45);
+    background:rgba(59,130,246,.14);
+    color:#bfdbfe;
+  }
+
+  .record-pill-btn.danger{
+    border-color:rgba(248,113,113,.45);
+    color:#fda4af;
+  }
+
+  .record-icon-btn{
+    width:40px;
+    height:40px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    font-size:18px;
+    font-weight:800;
+    flex:0 0 auto;
+  }
+
   .text-slate-900,
   .text-slate-800{
     color:#f3f7ff !important;
@@ -376,7 +455,7 @@
     align-items:center;
     justify-content:center;
     padding:16px;
-    z-index:9999;
+    z-index:20000;
   }
 
   #imagePreviewModal.show{
@@ -456,6 +535,84 @@
   #contentEditor .editor-token{
     font-weight:800;
   }
+  
+
+  #recordDetailModal{
+    position:fixed;
+    inset:0;
+    background:rgba(2,6,15,.82);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    padding:12px;
+    z-index:10000;
+  }
+
+  #recordDetailModal.show{
+    display:flex;
+ align-items:stretch;
+ }
+
+  .detail-sheet{
+   width:100vw;
+    max-height:100vh;
+    height:100vh;
+    display:flex;
+    flex-direction:column;
+    border-radius:0;
+    overflow:hidden;
+    background:linear-gradient(180deg, rgba(20,28,45,.98), rgba(10,16,28,.98));
+    border:1px solid rgba(255,255,255,.10);
+    box-shadow:0 20px 60px rgba(0,0,0,.45);
+  }
+
+  .detail-head{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:12px;
+    padding:16px 16px 12px;
+    border-bottom:1px solid rgba(255,255,255,.08);
+  }
+
+  .detail-body{
+    overflow-y:auto;
+    padding:16px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+
+  .detail-content{
+    font-size:24px;
+    font-weight:900;
+    line-height:1.72;
+    word-break:break-word;
+  }
+
+  .detail-meta{
+    font-size:14px;
+    color:#b8c6da;
+  }
+
+  .detail-tags{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+
+  .detail-close{
+    width:44px;
+    height:44px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.06);
+    color:#fff;
+    font-size:22px;
+    font-weight:900;
+    flex:0 0 auto;
+  }
+
   </style>
 </head>
 <body class="space-y-2">
@@ -497,7 +654,7 @@
       <button class="press action-chip" onclick="scrollToSection('chartSection')">공부시간 추이</button>
       <button class="press action-chip" onclick="scrollToSection('tagChartSection')">태그 통계</button>
       <button class="press action-chip" onclick="scrollToSection('backupSection')">백업 / 복원</button>
-      <button class="press action-chip text-red-300" onclick="clearAllRecords()">전체휴지통 이동</button>
+      <button class="press action-chip text-red-300" onclick="clearAllRecords()">전체 휴지통이동</button>
       <div id="saveCountText" class="action-chip">현재 0건</div>
     </div>
   </div>
@@ -654,6 +811,18 @@
       <div id="queryTitle" class="text-xl font-black text-slate-900">전체 조회</div>
 
       <div class="query-actions">
+        <div class="speech-rate-box">
+          <span class="speech-rate-label">읽기속도</span>
+          <select id="speechRateSelect" class="speech-rate-select" onchange="updateSpeechRateLabel()">
+            <option value="0.8">0.8x</option>
+            <option value="0.9">0.9x</option>
+            <option value="1" selected>1.0x</option>
+            <option value="1.1">1.1x</option>
+            <option value="1.2">1.2x</option>
+            <option value="1.35">1.35x</option>
+            <option value="1.5">1.5x</option>
+          </select>
+        </div>
         <button type="button" onclick="showAllRecordsView()" class="press speak-btn">전체조회 보기</button>
         <button type="button" onclick="readFilteredRecords()" class="press speak-btn">조회결과 읽기</button>
         <button type="button" onclick="readAllRecords()" class="press speak-btn">전체 읽기</button>
@@ -730,10 +899,7 @@
       <button onclick="exportJson()" class="press h-11 rounded-xl bg-slate-900 text-white font-bold">JSON 백업</button>
       <button onclick="exportCsv()" class="press h-11 rounded-xl border font-bold text-slate-700">CSV 내보내기</button>
 
-      <button onclick="showStorageKeys()" class="press h-11 rounded-xl border font-bold text-slate-700">
-        저장 키 확인
-      </button>
-
+      
       <button onclick="showRemainingStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
         남은 저장용량 확인
       </button>
@@ -750,6 +916,26 @@
     </div>
   </div>
 
+
+
+  <div id="recordDetailModal" onclick="closeRecordDetail(event)">
+    <div class="detail-sheet" onclick="event.stopPropagation()">
+      <div class="detail-head">
+        <div>
+          <div id="detailTitleText" class="text-xl font-black text-slate-100">상세 내용</div>
+          <div id="detailMetaText" class="detail-meta mt-1"></div>
+        </div>
+        <button type="button" class="detail-close" onclick="closeRecordDetail()">×</button>
+      </div>
+
+      <div class="detail-body">
+        <div id="detailContentHtml" class="detail-content"></div>
+        <div id="detailImageList" class="grid grid-cols-2 gap-2"></div>
+        <div id="detailTagList" class="detail-tags"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 px-5 py-3 rounded-2xl opacity-0 pointer-events-none transition-all duration-200"></div>
 
   <script>
@@ -761,8 +947,9 @@
   const SYMBOL_MASTER_KEY = 'study_symbol_master_rich_v1';
 
   const IMAGE_DB_NAME = 'study_log_html_rich_images_v1';
-const IMAGE_DB_VERSION = 1;
+const IMAGE_DB_VERSION = 2;
 const IMAGE_STORE_NAME = 'images';
+const APP_STORE_NAME = 'appkv';
 
 let imageDb = null;
 
@@ -777,6 +964,9 @@ async function openImageDb(){
       if(!db.objectStoreNames.contains(IMAGE_STORE_NAME)){
         db.createObjectStore(IMAGE_STORE_NAME, { keyPath: 'id' });
       }
+      if(!db.objectStoreNames.contains(APP_STORE_NAME)){
+        db.createObjectStore(APP_STORE_NAME, { keyPath: 'key' });
+      }
     };
 
     request.onsuccess = function(){
@@ -787,6 +977,45 @@ async function openImageDb(){
     request.onerror = function(){
       reject(request.error);
     };
+  });
+}
+
+async function putAppValue(key, value){
+  const db = await openImageDb();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(APP_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(APP_STORE_NAME);
+    const req = store.put({ key, value, updatedAt: Date.now() });
+
+    req.onsuccess = () => resolve(value);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function getAppValue(key){
+  const db = await openImageDb();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(APP_STORE_NAME, 'readonly');
+    const store = tx.objectStore(APP_STORE_NAME);
+    const req = store.get(key);
+
+    req.onsuccess = () => resolve(req.result ? req.result.value : undefined);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function clearAppStore(){
+  const db = await openImageDb();
+
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(APP_STORE_NAME, 'readwrite');
+    const store = tx.objectStore(APP_STORE_NAME);
+    const req = store.clear();
+
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
   });
 }
 
@@ -1065,7 +1294,48 @@ function normalizeStringList(list){
     return `${Math.floor(total/60)}시간 ${total%60}분`;
   }
 
-  function loadRecords(){
+  
+function createDefaultDraft(){
+  return {
+    minutes:'10',
+    contentHtml:'',
+    contentText:'',
+    tags:[],
+    studiedAt:getLocalDateTimeValue(),
+    customTag:'',
+    customSymbol:'',
+    textColor:'#edf3fb',
+    imageIds:[]
+  };
+}
+
+function normalizeRecordItem(item, type='record'){
+  const text = item?.contentText || stripHtml(item?.contentHtml || item?.content || '');
+  const html = item?.contentHtml || escapeHtml(text);
+
+  return {
+    ...item,
+    id: item?.id || uid(),
+    createdAt: item?.createdAt || new Date().toISOString(),
+    updatedAt: item?.updatedAt || new Date().toISOString(),
+    deletedAt: type === 'trash' ? (item?.deletedAt || new Date().toISOString()) : item?.deletedAt,
+    studiedAt: item?.studiedAt || getLocalDateTimeValue(),
+    minutes: Number(item?.minutes || 0),
+    contentText: text,
+    contentHtml: html,
+    tags: Array.isArray(item?.tags) ? item.tags : [],
+    favorite: !!item?.favorite,
+    imageIds: Array.isArray(item?.imageIds) ? item.imageIds.filter(Boolean) : [],
+    images: Array.isArray(item?.images) ? item.images.filter(Boolean) : []
+  };
+}
+
+function normalizeRecordList(list, type='record'){
+  if(!Array.isArray(list)) return [];
+  return list.map(item => normalizeRecordItem(item, type)).filter(item => item.minutes > 0 && item.contentText);
+}
+
+function readLegacyRecordsFromLocalStorage(){
   try{
     let data = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
 
@@ -1087,181 +1357,206 @@ function normalizeStringList(list){
             images: Array.isArray(item.images) ? item.images.filter(Boolean) : []
           };
         });
-
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       }
     }
 
-    if(!Array.isArray(data)) return [];
-
-    return data.map(item => {
-      const text = item?.contentText || stripHtml(item?.contentHtml || item?.content || '');
-      const html = item?.contentHtml || escapeHtml(text);
-      return {
-        ...item,
-        id: item?.id || uid(),
-        createdAt: item?.createdAt || new Date().toISOString(),
-        updatedAt: item?.updatedAt || new Date().toISOString(),
-        studiedAt: item?.studiedAt || getLocalDateTimeValue(),
-        minutes: Number(item?.minutes || 0),
-        contentText: text,
-        contentHtml: html,
-        tags: Array.isArray(item?.tags) ? item.tags : [],
-        favorite: !!item?.favorite,
-        imageIds: Array.isArray(item?.imageIds) ? item.imageIds.filter(Boolean) : [],
-        images: Array.isArray(item?.images) ? item.images.filter(Boolean) : []
-      };
-    }).filter(item => item.minutes > 0 && item.contentText);
+    return normalizeRecordList(data, 'record');
   }catch(e){
-    console.error('loadRecords error:', e);
+    console.error('readLegacyRecordsFromLocalStorage error:', e);
     return [];
   }
 }
 
-  function saveRecords(){
-    try{
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
-      return true;
-    }catch(e){
-      console.error('saveRecords error:', e);
-      return false;
-    }
-  }
-
-  function loadTrash(){
+function readLegacyTrashFromLocalStorage(){
   try{
-    const data = JSON.parse(localStorage.getItem(TRASH_KEY) || '[]');
-    if(!Array.isArray(data)) return [];
-
-    return data.map(item => {
-      const text = item?.contentText || stripHtml(item?.contentHtml || item?.content || '');
-      const html = item?.contentHtml || escapeHtml(text);
-
-      return {
-        ...item,
-        id: item?.id || uid(),
-        createdAt: item?.createdAt || new Date().toISOString(),
-        updatedAt: item?.updatedAt || new Date().toISOString(),
-        deletedAt: item?.deletedAt || new Date().toISOString(),
-        studiedAt: item?.studiedAt || getLocalDateTimeValue(),
-        minutes: Number(item?.minutes || 0),
-        contentText: text,
-        contentHtml: html,
-        tags: Array.isArray(item?.tags) ? item.tags : [],
-        favorite: !!item?.favorite,
-        imageIds: Array.isArray(item?.imageIds) ? item.imageIds.filter(Boolean) : [],
-        images: Array.isArray(item?.images) ? item.images.filter(Boolean) : []
-      };
-    }).filter(item => item.minutes > 0 && item.contentText);
+    return normalizeRecordList(JSON.parse(localStorage.getItem(TRASH_KEY) || '[]'), 'trash');
   }catch(e){
-    console.error('loadTrash error:', e);
+    console.error('readLegacyTrashFromLocalStorage error:', e);
     return [];
   }
 }
 
-  function saveTrash(){
-    localStorage.setItem(TRASH_KEY, JSON.stringify(trash));
-  }
+function readLegacyGoalFromLocalStorage(){
+  const n = Number(localStorage.getItem(GOAL_KEY) || 120);
+  return Number.isFinite(n) && n >= 0 ? n : 120;
+}
 
-  function loadGoal(){
-    const n = Number(localStorage.getItem(GOAL_KEY) || 120);
-    return Number.isFinite(n) && n >= 0 ? n : 120;
-  }
-
-  function saveGoal(v){
-    localStorage.setItem(GOAL_KEY, String(v));
-    goalMinutes = v;
-  }
-
-  function loadTagMaster(){
-    try{
-      return JSON.parse(localStorage.getItem(TAG_MASTER_KEY) || '[]');
-    }catch(e){
-      return [];
-    }
-  }
-
-  function saveTagMaster(list){
-    localStorage.setItem(TAG_MASTER_KEY, JSON.stringify(list));
-  }
-
-  function loadSymbolMaster(){
-    try{
-      return JSON.parse(localStorage.getItem(SYMBOL_MASTER_KEY) || '[]');
-    }catch(e){
-      return [];
-    }
-  }
-
-  function saveSymbolMaster(list){
-    localStorage.setItem(SYMBOL_MASTER_KEY, JSON.stringify(list));
-  }
-
-  function initDefaultMasters(){
-    if(!localStorage.getItem(TAG_MASTER_KEY)){
-      saveTagMaster([...defaultTags]);
-    }
-
-    if(!localStorage.getItem(SYMBOL_MASTER_KEY)){
-      saveSymbolMaster([...defaultSymbols]);
-    }
-  }
-
-  function loadDraft(){
+function readLegacyTagMasterFromLocalStorage(){
   try{
-    return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null') || {
-      minutes:'10',
-      contentHtml:'',
-      contentText:'',
-      tags:[],
-      studiedAt:getLocalDateTimeValue(),
-      customTag:'',
-      customSymbol:'',
-      textColor:'#edf3fb',
-      imageIds:[]
-    };
+    return normalizeStringList(JSON.parse(localStorage.getItem(TAG_MASTER_KEY) || '[]'));
   }catch(e){
+    return [];
+  }
+}
+
+function readLegacySymbolMasterFromLocalStorage(){
+  try{
+    return normalizeStringList(JSON.parse(localStorage.getItem(SYMBOL_MASTER_KEY) || '[]'));
+  }catch(e){
+    return [];
+  }
+}
+
+function readLegacyDraftFromLocalStorage(){
+  try{
+    const loaded = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    if(!loaded) return createDefaultDraft();
+
     return {
-      minutes:'10',
-      contentHtml:'',
-      contentText:'',
-      tags:[],
-      studiedAt:getLocalDateTimeValue(),
-      customTag:'',
-      customSymbol:'',
-      textColor:'#edf3fb',
-      imageIds:[]
+      ...createDefaultDraft(),
+      ...loaded,
+      tags: Array.isArray(loaded.tags) ? loaded.tags : [],
+      imageIds: normalizeStringList(loaded.imageIds || [])
     };
+  }catch(e){
+    return createDefaultDraft();
   }
 }
 
-  function saveDraft(){
+let records = [];
+let trash = [];
+let goalMinutes = 120;
+let draft = createDefaultDraft();
+let tagMaster = [];
+let symbolMaster = [];
+pastedImages = [];
+
+function loadRecords(){
+  return records;
+}
+
+function saveRecords(){
+  try{
+    putAppValue('records', records.map(item => ({ ...item, images: [] })));
+    return true;
+  }catch(e){
+    console.error('saveRecords error:', e);
+    return false;
+  }
+}
+
+function loadTrash(){
+  return trash;
+}
+
+function saveTrash(){
+  try{
+    putAppValue('trash', trash.map(item => ({ ...item, images: [] })));
+    return true;
+  }catch(e){
+    console.error('saveTrash error:', e);
+    return false;
+  }
+}
+
+function loadGoal(){
+  return goalMinutes;
+}
+
+function saveGoal(v){
+  goalMinutes = Number(v) || 0;
+  putAppValue('goalMinutes', goalMinutes);
+}
+
+function loadTagMaster(){
+  return tagMaster.slice();
+}
+
+function saveTagMaster(list){
+  tagMaster = normalizeStringList(list);
+  putAppValue('tagMaster', tagMaster);
+  return tagMaster;
+}
+
+function loadSymbolMaster(){
+  return symbolMaster.slice();
+}
+
+function saveSymbolMaster(list){
+  symbolMaster = normalizeStringList(list);
+  putAppValue('symbolMaster', symbolMaster);
+  return symbolMaster;
+}
+
+function initDefaultMasters(){
+  if(!tagMaster.length){
+    tagMaster = [...defaultTags];
+    putAppValue('tagMaster', tagMaster);
+  }
+
+  if(!symbolMaster.length){
+    symbolMaster = [...defaultSymbols];
+    putAppValue('symbolMaster', symbolMaster);
+  }
+}
+
+function loadDraft(){
+  return draft;
+}
+
+function saveDraft(){
   try{
     const slimDraft = {
       minutes: draft.minutes,
       contentHtml: draft.contentHtml,
       contentText: draft.contentText,
-      tags: draft.tags,
+      tags: Array.isArray(draft.tags) ? draft.tags : [],
       studiedAt: draft.studiedAt,
       customTag: draft.customTag,
       customSymbol: draft.customSymbol,
       textColor: draft.textColor,
       imageIds: normalizeStringList(draft.imageIds || [])
     };
-    localStorage.setItem(DRAFT_KEY, JSON.stringify(slimDraft));
+    draft = { ...createDefaultDraft(), ...slimDraft };
+    pastedImages = [...draft.imageIds];
+    putAppValue('draft', draft);
     return true;
   }catch(e){
     console.error('saveDraft error:', e);
     return false;
   }
 }
-  let records = loadRecords();
-  let trash = loadTrash();
-  let goalMinutes = loadGoal();
-  let draft = loadDraft();
-  pastedImages = Array.isArray(draft.imageIds) ? [...draft.imageIds] : [];
 
-  function showToast(message){
+async function hydrateAppState(){
+  const [dbRecords, dbTrash, dbGoal, dbTags, dbSymbols, dbDraft] = await Promise.all([
+    getAppValue('records'),
+    getAppValue('trash'),
+    getAppValue('goalMinutes'),
+    getAppValue('tagMaster'),
+    getAppValue('symbolMaster'),
+    getAppValue('draft')
+  ]);
+
+  records = normalizeRecordList(Array.isArray(dbRecords) ? dbRecords : readLegacyRecordsFromLocalStorage(), 'record');
+  trash = normalizeRecordList(Array.isArray(dbTrash) ? dbTrash : readLegacyTrashFromLocalStorage(), 'trash');
+
+  const goalCandidate = Number(dbGoal);
+  goalMinutes = Number.isFinite(goalCandidate) && goalCandidate >= 0 ? goalCandidate : readLegacyGoalFromLocalStorage();
+
+  tagMaster = normalizeStringList(Array.isArray(dbTags) ? dbTags : readLegacyTagMasterFromLocalStorage());
+  symbolMaster = normalizeStringList(Array.isArray(dbSymbols) ? dbSymbols : readLegacySymbolMasterFromLocalStorage());
+
+  const draftCandidate = dbDraft && typeof dbDraft === 'object' ? dbDraft : readLegacyDraftFromLocalStorage();
+  draft = {
+    ...createDefaultDraft(),
+    ...draftCandidate,
+    tags: Array.isArray(draftCandidate?.tags) ? draftCandidate.tags : [],
+    imageIds: normalizeStringList(draftCandidate?.imageIds || [])
+  };
+
+  pastedImages = [...draft.imageIds];
+
+  await Promise.all([
+    putAppValue('records', records.map(item => ({ ...item, images: [] }))),
+    putAppValue('trash', trash.map(item => ({ ...item, images: [] }))),
+    putAppValue('goalMinutes', goalMinutes),
+    putAppValue('tagMaster', tagMaster),
+    putAppValue('symbolMaster', symbolMaster),
+    putAppValue('draft', draft)
+  ]);
+}
+
+function showToast(message){
     const el = document.getElementById('toast');
     el.textContent = message;
     el.classList.remove('opacity-0','pointer-events-none');
@@ -1952,6 +2247,46 @@ function normalizeStringList(list){
     return highlightText(text.slice(0, PREVIEW_LENGTH) + '...', '');
   }
 
+
+
+  async function openRecordDetail(id){
+    const record = records.find(r => r.id === id);
+    if(!record) return;
+
+    const modal = document.getElementById('recordDetailModal');
+    const titleEl = document.getElementById('detailTitleText');
+    const metaEl = document.getElementById('detailMetaText');
+    const contentEl = document.getElementById('detailContentHtml');
+    const imageEl = document.getElementById('detailImageList');
+    const tagEl = document.getElementById('detailTagList');
+
+    titleEl.textContent = '상세 내용';
+    metaEl.textContent = `${formatDateTime(record.studiedAt)} | ${record.minutes}분`;
+    contentEl.innerHTML = record.contentHtml || escapeHtml(record.contentText || '');
+
+    const imageMap = await getImagesByIds(record.imageIds || []);
+    const images = (record.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+    imageEl.innerHTML = images.length
+      ? images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')
+      : '';
+
+    tagEl.innerHTML = [
+      ...((record.tags || []).map(tag => `<span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">#${escapeHtml(tag)}</span>`)),
+      ...(record.favorite ? ['<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>'] : []),
+      ...(((record.tags || []).includes('복습필요')) ? ['<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>'] : [])
+    ].join('');
+
+    modal.classList.add('show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeRecordDetail(event){
+    if(event && event.target && event.target.id !== 'recordDetailModal') return;
+    const modal = document.getElementById('recordDetailModal');
+    modal.classList.remove('show');
+    document.body.style.overflow = '';
+  }
+
   async function renderRecords(){
   const q = document.getElementById('searchInput').value.trim();
   const items = getFilteredRecords();
@@ -2000,22 +2335,23 @@ function normalizeStringList(list){
             ${(record.tags || []).includes('복습필요') ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
           </div>
 
-          <div class="flex flex-wrap items-center justify-between gap-3">
-            <div class="flex flex-wrap items-center gap-2">
-              ${isLong
-                ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${record.id}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
-                : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
-              }
+          <div class="record-actions">
+                <div class="record-actions-left">
+                  ${isLong
+                    ? `<button type="button" class="press record-pill-btn" onclick="toggleExpand('${record.id}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
+                    : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
+                  }
 
-              <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${record.id}')">${record.favorite ? '⭐' : '☆'}</button>
-              <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${record.id}')">${(record.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
-            </div>
+                  <button type="button" class="press record-icon-btn" onclick="toggleFavorite('${record.id}')" aria-label="중요 표시">${record.favorite ? '⭐' : '☆'}</button>
+                  <button type="button" class="press record-icon-btn" onclick="toggleReview('${record.id}')" aria-label="복습 표시">${(record.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
+                </div>
 
-            <div class="flex items-center gap-2">
-              <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${record.id}')">수정</button>
-              <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${record.id}')">삭제</button>
-            </div>
-          </div>
+                <div class="record-actions-right">
+<!-- <button type="button" class="press record-pill-btn primary" onclick="openRecordDetail('${record.id}')">상세보기</button> -->
+                  <button type="button" class="press record-pill-btn" onclick="editRecord('${record.id}')">수정</button>
+                  <button type="button" class="press record-pill-btn danger" onclick="deleteRecord('${record.id}')">삭제</button>
+                </div>
+              </div>
         </div>
       </div>
     `;
@@ -2196,20 +2532,21 @@ function normalizeStringList(list){
                 ${(item.tags || []).includes('복습필요') ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
               </div>
 
-              <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex flex-wrap items-center gap-2">
+              <div class="record-actions">
+                <div class="record-actions-left">
                   ${isLong
-                    ? `<button type="button" class="press text-sm font-bold text-slate-300 whitespace-nowrap" onclick="toggleExpand('${item.id}'); showDayRecords('${dateKey}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
+                    ? `<button type="button" class="press record-pill-btn" onclick="toggleExpand('${item.id}'); showDayRecords('${dateKey}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
                     : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
                   }
 
-                  <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleFavorite('${item.id}'); showDayRecords('${dateKey}')">${item.favorite ? '⭐' : '☆'}</button>
-                  <button type="button" class="press w-10 h-10 rounded-xl border border-slate-500 bg-white/10 text-slate-100 shrink-0" onclick="toggleReview('${item.id}'); showDayRecords('${dateKey}')">${(item.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
+                  <button type="button" class="press record-icon-btn" onclick="toggleFavorite('${item.id}'); showDayRecords('${dateKey}')" aria-label="중요 표시">${item.favorite ? '⭐' : '☆'}</button>
+                  <button type="button" class="press record-icon-btn" onclick="toggleReview('${item.id}'); showDayRecords('${dateKey}')" aria-label="복습 표시">${(item.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
                 </div>
 
-                <div class="flex items-center gap-2">
-                  <button type="button" class="press px-4 h-10 rounded-xl border border-slate-400 font-bold text-sm text-slate-100" onclick="editRecord('${item.id}')">수정</button>
-                  <button type="button" class="press px-4 h-10 rounded-xl border border-red-400 font-bold text-sm text-red-400" onclick="deleteRecord('${item.id}'); showDayRecords('${dateKey}')">삭제</button>
+                <div class="record-actions-right">
+                  <button type="button" class="press record-pill-btn primary" onclick="openRecordDetail('${item.id}')">상세보기</button>
+                  <button type="button" class="press record-pill-btn" onclick="editRecord('${item.id}')">수정</button>
+                  <button type="button" class="press record-pill-btn danger" onclick="deleteRecord('${item.id}'); showDayRecords('${dateKey}')">삭제</button>
                 </div>
               </div>
             </div>
@@ -2534,66 +2871,84 @@ function normalizeStringList(list){
   function stopSpeech(){
     if('speechSynthesis' in window) window.speechSynthesis.cancel();
   }
+  
 
-  function buildSpeechText(items, mode='filtered'){
-    if(!items.length) return '읽어드릴 학습 기록이 없습니다.';
+  function sanitizeSpeechText(text){
+    return String(text || '')
+      .replace(/\s+/g, ' ')
+      .replace(/\.{2,}/g, '. ')
+      .trim();
+  }
+function buildSpeechText(items, mode='filtered'){
+  if(!items.length) return '읽어드릴 학습 기록이 없습니다.';
 
-    const introMap = {
-      filtered: `조회 결과 ${items.length}건을 읽어드립니다.`,
-      all: `전체 기록 ${items.length}건을 읽어드립니다.`,
-      day: `선택한 날짜 기록 ${items.length}건을 읽어드립니다.`
-    };
+  const body = items.map(r => {
+    const baseText = (r.contentText || stripHtml(r.contentHtml || '') || '')
+      .replace(/\s+/g, ' ')
+      .trim();
 
-    const body = items.map((r, i)=>{
-      const tags = (r.tags && r.tags.length) ? `태그는 ${r.tags.join(', ')}.` : '';
-      const fav = r.favorite ? '중요 표시된 기록입니다.' : '';
-      const review = (r.tags || []).includes('복습필요') ? '복습이 필요한 기록입니다.' : '';
-      const baseText = r.contentText || stripHtml(r.contentHtml || '');
-      const content = baseText.length > 120 ? baseText.slice(0,120) + ' 이하 생략.' : baseText;
-      return `${i+1}번. ${r.minutes}분 공부. 내용은 ${content}. ${tags} ${fav} ${review}`;
-    }).join(' ');
+    return baseText || '내용 없음';
+  }).join(' ');
 
-    return `${introMap[mode] || introMap.filtered} ${body}`;
+  return body;
+}
+  
+
+  function getSpeechRate(){
+    const el = document.getElementById('speechRateSelect');
+    const rate = Number(el?.value || 1);
+    return Number.isFinite(rate) && rate > 0 ? rate : 1;
   }
 
-  function speakText(text){
-    if(!('speechSynthesis' in window)){
-      showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
-      return;
-    }
-    stopSpeech();
-    const utter = new SpeechSynthesisUtterance(text);
-    utter.lang = 'ko-KR';
-    window.speechSynthesis.speak(utter);
+  function updateSpeechRateLabel(){
+    const el = document.getElementById('speechRateSelect');
+    if(el) el.title = `현재 읽기속도 ${el.value}배`;
   }
+function speakText(text){
+  if(!('speechSynthesis' in window)){
+    showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
+    return;
+  }
+  stopSpeech();
+  const utter = new SpeechSynthesisUtterance(text);
+  utter.lang = 'ko-KR';
 
+  const rateEl = document.getElementById('speechRateSelect');
+  const rate = Number(rateEl?.value || '1');
+  utter.rate = Number.isFinite(rate) ? rate : 1;
+
+  window.speechSynthesis.speak(utter);
+}
   function readFilteredRecords(){
-    const items = getFilteredRecords();
-    if(!items.length){
-      showToast('조회 결과가 없습니다.');
-      return;
-    }
-    speakText(buildSpeechText(items, 'filtered'));
+  const items = getFilteredRecords();
+  if(!items.length){
+    showToast('조회 결과가 없습니다.');
+    return;
   }
+  speakText(buildSpeechText(items, 'filtered'));
+}
 
-  function readAllRecords(){
-    if(!records.length){
-      showToast('전체 기록이 없습니다.');
-      return;
-    }
-    speakText(buildSpeechText(records, 'all'));
+function readAllRecords(){
+  if(!records.length){
+    showToast('전체 기록이 없습니다.');
+    return;
   }
+  speakText(buildSpeechText(records, 'all'));
+}
 
   function readSelectedDayRecords(){
-    if(!currentDaySpeechItems.length){
-      showToast('선택된 날짜 기록이 없습니다.');
-      return;
-    }
-    speakText(buildSpeechText(currentDaySpeechItems, 'day'));
+  if(!currentDaySpeechItems.length){
+    showToast('선택된 날짜 기록이 없습니다.');
+    return;
   }
+  speakText(buildSpeechText(currentDaySpeechItems, 'day'));
+}
+
+  
 
   window.addEventListener('load', async ()=>{
   await openImageDb();
+  await hydrateAppState();
   initDefaultMasters();
   await migrateLegacyBase64Images();
 
@@ -2602,6 +2957,7 @@ function normalizeStringList(list){
   renderTagButtons();
   await syncFormFromDraft();
   document.getElementById('goalInput').value = goalMinutes;
+  updateSpeechRateLabel();
 
   ['minutesInput','customTagInput','customSymbolInput','studiedAtInput'].forEach(id=>{
     const el=document.getElementById(id);
@@ -2662,25 +3018,24 @@ function normalizeStringList(list){
     }
     keysToRemove.forEach(key => localStorage.removeItem(key));
 
-    // 2. IndexedDB 이미지 제거
+    // 2. IndexedDB 이미지 및 앱 데이터 제거
     await clearImageStore();
+    await clearAppStore();
 
     // 3. 메모리 초기화
     records = [];
     trash = [];
+    tagMaster = [...defaultTags];
+    symbolMaster = [...defaultSymbols];
+    goalMinutes = 120;
     pastedImages = [];
-    draft = {
-      minutes:'10',
-      contentHtml:'',
-      contentText:'',
-      tags:[],
-      studiedAt:getLocalDateTimeValue(),
-      customTag:'',
-      customSymbol:'',
-      textColor:'#edf3fb',
-      imageIds:[]
-    };
+    draft = createDefaultDraft();
 
+    saveRecords();
+    saveTrash();
+    saveGoal(goalMinutes);
+    saveTagMaster(tagMaster);
+    saveSymbolMaster(symbolMaster);
     saveDraft();
 
     // 4. UI 완전 갱신
@@ -2808,4 +3163,3 @@ async function warnStorageUsage(){
 </body>
   </html>
   
-    
