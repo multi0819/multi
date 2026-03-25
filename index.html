@@ -190,6 +190,8 @@
     padding:8px 10px;
     font-size:13px;
     min-width:108px;
+    flex:0 0 auto;
+    white-space:nowrap;
   }
 
   .speak-btn.stop{
@@ -238,17 +240,22 @@
 
   .query-topbar{
     display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
+    flex-direction:column;
+    align-items:stretch;
     gap:10px;
-    flex-wrap:wrap;
   }
 
   .query-actions{
     display:flex;
-    flex-wrap:wrap;
+    flex-wrap:nowrap;
     gap:8px;
-    justify-content:flex-end;
+    justify-content:flex-start;
+    align-items:center;
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+    -webkit-overflow-scrolling:touch;
+    padding-bottom:2px;
   }
 
   .speech-rate-box{
@@ -259,6 +266,7 @@
     border-radius:14px;
     border:1px solid rgba(255,255,255,.12);
     background:rgba(255,255,255,.04);
+    flex:0 0 auto;
   }
 
   .speech-rate-label{
@@ -745,6 +753,7 @@
         id="imageFileInput"
         type="file"
         accept="image/*"
+        multiple
         class="hidden"
         onchange="handleImageFileSelect(event)"
       />
@@ -912,7 +921,7 @@
         백업 불러오기
       </button>
 
-     <input id="importFile" type="file" accept=".json,application/json,text/plain,*/*" class="hidden" onchange="importJson(event)" />
+      <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importJson(event)" />
     </div>
   </div>
 
@@ -1957,24 +1966,12 @@ function showToast(message){
 
           await putImageRecord(imageId, dataUrl);
 
-          const oldIds = [...pastedImages];
-          pastedImages = [imageId];
+          pastedImages.push(imageId);
           draft.imageIds = [...pastedImages];
           saveDraft();
 
-          for(const oldId of oldIds){
-            const stillUsed =
-              records.some(r => Array.isArray(r.imageIds) && r.imageIds.includes(oldId)) ||
-              trash.some(r => Array.isArray(r.imageIds) && r.imageIds.includes(oldId)) ||
-              pastedImages.includes(oldId);
-
-            if(!stillUsed){
-              try{ await deleteImageRecord(oldId); }catch(e){}
-            }
-          }
-
           await renderPastePreview();
-          showToast('클립보드 이미지 추가됨');
+          showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
           return;
         }
       }
@@ -1989,44 +1986,44 @@ function showToast(message){
 
   async function handleImageFileSelect(event){
   const input = event.target;
-  const file = input.files && input.files[0];
+  const files = Array.from(input.files || []);
 
-  if(!file){
+  if(!files.length){
     showToast('선택이 취소되었습니다.');
     input.value = '';
     return;
   }
 
-  if(!file.type || !file.type.startsWith('image/')){
+  const imageFiles = files.filter(file => file.type && file.type.startsWith('image/'));
+
+  if(!imageFiles.length){
     showToast('이미지 파일만 선택할 수 있습니다.');
     input.value = '';
     return;
   }
 
+  if(imageFiles.length !== files.length){
+    showToast('이미지가 아닌 파일은 제외하고 추가합니다.');
+  }
+
   try{
-    const dataUrl = await blobToCompressedDataUrl(file);
-    const imageId = imageUid();
+    let addedCount = 0;
 
-    await putImageRecord(imageId, dataUrl);
+    for(const file of imageFiles){
+      const dataUrl = await blobToCompressedDataUrl(file);
+      const imageId = imageUid();
 
-    const oldIds = [...pastedImages];
-    pastedImages = [imageId];
+      await putImageRecord(imageId, dataUrl);
+
+      pastedImages.push(imageId);
+      addedCount += 1;
+    }
+
     draft.imageIds = [...pastedImages];
     saveDraft();
 
-    for(const oldId of oldIds){
-      const stillUsed =
-        records.some(r => Array.isArray(r.imageIds) && r.imageIds.includes(oldId)) ||
-        trash.some(r => Array.isArray(r.imageIds) && r.imageIds.includes(oldId)) ||
-        pastedImages.includes(oldId);
-
-      if(!stillUsed){
-        try{ await deleteImageRecord(oldId); }catch(e){}
-      }
-    }
-
     await renderPastePreview();
-    showToast('사진 1장 추가 완료');
+    showToast(`${addedCount}장 추가 완료 (총 ${pastedImages.length}장)`);
   }catch(err){
     console.error(err);
     showToast('사진 처리 실패');
