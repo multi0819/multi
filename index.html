@@ -45,15 +45,76 @@
     backdrop-filter:blur(10px);
   }
 
+  .sticky-nav .action-chip{
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.06),
+      0 10px 24px rgba(0,0,0,.24);
+    border-color:rgba(255,255,255,.10) !important;
+    transform:translateY(0);
+    transition:transform .12s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease;
+  }
+
+  .sticky-nav .action-chip:active{
+    transform:translateY(1px) scale(.98);
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 4px 12px rgba(0,0,0,.22);
+  }
+
+  .sticky-nav .action-chip:hover{
+    border-color:rgba(255,255,255,.16) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.08),
+      0 12px 28px rgba(0,0,0,.28);
+  }
+
+  .sticky-nav .action-chip.is-active,
+  .sticky-nav .action-chip.active,
+  .sticky-nav .action-chip[aria-pressed="true"]{
+    background:linear-gradient(135deg,#315ea8,#5f8fff) !important;
+    color:#ffffff !important;
+    border-color:rgba(130,170,255,.45) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 12px 28px rgba(37,99,235,.24) !important;
+  }
+
+  .sticky-nav .action-chip.is-active:active,
+  .sticky-nav .action-chip.active:active,
+  .sticky-nav .action-chip[aria-pressed="true"]:active{
+    transform:translateY(1px) scale(.98);
+  }
+
+  #specialButtons .press.is-active,
+  #tagButtons .chip.is-active{
+    background:linear-gradient(135deg,#315ea8,#5f8fff) !important;
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+    border-color:rgba(130,170,255,.42) !important;
+    box-shadow:0 8px 20px rgba(37,99,235,.18) !important;
+  }
+
+
+  #calendarSection{
+    margin-bottom:0 !important;
+  }
+
+  .calendar-tight{
+    margin-bottom:2px !important;
+  }
+
+
   .action-chip{
-    padding:10px 12px;
-    border-radius:14px;
-    font-size:13px;
+    padding:8px 8px;
+    border-radius:12px;
+    font-size:12px;
     font-weight:800;
     white-space:nowrap;
     background:linear-gradient(180deg,#1b2538,#141d2d);
     border:1px solid rgba(255,255,255,.06);
     color:#e5edf8;
+    min-width:auto !important;
+    letter-spacing:-0.02em;
   }
 
   .stat-strip{
@@ -120,6 +181,121 @@
     flex-wrap:nowrap;
   }
 
+  .minute-toggle-bar{
+    display:flex;
+    gap:6px;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+
+  .minute-toggle-bar::-webkit-scrollbar{
+    display:none;
+  }
+
+  .minute-toggle-btn{
+    min-width:56px;
+    height:36px;
+    padding:0 10px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg,#1b2538,#141d2d);
+    color:#dfe8f6;
+    font-size:12px;
+    font-weight:800;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  
+  .nav-minute-btn{
+    min-width:44px;
+    height:30px;
+    padding:0 8px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg,#172134,#121a29);
+    color:#d7e3f5;
+    font-size:11px;
+    font-weight:800;
+    white-space:nowrap;
+    flex:0 0 auto;
+  }
+
+  
+  .minute-picker-list{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    max-height:220px;
+    overflow-y:auto;
+    padding-right:4px;
+    scrollbar-width:thin;
+  }
+
+  .minute-picker-item{
+    width:100%;
+    min-height:42px;
+    padding:0 14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.08);
+    background:linear-gradient(180deg,#172134,#121a29);
+    color:#d7e3f5;
+    font-size:14px;
+    font-weight:800;
+    text-align:left;
+  }
+
+  .minute-picker-item.active{
+    background:rgba(255,255,255,.08);
+    color:#ffffff;
+    border-color:rgba(255,255,255,.16);
+  }
+
+  #toggleMinuteBtn.is-active{
+    background:linear-gradient(135deg,#27467e,#4b7fe8) !important;
+    color:#ffffff !important;
+    border-color:rgba(120,160,255,.35) !important;
+    box-shadow:0 8px 20px rgba(37,99,235,.18) !important;
+  }
+
+  .nav-minute-btn.active{
+    background:rgba(255,255,255,.07);
+    color:#ffffff;
+    border-color:rgba(255,255,255,.14);
+  }
+
+  .minute-toggle-btn.active{
+    background:rgba(255,255,255,.06);
+    color:#ffffff;
+    border-color:rgba(255,255,255,.16);
+    box-shadow:none;
+  }
+
+  .top-input-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    overflow-x:auto;
+    padding-bottom:2px;
+    scrollbar-width:none;
+  }
+
+  .top-input-row::-webkit-scrollbar{
+    display:none;
+  }
+
+  .top-minute-input{
+    width:72px;
+    min-width:72px;
+    height:36px;
+    border-radius:12px;
+    padding:0 10px;
+    text-align:center;
+    font-size:13px;
+    font-weight:800;
+  }
+
   #quickMinuteButtons button,
   #specialButtons button{
     background:#f8fafc !important;
@@ -131,9 +307,9 @@
   }
 
   #quickMinuteButtons button{
-    min-width:56px !important;
-    padding-left:10px !important;
-    padding-right:10px !important;
+    min-width:48px !important;
+    padding-left:8px !important;
+    padding-right:8px !important;
     font-size:12px !important;
   }
 
@@ -199,6 +375,12 @@
     border-color:rgba(248,113,113,.35);
   }
 
+  .compact-query-btn{
+    min-width:92px !important;
+    padding:8px 10px !important;
+    font-size:12px !important;
+  }
+
   #toast{
     background:rgba(10,16,28,.96);
     color:#f8fbff;
@@ -207,7 +389,77 @@
 
   #querySection{
     padding:16px;
+    display:none;
   }
+
+  #querySection.is-open{
+    display:block;
+  }
+
+  #calendarSection{
+    display:none;
+  }
+
+  #calendarSection.is-open{
+    display:block;
+  }
+
+
+  .toggle-panel{
+    display:none;
+  }
+
+  .toggle-panel.is-open{
+    display:block;
+  }
+
+  .nav-toggle-btn{
+    min-width:92px !important;
+  }
+
+  .calendar-action-row{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    margin-top:14px;
+  }
+
+  .calendar-action-btn.is-hidden{
+    display:none !important;
+  }
+
+  .calendar-nav-btn{
+    min-width:118px;
+    background:linear-gradient(180deg,#172338,#121b2c) !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.04),
+      0 8px 20px rgba(0,0,0,.18);
+    letter-spacing:-0.01em;
+  }
+
+  .calendar-nav-btn.is-active{
+    background:linear-gradient(135deg, rgba(44,88,182,.95), rgba(91,146,255,.96)) !important;
+    border-color:rgba(154,194,255,.55) !important;
+    color:#ffffff !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.18),
+      0 10px 24px rgba(37,99,235,.28),
+      0 0 0 1px rgba(255,255,255,.06) !important;
+  }
+
+  .calendar-nav-btn.is-active::after{
+    content:'';
+    display:inline-block;
+    width:6px;
+    height:6px;
+    margin-left:8px;
+    border-radius:999px;
+    background:rgba(255,255,255,.92);
+    vertical-align:middle;
+    box-shadow:0 0 10px rgba(255,255,255,.42);
+  }
+
 
   #queryScrollArea{
     max-height:68vh;
@@ -256,6 +508,23 @@
     overflow-y:hidden;
     -webkit-overflow-scrolling:touch;
     padding-bottom:2px;
+  }
+
+  .query-view-switch{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  .query-view-switch .speak-btn[disabled]{
+    opacity:.45;
+    border-color:rgba(255,255,255,.10);
+  }
+
+  .query-view-switch .speak-btn.active{
+    border-color:rgba(96,165,250,.45);
+    background:rgba(59,130,246,.14);
+    color:#bfdbfe;
   }
 
   .speech-rate-box{
@@ -385,25 +654,61 @@
     line-height:1.4 !important;
   }
 
+  #calendarSection{
+    background:
+      radial-gradient(circle at top center, rgba(59,130,246,.10), transparent 42%),
+      linear-gradient(180deg, rgba(15,23,42,.96), rgba(9,16,29,.98)) !important;
+  }
+
+  #calendarHeatmap{
+    gap:6px !important;
+    margin-bottom:8px !important;
+  }
+
   #calendarHeatmap button{
-    font-weight:900 !important;
-    font-size:18px !important;
+    font-weight:800 !important;
+    font-size:17px !important;
+    line-height:1 !important;
+    padding:0 !important;
+    height:54px !important;
+    border-radius:18px !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.05),
+      0 8px 18px rgba(0,0,0,.22) !important;
+    transition:transform .16s ease, box-shadow .16s ease, filter .16s ease !important;
+  }
+
+  #calendarHeatmap button:active{
+    transform:scale(.96);
   }
 
   #calendarHeatmap .bg-slate-100{
-    color:#475569 !important;
-    -webkit-text-fill-color:#475569 !important;
+    background:linear-gradient(180deg, #f3f6fb, #dfe6f1) !important;
+    color:#4a5568 !important;
+    -webkit-text-fill-color:#4a5568 !important;
+    border:1px solid rgba(255,255,255,.55) !important;
   }
 
   #calendarHeatmap .bg-blue-200{
-    color:#0f172a !important;
-    -webkit-text-fill-color:#0f172a !important;
+    background:linear-gradient(180deg, #d9e8ff, #bdd6ff) !important;
+    color:#233047 !important;
+    -webkit-text-fill-color:#233047 !important;
+    border:1px solid rgba(120,160,230,.28) !important;
   }
 
-  #calendarHeatmap .bg-blue-400,
-  #calendarHeatmap .bg-blue-700{
+  #calendarHeatmap .bg-blue-400{
+    background:linear-gradient(180deg, #76adff, #4e88e8) !important;
     color:#ffffff !important;
     -webkit-text-fill-color:#ffffff !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+  }
+
+  #calendarHeatmap .bg-blue-700{
+    background:linear-gradient(180deg, #2f67d8, #1746a8) !important;
+    color:#ffffff !important;
+    -webkit-text-fill-color:#ffffff !important;
+    border:1px solid rgba(255,255,255,.10) !important;
   }
 
   #restoreLatestBtn{
@@ -427,7 +732,7 @@
   }
 
   .flex.gap-2{
-    gap:8px !important;
+    gap:5px !important;
   }
 
   .grid.gap-2{
@@ -439,9 +744,11 @@
   }
 
   .action-chip{
-    padding:9px 11px !important;
-    border-radius:14px !important;
-    font-size:12px !important;
+    padding:7px 10px !important;
+    min-height:42px !important;
+    border-radius:12px !important;
+    font-size:11px !important;
+    font-weight:800 !important;
   }
 
   .paste-thumb{
@@ -621,13 +928,72 @@
     flex:0 0 auto;
   }
 
+  
+
+  .calendar-action-bar{
+    display:flex;
+    gap:10px;
+    margin-top:14px;
+    flex-wrap:wrap;
+  }
+
+  .calendar-action-btn{
+    min-height:44px;
+    padding:0 16px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    font-size:14px;
+    font-weight:800;
+    box-shadow:0 10px 22px rgba(0,0,0,.18);
+    transition:all .18s ease;
+  }
+
+  .calendar-action-btn.primary{
+    background:linear-gradient(135deg, rgba(59,130,246,.34), rgba(96,165,250,.26));
+    border-color:rgba(96,165,250,.52);
+    color:#eff6ff;
+    box-shadow:0 10px 24px rgba(37,99,235,.20);
+  }
+
+  .calendar-action-btn:disabled{
+    background:rgba(148,163,184,.08) !important;
+    border-color:rgba(148,163,184,.14) !important;
+    color:rgba(226,232,240,.42) !important;
+    box-shadow:none !important;
+    opacity:1 !important;
+    filter:grayscale(.35);
+    cursor:not-allowed;
+  }
+
+  .query-header-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:12px;
+  }
+
+  .query-close-btn{
+    min-width:42px;
+    height:42px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    font-size:22px;
+    font-weight:900;
+    flex:0 0 auto;
+  }
+
   </style>
 </head>
 <body class="space-y-2">
 
   <div class="card p-4">
     <div class="text-[11px] tracking-[0.12em] font-black text-slate-400 mb-2">PREMIUM STUDY BOARD</div>
-    <div class="text-4xl font-black bg-gradient-to-b from-white via-blue-100 to-blue-300 bg-clip-text text-transparent">학습기록</div>
+    <div class="text-[32px] leading-[0.98] font-black bg-gradient-to-b from-white via-blue-100 to-blue-300 bg-clip-text text-transparent tracking-[-0.03em]">학습기록</div>
 
     <div class="mt-3 stat-strip">
       <div class="stat-card stat-blue press" onclick="scrollToSection('chartSection')">
@@ -656,24 +1022,31 @@
     </div>
   </div>
 
-  <div class="card p-3 sticky-nav overflow-x-auto">
-    <div class="flex gap-2 min-w-max text-sm font-bold">
-      <button class="press action-chip" onclick="scrollToSection('calendarSection')">달력 보기</button>
-      <button class="press action-chip" onclick="scrollToSection('chartSection')">공부시간 추이</button>
-      <button class="press action-chip" onclick="scrollToSection('tagChartSection')">태그 통계</button>
-      <button class="press action-chip" onclick="scrollToSection('backupSection')">백업 / 복원</button>
-      <button class="press action-chip text-red-300" onclick="clearAllRecords()">전체 휴지통이동</button>
+  <div class="card p-2 sticky-nav overflow-x-auto">
+    <div class="flex gap-1 min-w-max text-sm font-bold items-center">
+      <button id="toggleCalendarBtn" class="press action-chip calendar-nav-btn" onclick="toggleCalendarSection()">달력</button>
+      <button id="toggleFilterBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('filterSection', 'toggleFilterBtn')">검색</button>
+      <button id="toggleChartBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('chartSection', 'toggleChartBtn')">추이</button>
+      <button id="toggleTagBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('tagChartSection', 'toggleTagBtn')">통계</button>
+      <button id="toggleBackupBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('backupSection', 'toggleBackupBtn')">백업</button>
+      <div class="nav-divider"></div>
+      <button id="toggleMinuteBtn" class="press action-chip nav-toggle-btn" onclick="toggleMinutePicker()">공부시간</button>
+      <div class="nav-divider"></div>
+      <button class="press action-chip danger-soft" onclick="clearAllRecords()">휴지통</button>
       <div id="saveCountText" class="action-chip">현재 0건</div>
     </div>
   </div>
 
-  <div class="card p-4 space-y-2">
-    <div class="flex gap-1 overflow-x-auto">
-      <input id="minutesInput" class="w-24 min-w-[88px] h-10 rounded-xl px-3 text-sm shrink-0" placeholder="시간(분)" inputmode="numeric" />
-      <div class="flex gap-2 min-w-max" id="quickMinuteButtons"></div>
-    </div>
+  
+  <div id="minutePickerPanel" class="card p-3" style="display:none;">
+    <div class="text-sm font-black text-slate-200 mb-2">공부시간 선택</div>
+    <div id="minutePickerList" class="minute-picker-list"></div>
+  </div>
 
-    <details class="rounded-2xl p-3">
+  <div class="card px-4 pt-1 pb-4 space-y-2">
+    <input id="minutesInput" type="hidden" value="10" />
+
+    <details class="rounded-2xl px-3 pt-0 pb-3">
       <summary class="cursor-pointer text-sm font-bold text-slate-300">기호 / 태그 설정</summary>
       <div class="mt-3 space-y-3">
         <div class="flex gap-2 overflow-x-auto" id="specialButtons"></div>
@@ -770,8 +1143,8 @@
       <button id="saveBtn" onclick="saveRecord()" class="press h-10 rounded-xl bg-blue-600 text-white text-base font-black">기록 저장</button>
     </div>
   </div>
-  <div class="card p-4">
-    <div class="text-xl font-black text-slate-900 mb-3">검색 / 필터 / 정렬</div>
+  <div id="filterSection" class="card p-4" style="display:none;">
+    <div class="section-headline"><div class="title">검색</div><div class="sub">필요할 때만 열기</div></div>
 
     <div class="space-y-2">
       <input id="searchInput" oninput="renderRecords()" class="w-full h-11 rounded-xl px-3" placeholder="내용 또는 태그 검색" />
@@ -794,16 +1167,16 @@
     </div>
   </div>
 
-  <div id="calendarSection" class="card p-4">
-    <div class="text-2xl font-black text-slate-900 mb-2">달력형 학습 보기</div>
+  <div id="calendarSection" class="card p-3">
+    <div class="text-[34px] leading-none font-black text-slate-900 mb-3 tracking-[-0.03em]">달력형 학습 보기</div>
 
     <div class="flex items-center justify-between mb-3">
-      <button onclick="changeMonth(-1)" class="press px-3 py-1 rounded-lg border">◀</button>
-      <div id="calendarTitle" class="text-lg font-bold"></div>
-      <button onclick="changeMonth(1)" class="press px-3 py-1 rounded-lg border">▶</button>
+      <button onclick="changeMonth(-1)" class="press w-14 h-14 rounded-2xl border border-white/15 bg-white/5 text-xl font-black shadow-[0_10px_24px_rgba(0,0,0,.24)]">◀</button>
+      <div id="calendarTitle" class="text-[28px] font-black tracking-[-0.02em]"></div>
+      <button onclick="changeMonth(1)" class="press w-14 h-14 rounded-2xl border border-white/15 bg-white/5 text-xl font-black shadow-[0_10px_24px_rgba(0,0,0,.24)]">▶</button>
     </div>
 
-    <div id="calendarHeatmap" class="grid grid-cols-7 gap-2 text-center text-sm mb-3"></div>
+    <div id="calendarHeatmap" class="grid grid-cols-7 gap-1.5 text-center text-sm mb-2"></div>
 
     <div class="flex flex-wrap gap-2 text-xs text-slate-500 mb-2">
       <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-slate-100 border"></span>기록 없음</span>
@@ -812,12 +1185,22 @@
       <span class="inline-flex items-center gap-1"><span class="w-4 h-4 rounded bg-blue-700 border"></span>3시간 이상</span>
     </div>
 
-    <div id="calendarDetail" class="text-sm text-slate-600">날짜를 누르면 그날의 학습 기록을 아래에서 바로 볼 수 있습니다.</div>
+    <div id="calendarDetail" class="text-sm text-slate-600 calendar-tight">날짜를 누르면 바로 해당 날짜 기록이 열립니다.</div>
+
+
   </div>
 
-  <div id="querySection" class="card p-4">
+  <div id="querySection" class="card p-4 is-open">
     <div class="query-topbar mb-3">
-      <div id="queryTitle" class="text-xl font-black text-slate-900">전체 조회</div>
+      <div class="query-header-row">
+        <div id="queryTitle" class="text-xl font-black text-slate-900">최근 입력 1건</div>
+        <button type="button" class="press query-close-btn" onclick="closeQuerySection()">×</button>
+      </div>
+
+      <div class="query-view-switch">
+        <button type="button" id="latestViewBtn" onclick="showLatestRecordView()" class="press speak-btn compact-query-btn">최근 1건</button>
+        <button type="button" id="allViewBtn" onclick="showAllRecordsView()" class="press speak-btn compact-query-btn">전체</button>
+      </div>
 
       <div class="query-actions">
         <div class="speech-rate-box">
@@ -832,9 +1215,8 @@
             <option value="1.5">1.5x</option>
           </select>
         </div>
-        <button type="button" onclick="showAllRecordsView()" class="press speak-btn">전체조회 보기</button>
-        <button type="button" onclick="readFilteredRecords()" class="press speak-btn">조회결과 읽기</button>
-        <button type="button" onclick="readAllRecords()" class="press speak-btn">전체 읽기</button>
+        <button type="button" onclick="readFilteredRecords()" class="press speak-btn compact-query-btn">조회결과 읽기</button>
+        <button type="button" onclick="readAllRecords()" class="press speak-btn compact-query-btn">전체 읽기</button>
         <button type="button" onclick="stopSpeech()" class="press speak-btn stop">읽기 중지</button>
       </div>
     </div>
@@ -891,18 +1273,18 @@
     <div id="topStudyText" class="text-base font-bold text-slate-900 leading-snug">-</div>
   </div>
 
-  <div id="chartSection" class="card p-4">
-    <div class="text-2xl font-black text-slate-900 mb-3">공부시간 추이</div>
+  <div id="chartSection" class="card p-4 toggle-panel">
+    <div class="section-headline"><div class="title">공부시간 추이</div><div class="sub">최근 흐름 확인</div></div>
     <div class="h-56"><canvas id="dailyChart"></canvas></div>
   </div>
 
-  <div id="tagChartSection" class="card p-4">
-    <div class="text-2xl font-black text-slate-900 mb-3">태그 통계</div>
+  <div id="tagChartSection" class="card p-4 toggle-panel">
+    <div class="section-headline"><div class="title">태그 통계</div><div class="sub">자주 공부한 영역</div></div>
     <div class="h-56"><canvas id="tagChart"></canvas></div>
   </div>
 
-  <div id="backupSection" class="card p-4">
-    <div class="text-2xl font-black text-slate-900 mb-3">백업 / 복원</div>
+  <div id="backupSection" class="card p-4 toggle-panel">
+    <div class="section-headline"><div class="title">백업 / 복원</div><div class="sub">내 기록 안전하게 보관</div></div>
     <div class="grid grid-cols-1 gap-2">
       <button id="restoreLatestBtn" onclick="restoreLatestTrash()" class="press h-11 rounded-xl bg-amber-100 text-amber-800 font-bold border">최근 삭제 1건 복구</button>
       <button onclick="exportJson()" class="press h-11 rounded-xl bg-slate-900 text-white font-bold">JSON 백업</button>
@@ -1187,6 +1569,8 @@ function normalizeStringList(list){
   let pastedImages = [];
   let currentCalendarDate = new Date();
   let currentDaySpeechItems = [];
+  let selectedCalendarDateKey = '';
+  let currentQueryViewMode = 'latest';
   let liveTimer = null;
   let autoTimeMode = true;
   let longPressTimer = null;
@@ -1645,7 +2029,15 @@ function showToast(message){
     clearTimeout(longPressTimer);
   }
 
-  function scrollToSection(id){
+  
+  function setCalendarSelectedDay(dateKey){
+    document.querySelectorAll('#calendarHeatmap button[data-date-key]').forEach(btn => {
+      if(btn.dataset.dateKey === dateKey) btn.classList.add('selected-day');
+      else btn.classList.remove('selected-day');
+    });
+  }
+
+function scrollToSection(id){
     const el = document.getElementById(id);
     if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
   }
@@ -1701,7 +2093,7 @@ function showToast(message){
   }
 
   async function syncFormFromDraft(){
-  document.getElementById('minutesInput').value = draft.minutes || '10';
+  if(document.getElementById('minutesInput')) document.getElementById('minutesInput').value = draft.minutes || '10';
   setEditorHtml(draft.contentHtml || '');
   document.getElementById('studiedAtInput').value = draft.studiedAt || getLocalDateTimeValue();
   document.getElementById('customTagInput').value = draft.customTag || '';
@@ -1710,10 +2102,12 @@ function showToast(message){
   pastedImages = Array.isArray(draft.imageIds) ? [...draft.imageIds] : [];
   renderColorPalette();
   await renderPastePreview();
+  renderQuickButtons();
+  closeMinutePicker();
 }
 
   function persistDraftFromDom(){
-  draft.minutes = document.getElementById('minutesInput').value || '10';
+  draft.minutes = (document.getElementById('minutesInput')?.value) || draft.minutes || '10';
   draft.contentHtml = getEditorHtml();
   draft.contentText = getEditorText();
   draft.studiedAt = document.getElementById('studiedAtInput').value;
@@ -1725,29 +2119,75 @@ function showToast(message){
 }
 
   function renderQuickButtons(){
-    document.getElementById('quickMinuteButtons').innerHTML =
-      quickMinutes.map(min => `<button class="press h-10 min-w-[68px] rounded-xl border border-slate-300 font-bold bg-white px-3 text-sm shrink-0" onclick="setQuickMinute(${min})">${min}분</button>`).join('');
+    renderMinutePicker();
+  }
+
+  function renderMinutePicker(){
+    const current = String(document.getElementById('minutesInput')?.value || draft.minutes || '10');
+    const list = document.getElementById('minutePickerList');
+    if(!list) return;
+
+    list.innerHTML = quickMinutes.map(min => `
+      <button
+        type="button"
+        class="press minute-picker-item ${current === String(min) ? 'active' : ''}"
+        onclick="setQuickMinute(${min})"
+      >${min}분</button>
+    `).join('');
+  }
+
+  function toggleMinutePicker(){
+    const panel = document.getElementById('minutePickerPanel');
+    const btn = document.getElementById('toggleMinuteBtn');
+    if(!panel || !btn) return;
+
+    const hidden = getComputedStyle(panel).display === 'none';
+    panel.style.display = hidden ? 'block' : 'none';
+    btn.classList.toggle('is-active', hidden);
+    btn.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+
+    if(hidden){
+      renderMinutePicker();
+      requestAnimationFrame(() => {
+        panel.scrollIntoView({ behavior:'smooth', block:'start' });
+      });
+    }
+  }
+
+  function closeMinutePicker(){
+    const panel = document.getElementById('minutePickerPanel');
+    const btn = document.getElementById('toggleMinuteBtn');
+    if(panel) panel.style.display = 'none';
+    if(btn){ btn.classList.remove('is-active'); btn.setAttribute('aria-pressed', 'false'); }
   }
 
   function setQuickMinute(min){
-    document.getElementById('minutesInput').value = min;
+    const input = document.getElementById('minutesInput');
+    if(input) input.value = min;
+    draft.minutes = String(min);
     persistDraftFromDom();
+    renderMinutePicker();
+    closeMinutePicker();
+    showToast(`${min}분 선택됨`);
   }
 
   function renderSpecialButtons(){
     const symbols = getAllSymbols();
     document.getElementById('specialButtons').innerHTML =
-      symbols.map(ch => `
+      symbols.map(ch => {
+        const isActive = (document.getElementById('customSymbolInput')?.value || '') === ch;
+        return `
         <button
-          class="press h-10 min-w-[58px] rounded-xl border border-slate-300 bg-white text-lg font-bold shrink-0"
-          onclick="insertChar('${ch.replaceAll("'","\\'")}')"
-          ontouchstart="startLongPressDelete('symbol','${ch.replaceAll("'","\\'")}')"
+          class="press h-10 min-w-[58px] rounded-xl border border-slate-300 bg-white text-lg font-bold shrink-0 ${isActive ? 'is-active' : ''}"
+          onclick="insertChar('${ch.replaceAll("'","\'")}'); setActiveSymbol('${ch.replaceAll("'","\'")}')"
+          ontouchstart="startLongPressDelete('symbol','${ch.replaceAll("'","\'")}')"
           ontouchend="cancelLongPress()"
-          onmousedown="startLongPressDelete('symbol','${ch.replaceAll("'","\\'")}')"
+          onmousedown="startLongPressDelete('symbol','${ch.replaceAll("'","\'")}')"
           onmouseup="cancelLongPress()"
           onmouseleave="cancelLongPress()"
         >${ch}</button>
-      `).join('');
+      `;
+      }).join('');
   }
 
   function insertChar(ch){
@@ -1768,7 +2208,7 @@ function showToast(message){
     document.getElementById('tagButtons').innerHTML =
       tags.map(tag => `
         <button
-          class="chip ${draft.tags.includes(tag)?'active':''} shrink-0"
+          class="chip ${draft.tags.includes(tag)?'active is-active':''} shrink-0"
           onclick="toggleTag('${tag.replaceAll("'","\\'")}')"
           ontouchstart="startLongPressDelete('tag','${tag.replaceAll("'","\\'")}')"
           ontouchend="cancelLongPress()"
@@ -1826,7 +2266,16 @@ function showToast(message){
     renderTagButtons();
   }
 
-  function addCustomTag(){
+  
+  function setActiveSymbol(symbol){
+    const input = document.getElementById('customSymbolInput');
+    if(input) input.value = symbol || '';
+    draft.customSymbol = symbol || '';
+    saveDraft();
+    renderSpecialButtons();
+  }
+
+function addCustomTag(){
     const input = document.getElementById('customTagInput');
     const tag = input.value.trim();
     if(!tag) return;
@@ -2038,7 +2487,7 @@ function showToast(message){
     return records.some(r => r.id !== editingId && r.studiedAt === payload.studiedAt && r.contentText === payload.contentText);
   }
   async function saveRecord(){
-  draft.minutes = document.getElementById('minutesInput').value || '10';
+  draft.minutes = (document.getElementById('minutesInput')?.value) || draft.minutes || '10';
   draft.contentHtml = getEditorHtml();
   draft.contentText = getEditorText();
   draft.studiedAt = document.getElementById('studiedAtInput').value;
@@ -2110,9 +2559,11 @@ function showToast(message){
   showToast(wasEditing ? '기록이 수정되었습니다.' : '기록이 저장되었습니다.');
   warnStorageUsage();
   await resetForm();
+  closeMinutePicker();
   await renderRecords();
   renderStats();
   renderQuickInsights();
+  await refreshCurrentQueryView();
 }
 
   async function editRecord(id){
@@ -2175,18 +2626,22 @@ function showToast(message){
   await renderRecords();
   renderStats();
   renderQuickInsights();
+  await refreshCurrentQueryView();
 
   showToast('기록이 삭제되었습니다.');
 }
 
-  function toggleFavorite(id){
+  async function toggleFavorite(id){
     records = records.map(r=>r.id===id ? {...r, favorite:!r.favorite} : r);
     saveRecords();
-    renderRecords();
+    await renderRecords();
     renderQuickInsights();
+    renderStats();
+    updateSelectedDayButton();
+    await refreshCurrentQueryView();
   }
 
-  function toggleReview(id){
+  async function toggleReview(id){
     records = records.map(r=>{
       if(r.id !== id) return r;
       const tags = Array.isArray(r.tags) ? [...r.tags] : [];
@@ -2197,13 +2652,16 @@ function showToast(message){
       };
     });
     saveRecords();
-    renderRecords();
+    await renderRecords();
     renderQuickInsights();
+    renderStats();
+    await refreshCurrentQueryView();
   }
 
-  function toggleExpand(id){
+  async function toggleExpand(id){
     expanded[id] = !expanded[id];
-    renderRecords();
+    await renderRecords();
+    await refreshCurrentQueryView();
   }
 
   function getFilteredRecords(){
@@ -2284,20 +2742,36 @@ function showToast(message){
     document.body.style.overflow = '';
   }
 
-  async function renderRecords(){
-  const q = document.getElementById('searchInput').value.trim();
-  const items = getFilteredRecords();
-  const container = document.getElementById('recordList');
-
-  if (!items.length) {
-    container.innerHTML = '<div class="text-sm text-slate-400">기록이 없습니다.</div>';
-    return;
+  function setQueryViewMode(mode){
+    currentQueryViewMode = mode;
+    const map = { latest: 'latestViewBtn', all: 'allViewBtn' };
+    ['latestViewBtn','allViewBtn'].forEach(id => {
+      const el = document.getElementById(id);
+      if(!el) return;
+      el.classList.toggle('active', map[mode] === id);
+    });
   }
 
-  const allImageIds = items.flatMap(record => Array.isArray(record.imageIds) ? record.imageIds : []);
-  const imageMap = await getImagesByIds(allImageIds);
+  async function refreshCurrentQueryView(){
+    const section = document.getElementById('querySection');
+    const isOpen = section && (section.classList.contains('is-open') || section.style.display === 'block' || getComputedStyle(section).display !== 'none');
+    if(!isOpen) return;
 
-  container.innerHTML = items.map(record => {
+    if(currentQueryViewMode === 'day' && selectedCalendarDateKey){
+      await showDayRecords(selectedCalendarDateKey);
+      return;
+    }
+
+    if(currentQueryViewMode === 'all'){
+      showAllRecordsView();
+      await renderRecords();
+      return;
+    }
+
+    await showLatestRecordView();
+  }
+
+  function buildRecordCardHtml(record, imageMap = {}, q = ''){
     const isExpanded = !!expanded[record.id];
     const text = record.contentText || stripHtml(record.contentHtml || '');
     const isLong = text.length > PREVIEW_LENGTH;
@@ -2344,7 +2818,6 @@ function showToast(message){
                 </div>
 
                 <div class="record-actions-right">
-<!-- <button type="button" class="press record-pill-btn primary" onclick="openRecordDetail('${record.id}')">상세보기</button> -->
                   <button type="button" class="press record-pill-btn" onclick="editRecord('${record.id}')">수정</button>
                   <button type="button" class="press record-pill-btn danger" onclick="deleteRecord('${record.id}')">삭제</button>
                 </div>
@@ -2352,7 +2825,48 @@ function showToast(message){
         </div>
       </div>
     `;
-  }).join('');
+  }
+
+  async function showLatestRecordView(){
+    closeCalendarSection();
+    const panel = document.getElementById('selectedDayRecords');
+    const recent = document.getElementById('recentSection');
+    const title = document.getElementById('queryTitle');
+    const area = document.getElementById('queryScrollArea');
+    const latest = records.slice().sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt))[0];
+
+    title.textContent = '최근 입력 1건';
+    recent.classList.add('hidden');
+    panel.classList.remove('hidden');
+    setQueryViewMode('latest');
+
+    if(!latest){
+      panel.innerHTML = '<div class="text-sm text-slate-400">저장된 기록이 없습니다.</div>';
+      currentDaySpeechItems = [];
+      if(area) area.scrollTop = 0;
+      return;
+    }
+
+    const imageMap = await getImagesByIds(Array.isArray(latest.imageIds) ? latest.imageIds : []);
+    panel.innerHTML = buildRecordCardHtml(latest, imageMap, '');
+    currentDaySpeechItems = [latest];
+    if(area) area.scrollTop = 0;
+  }
+
+  async function renderRecords(){
+  const q = document.getElementById('searchInput').value.trim();
+  const items = getFilteredRecords();
+  const container = document.getElementById('recordList');
+
+  if (!items.length) {
+    container.innerHTML = '<div class="text-sm text-slate-400">기록이 없습니다.</div>';
+    return;
+  }
+
+  const allImageIds = items.flatMap(record => Array.isArray(record.imageIds) ? record.imageIds : []);
+  const imageMap = await getImagesByIds(allImageIds);
+
+  container.innerHTML = items.map(record => buildRecordCardHtml(record, imageMap, q)).join('');
 }
 
   function computeStats(){
@@ -2448,23 +2962,156 @@ function showToast(message){
       else if(mins >= 60) cls = 'bg-blue-400 border-blue-400 text-white';
       else if(mins > 0) cls = 'bg-blue-200 border-blue-200 text-blue-900';
 
-      html += `<button onclick="showDayRecords('${key}')" class="press h-11 rounded-xl border ${cls} font-bold">${d}</button>`;
+      const selectedCls = selectedCalendarDateKey === key ? ' is-selected selected-day' : '';
+      html += `<button type="button" data-date-key="${key}" onclick="selectCalendarDate('${key}')" class="press h-11 rounded-xl border ${cls} font-bold${selectedCls}">${d}</button>`;
     }
 
     box.innerHTML = html;
+    updateSelectedDayButton();
+  }
+
+  function updateSelectedDayButton(){
+    const detail = document.getElementById('calendarDetail');
+    if(!detail) return;
+
+    if(selectedCalendarDateKey){
+      const items = records.filter(r => getDateKey(r.studiedAt) === selectedCalendarDateKey);
+      const total = items.reduce((s, r) => s + Number(r.minutes || 0), 0);
+      detail.textContent = `${selectedCalendarDateKey} · 총 ${total}분`;
+    }else{
+      detail.textContent = '날짜를 누르면 바로 해당 날짜 기록이 열립니다.';
+    }
+  }
+
+  async function selectCalendarDate(dateKey){
+    selectedCalendarDateKey = dateKey;
+    renderCalendarHeatmap();
+    updateSelectedDayButton();
+
+    const items = records.filter(r => getDateKey(r.studiedAt) === dateKey);
+    const total = items.reduce((s, r) => s + Number(r.minutes || 0), 0);
+    const detail = document.getElementById('calendarDetail');
+    if(detail) detail.textContent = `${dateKey} 선택됨 · 총 ${total}분`;
+    showToast(`${dateKey} 선택됨`);
+
+    await showDayRecords(dateKey);
+    openQuerySection(false);
+    closeCalendarSection();
+
+    const area = document.getElementById('queryScrollArea');
+    if(area) area.scrollTop = 0;
+
+    requestAnimationFrame(() => {
+      scrollToSection('querySection');
+      const areaAgain = document.getElementById('queryScrollArea');
+      if(areaAgain) areaAgain.scrollTop = 0;
+    });
+  }
+
+
+  function togglePanelSection(sectionId, buttonId){
+    const section = document.getElementById(sectionId);
+    const btn = document.getElementById(buttonId);
+    if(!section) return;
+
+    const isHidden = getComputedStyle(section).display === 'none';
+
+    if(isHidden){
+      section.style.display = 'block';
+      section.classList.add('is-open');
+      if(btn){
+        btn.classList.add('is-active');
+        btn.setAttribute('aria-pressed', 'true');
+      }
+      requestAnimationFrame(() => {
+        scrollToSection(sectionId);
+      });
+    }else{
+      section.classList.remove('is-open');
+      section.style.display = 'none';
+      if(btn){
+        btn.classList.remove('is-active');
+        btn.setAttribute('aria-pressed', 'false');
+      }
+    }
+  }
+
+
+  function openCalendarSection(){
+    const section = document.getElementById('calendarSection');
+    const btn = document.getElementById('toggleCalendarBtn');
+    if(!section) return;
+    section.style.display = 'block';
+    section.classList.add('is-open');
+    if(btn) btn.classList.add('is-active');
+    scrollToSection('calendarSection');
+  }
+
+  function closeCalendarSection(){
+    const section = document.getElementById('calendarSection');
+    const btn = document.getElementById('toggleCalendarBtn');
+    if(!section) return;
+    section.style.display = 'none';
+    section.classList.remove('is-open');
+    if(btn){ btn.classList.remove('is-active'); btn.setAttribute('aria-pressed', 'false'); }
+  }
+
+  function toggleCalendarSection(){
+    const section = document.getElementById('calendarSection');
+    if(!section) return;
+    const isOpen = section.classList.contains('is-open') || section.style.display === 'block';
+    if(isOpen) closeCalendarSection();
+    else openCalendarSection();
+  }
+
+  function openQuerySection(shouldScroll = true){
+    const section = document.getElementById('querySection');
+    if(!section) return;
+    section.style.display = 'block';
+    section.classList.add('is-open');
+    if(shouldScroll) scrollToSection('querySection');
+  }
+
+  function closeQuerySection(){
+    const section = document.getElementById('querySection');
+    if(!section) return;
+    section.style.display = 'none';
+    section.classList.remove('is-open');
+  }
+
+  function openAllRecordsPanel(){
+    showAllRecordsView();
+    openQuerySection(true);
+  }
+
+  async function openSelectedDayView(){
+    if(!selectedCalendarDateKey){
+      openCalendarSection();
+      showToast('먼저 달력에서 날짜를 선택해 주세요.');
+      return;
+    }
+
+    await showDayRecords(selectedCalendarDateKey);
+    openQuerySection(true);
+    closeCalendarSection();
   }
 
   function showAllRecordsView(){
+    closeCalendarSection();
     document.getElementById('queryTitle').textContent = '전체 조회';
     document.getElementById('selectedDayRecords').classList.add('hidden');
     document.getElementById('selectedDayRecords').innerHTML = '';
     document.getElementById('recentSection').classList.remove('hidden');
+    setQueryViewMode('all');
 
     const area = document.getElementById('queryScrollArea');
     if(area) area.scrollTop = 0;
   }
 
   async function showDayRecords(dateKey){
+  selectedCalendarDateKey = dateKey;
+  updateSelectedDayButton();
+
   const items = records
     .filter(r => getDateKey(r.studiedAt) === dateKey)
     .sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
@@ -2482,6 +3129,7 @@ function showToast(message){
   title.textContent = `${dateKey} 학습 기록`;
   recent.classList.add('hidden');
   panel.classList.remove('hidden');
+  setQueryViewMode('day');
 
   if(!items.length){
     panel.innerHTML = '<div class="text-sm text-slate-400">해당 날짜 기록이 없습니다.</div>';
@@ -2990,6 +3638,10 @@ function readAllRecords(){
   renderStats();
   renderQuickInsights();
   await renderPastePreview();
+  selectedCalendarDateKey = '';
+  updateSelectedDayButton();
+  openQuerySection(false);
+  await showLatestRecordView();
   startLiveTime();
 });
 
