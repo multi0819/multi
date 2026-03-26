@@ -1725,7 +1725,15 @@ function normalizeRecordItem(item, type='record'){
 
 function normalizeRecordList(list, type='record'){
   if(!Array.isArray(list)) return [];
-  return list.map(item => normalizeRecordItem(item, type)).filter(item => item.minutes > 0 && item.contentText);
+  return list
+    .map(item => normalizeRecordItem(item, type))
+    .filter(item => {
+      const hasText = !!String(item.contentText || '').trim();
+      const hasHtml = !!String(item.contentHtml || '').trim();
+      const hasImages = Array.isArray(item.imageIds) && item.imageIds.length > 0;
+      const hasMinutes = Number(item.minutes || 0) > 0;
+      return hasText || hasHtml || hasImages || hasMinutes;
+    });
 }
 
 function readLegacyRecordsFromLocalStorage(){
@@ -2773,7 +2781,7 @@ function addCustomTag(){
 
   function buildRecordCardHtml(record, imageMap = {}, q = ''){
     const isExpanded = !!expanded[record.id];
-    const text = record.contentText || stripHtml(record.contentHtml || '');
+    const text = record.contentText || stripHtml(record.contentHtml || '') || '[내용 없음]';
     const isLong = text.length > PREVIEW_LENGTH;
     const bodyHtml = isExpanded || !isLong
       ? (record.contentHtml || escapeHtml(text))
@@ -3144,7 +3152,7 @@ function addCustomTag(){
     <div class="space-y-3">
       ${items.map(item => {
         const isExpanded = !!expanded[item.id];
-        const text = item.contentText || stripHtml(item.contentHtml || '');
+        const text = item.contentText || stripHtml(item.contentHtml || '') || '[내용 없음]';
         const isLong = text.length > PREVIEW_LENGTH;
         const bodyHtml = isExpanded || !isLong
           ? (item.contentHtml || escapeHtml(text))
@@ -3641,7 +3649,8 @@ function readAllRecords(){
   selectedCalendarDateKey = '';
   updateSelectedDayButton();
   openQuerySection(false);
-  await showLatestRecordView();
+  showAllRecordsView();
+  await renderRecords();
   startLiveTime();
 });
 
