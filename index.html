@@ -8,8 +8,450 @@
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0b1322">
   <title>학습기록</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.tailwindcss.com">
+function syncBottomRateToTop(value){
+  const top = document.getElementById('speechRateSelect');
+  if(top){
+    top.value = String(value);
+    if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+  }
+}
+
+function syncTopRateToBottom(){
+  const top = document.getElementById('speechRateSelect');
+  const bottom = document.getElementById('bottomPlayerRate');
+  if(top && bottom){
+    bottom.value = String(top.value || '1');
+  }
+}
+
+function updateBottomPlayerState(isReading){
+  document.body.classList.toggle('player-reading', !!isReading);
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = isReading ? '읽는 중' : '대기 중';
+  }
+}
+
+function updateBottomPlayerProgress(current, total){
+  const safeTotal = Math.max(0, Number(total || 0));
+  const safeCurrent = Math.max(0, Number(current || 0));
+  const pageEl = document.getElementById('bottomPlayerPage');
+  const fillEl = document.getElementById('bottomPlayerProgressFill');
+
+  if(pageEl){
+    if(safeTotal > 0){
+      pageEl.textContent = `${safeCurrent} / ${safeTotal}`;
+    }else{
+      pageEl.textContent = '0 / 0';
+    }
+  }
+
+  if(fillEl){
+    const pct = safeTotal > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeTotal) * 100)) : 0;
+    fillEl.style.width = `${pct}%`;
+  }
+}
+
+function refreshBottomPlayerFromView(){
+  syncTopRateToBottom();
+  const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 0;
+  const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+  const end = Number(document.getElementById('repeatEndInput')?.value || total);
+  const usingRange = total > 0 ? !(start === 1 && end === total) : false;
+
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = usingRange ? `구간 ${start}~${end}` : '전체 준비';
+  }
+  updateBottomPlayerProgress(0, total);
+}
+
+(function(){
+  const originalReadUnifiedAction = window.readUnifiedAction;
+  if(typeof originalReadUnifiedAction === 'function'){
+    window.readUnifiedAction = function(){
+      updateBottomPlayerState(true);
+      refreshBottomPlayerFromView();
+      return originalReadUnifiedAction.apply(this, arguments);
+    };
+  }
+
+  const originalStopSpeech = window.stopSpeech;
+  if(typeof originalStopSpeech === 'function'){
+    window.stopSpeech = function(){
+      const result = originalStopSpeech.apply(this, arguments);
+      updateBottomPlayerState(false);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  const originalReadFilteredRecords = window.readFilteredRecords;
+  if(typeof originalReadFilteredRecords === 'function'){
+    window.readFilteredRecords = function(){
+      const result = originalReadFilteredRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadAllRecords = window.readAllRecords;
+  if(typeof originalReadAllRecords === 'function'){
+    window.readAllRecords = function(){
+      const result = originalReadAllRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadRepeatSection = window.readRepeatSection;
+  if(typeof originalReadRepeatSection === 'function'){
+    window.readRepeatSection = function(){
+      const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+      const end = Number(document.getElementById('repeatEndInput')?.value || start);
+      const total = Math.max(1, end - start + 1);
+      const result = originalReadRepeatSection.apply(this, arguments);
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      const statusEl = document.getElementById('bottomPlayerStatus');
+      if(statusEl) statusEl.textContent = `구간 ${start}~${end} 읽는 중`;
+      return result;
+    };
+  }
+
+  const originalUpdateSpeechRateLabel = window.updateSpeechRateLabel;
+  if(typeof originalUpdateSpeechRateLabel === 'function'){
+    window.updateSpeechRateLabel = function(){
+      const result = originalUpdateSpeechRateLabel.apply(this, arguments);
+      syncTopRateToBottom();
+      return result;
+    };
+  }
+
+  const originalAutoSyncRepeatRange = window.autoSyncRepeatRange;
+  if(typeof originalAutoSyncRepeatRange === 'function'){
+    window.autoSyncRepeatRange = function(){
+      const result = originalAutoSyncRepeatRange.apply(this, arguments);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  window.addEventListener('load', function(){
+    syncTopRateToBottom();
+    refreshBottomPlayerFromView();
+  });
+})();
+
+
+function renderBottomRateMenu(){
+  const menu = document.getElementById('bottomRateMenu');
+  const top = document.getElementById('speechRateSelect');
+  if(!menu || !top) return;
+
+  const values = ['0.8','0.9','1','1.1','1.2','1.35','1.5'];
+  const current = String(top.value || '1');
+
+  menu.innerHTML = values.map(v => {
+    const label = `${Number(v).toFixed(1)}x`;
+    const active = current === v ? ' active' : '';
+    return `<button type="button" class="bottom-rate-option${active}" onclick="selectBottomRate('${v}', event)">${label}</button>`;
+  }).join('');
+}
+
+function toggleBottomRatePicker(event){
+  if(event) event.stopPropagation();
+  const picker = document.getElementById('bottomRatePicker');
+  if(!picker) return;
+  picker.classList.toggle('is-open');
+  renderBottomRateMenu();
+}
+
+function selectBottomRate(value, event){
+  if(event) event.stopPropagation();
+  syncBottomRateToTop(value);
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker) picker.classList.remove('is-open');
+}
+
+(function(){
+  const originalSyncBottomRateToTop = window.syncBottomRateToTop;
+  window.syncBottomRateToTop = function(value){
+    if(typeof originalSyncBottomRateToTop === 'function'){
+      originalSyncBottomRateToTop(value);
+    }else{
+      const top = document.getElementById('speechRateSelect');
+      if(top){
+        top.value = String(value);
+        if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+      }
+    }
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(bottomValue) bottomValue.textContent = `${Number(value).toFixed(1)}x`;
+    renderBottomRateMenu();
+  };
+
+  const originalSyncTopRateToBottom = window.syncTopRateToBottom;
+  window.syncTopRateToBottom = function(){
+    if(typeof originalSyncTopRateToBottom === 'function'){
+      originalSyncTopRateToBottom();
+    }
+    const top = document.getElementById('speechRateSelect');
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(top && bottomValue){
+      bottomValue.textContent = `${Number(top.value || '1').toFixed(1)}x`;
+    }
+    renderBottomRateMenu();
+  };
+})();
+
+function syncInlineCalendarButton(){
+  const inlineBtn = document.getElementById('inlineCalendarBtn');
+  const section = document.getElementById('calendarSection');
+  if(!inlineBtn || !section) return;
+  inlineBtn.classList.toggle('active', section.classList.contains('is-open'));
+}
+
+document.addEventListener('click', function(e){
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker && !picker.contains(e.target)){
+    picker.classList.remove('is-open');
+  }
+});
+
+window.addEventListener('load', function(){
+  if(typeof syncTopRateToBottom === 'function') syncTopRateToBottom();
+  syncInlineCalendarButton();
+});
+
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js">
+function syncBottomRateToTop(value){
+  const top = document.getElementById('speechRateSelect');
+  if(top){
+    top.value = String(value);
+    if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+  }
+}
+
+function syncTopRateToBottom(){
+  const top = document.getElementById('speechRateSelect');
+  const bottom = document.getElementById('bottomPlayerRate');
+  if(top && bottom){
+    bottom.value = String(top.value || '1');
+  }
+}
+
+function updateBottomPlayerState(isReading){
+  document.body.classList.toggle('player-reading', !!isReading);
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = isReading ? '읽는 중' : '대기 중';
+  }
+}
+
+function updateBottomPlayerProgress(current, total){
+  const safeTotal = Math.max(0, Number(total || 0));
+  const safeCurrent = Math.max(0, Number(current || 0));
+  const pageEl = document.getElementById('bottomPlayerPage');
+  const fillEl = document.getElementById('bottomPlayerProgressFill');
+
+  if(pageEl){
+    if(safeTotal > 0){
+      pageEl.textContent = `${safeCurrent} / ${safeTotal}`;
+    }else{
+      pageEl.textContent = '0 / 0';
+    }
+  }
+
+  if(fillEl){
+    const pct = safeTotal > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeTotal) * 100)) : 0;
+    fillEl.style.width = `${pct}%`;
+  }
+}
+
+function refreshBottomPlayerFromView(){
+  syncTopRateToBottom();
+  const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 0;
+  const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+  const end = Number(document.getElementById('repeatEndInput')?.value || total);
+  const usingRange = total > 0 ? !(start === 1 && end === total) : false;
+
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = usingRange ? `구간 ${start}~${end}` : '전체 준비';
+  }
+  updateBottomPlayerProgress(0, total);
+}
+
+(function(){
+  const originalReadUnifiedAction = window.readUnifiedAction;
+  if(typeof originalReadUnifiedAction === 'function'){
+    window.readUnifiedAction = function(){
+      updateBottomPlayerState(true);
+      refreshBottomPlayerFromView();
+      return originalReadUnifiedAction.apply(this, arguments);
+    };
+  }
+
+  const originalStopSpeech = window.stopSpeech;
+  if(typeof originalStopSpeech === 'function'){
+    window.stopSpeech = function(){
+      const result = originalStopSpeech.apply(this, arguments);
+      updateBottomPlayerState(false);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  const originalReadFilteredRecords = window.readFilteredRecords;
+  if(typeof originalReadFilteredRecords === 'function'){
+    window.readFilteredRecords = function(){
+      const result = originalReadFilteredRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadAllRecords = window.readAllRecords;
+  if(typeof originalReadAllRecords === 'function'){
+    window.readAllRecords = function(){
+      const result = originalReadAllRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadRepeatSection = window.readRepeatSection;
+  if(typeof originalReadRepeatSection === 'function'){
+    window.readRepeatSection = function(){
+      const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+      const end = Number(document.getElementById('repeatEndInput')?.value || start);
+      const total = Math.max(1, end - start + 1);
+      const result = originalReadRepeatSection.apply(this, arguments);
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      const statusEl = document.getElementById('bottomPlayerStatus');
+      if(statusEl) statusEl.textContent = `구간 ${start}~${end} 읽는 중`;
+      return result;
+    };
+  }
+
+  const originalUpdateSpeechRateLabel = window.updateSpeechRateLabel;
+  if(typeof originalUpdateSpeechRateLabel === 'function'){
+    window.updateSpeechRateLabel = function(){
+      const result = originalUpdateSpeechRateLabel.apply(this, arguments);
+      syncTopRateToBottom();
+      return result;
+    };
+  }
+
+  const originalAutoSyncRepeatRange = window.autoSyncRepeatRange;
+  if(typeof originalAutoSyncRepeatRange === 'function'){
+    window.autoSyncRepeatRange = function(){
+      const result = originalAutoSyncRepeatRange.apply(this, arguments);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  window.addEventListener('load', function(){
+    syncTopRateToBottom();
+    refreshBottomPlayerFromView();
+  });
+})();
+
+
+function renderBottomRateMenu(){
+  const menu = document.getElementById('bottomRateMenu');
+  const top = document.getElementById('speechRateSelect');
+  if(!menu || !top) return;
+
+  const values = ['0.8','0.9','1','1.1','1.2','1.35','1.5'];
+  const current = String(top.value || '1');
+
+  menu.innerHTML = values.map(v => {
+    const label = `${Number(v).toFixed(1)}x`;
+    const active = current === v ? ' active' : '';
+    return `<button type="button" class="bottom-rate-option${active}" onclick="selectBottomRate('${v}', event)">${label}</button>`;
+  }).join('');
+}
+
+function toggleBottomRatePicker(event){
+  if(event) event.stopPropagation();
+  const picker = document.getElementById('bottomRatePicker');
+  if(!picker) return;
+  picker.classList.toggle('is-open');
+  renderBottomRateMenu();
+}
+
+function selectBottomRate(value, event){
+  if(event) event.stopPropagation();
+  syncBottomRateToTop(value);
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker) picker.classList.remove('is-open');
+}
+
+(function(){
+  const originalSyncBottomRateToTop = window.syncBottomRateToTop;
+  window.syncBottomRateToTop = function(value){
+    if(typeof originalSyncBottomRateToTop === 'function'){
+      originalSyncBottomRateToTop(value);
+    }else{
+      const top = document.getElementById('speechRateSelect');
+      if(top){
+        top.value = String(value);
+        if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+      }
+    }
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(bottomValue) bottomValue.textContent = `${Number(value).toFixed(1)}x`;
+    renderBottomRateMenu();
+  };
+
+  const originalSyncTopRateToBottom = window.syncTopRateToBottom;
+  window.syncTopRateToBottom = function(){
+    if(typeof originalSyncTopRateToBottom === 'function'){
+      originalSyncTopRateToBottom();
+    }
+    const top = document.getElementById('speechRateSelect');
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(top && bottomValue){
+      bottomValue.textContent = `${Number(top.value || '1').toFixed(1)}x`;
+    }
+    renderBottomRateMenu();
+  };
+})();
+
+function syncInlineCalendarButton(){
+  const inlineBtn = document.getElementById('inlineCalendarBtn');
+  const section = document.getElementById('calendarSection');
+  if(!inlineBtn || !section) return;
+  inlineBtn.classList.toggle('active', section.classList.contains('is-open'));
+}
+
+document.addEventListener('click', function(e){
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker && !picker.contains(e.target)){
+    picker.classList.remove('is-open');
+  }
+});
+
+window.addEventListener('load', function(){
+  if(typeof syncTopRateToBottom === 'function') syncTopRateToBottom();
+  syncInlineCalendarButton();
+});
+
+</script>
   <style>
   html { scroll-padding-top: 110px; }
 
@@ -333,6 +775,14 @@
     background:linear-gradient(180deg, rgba(18,27,45,.9), rgba(12,18,31,.9));
     border:1px solid rgba(255,255,255,.08);
     border-radius:18px;
+    padding:16px;
+  }
+
+  .editor-box{
+    background:linear-gradient(180deg, rgba(18,27,45,.9), rgba(12,18,31,.9));
+    border:1px solid rgba(255,255,255,.08);
+    border-radius:18px;
+    padding:16px;
   }
 
   .paste-empty{
@@ -343,12 +793,18 @@
   .record-image,
   .query-card img{
     width:100%;
-    height:140px;
-    object-fit:cover;
+    height:auto;
+    object-fit:contain;
     border-radius:14px;
     border:1px solid rgba(255,255,255,.14);
     display:block;
   }
+
+  .query-card .record-image-wrap,
+  .query-card .image-row{
+    width:100%;
+  }
+
 
   .mark-hit{
     background:#fde68a;
@@ -464,7 +920,8 @@
   #queryScrollArea{
     max-height:68vh;
     overflow-y:auto;
-    padding-right:4px;
+    padding-right:0;
+    padding-left:0;
   }
 
   #queryScrollArea::-webkit-scrollbar{
@@ -482,12 +939,41 @@
 
   .query-card{
     margin-bottom:10px;
+    width:100%;
   }
 
   .query-card-body{
     display:flex;
     flex-direction:column;
-    gap:10px;
+    gap:12px;
+    width:100%;
+    padding:0;
+  }
+
+  #recordList{
+    width:100%;
+  }
+
+  #recordList .query-card,
+  #selectedDayRecords .query-card{
+    width:100%;
+  }
+
+  #recordList .query-card > div,
+  #selectedDayRecords .query-card > div{
+    width:100%;
+  }
+
+  #recordList .query-card .card,
+  #selectedDayRecords .query-card .card{
+    width:100%;
+  }
+
+  .query-card .record-preview,
+  .query-card .detail-content-preview,
+  .query-card .content-preview{
+    width:100%;
+    max-width:none;
   }
 
 
@@ -569,27 +1055,29 @@
   .speech-rate-box{
     display:flex;
     align-items:center;
-    gap:8px;
-    padding:7px 10px;
+    gap:6px;
+    padding:6px 8px;
     border-radius:14px;
     border:1px solid rgba(255,255,255,.12);
-    background:rgba(255,255,255,.04);
+    background:rgba(255,255,255,.05);
     flex:0 0 auto;
-    min-width:0;
-    max-width:100%;
+    min-width:228px;
+    max-width:none;
     white-space:nowrap;
+    height:46px;
+    box-sizing:border-box;
   }
 
   .speech-rate-step{
-    width:36px;
-    min-width:36px;
-    height:36px;
+    width:32px;
+    min-width:32px;
+    height:32px;
     padding:0;
     border-radius:10px;
     border:1px solid rgba(255,255,255,.12);
     background:rgba(255,255,255,.04);
     color:#f8fbff;
-    font-size:22px;
+    font-size:18px;
     font-weight:900;
     line-height:1;
     display:inline-flex;
@@ -599,7 +1087,7 @@
   }
 
   .speech-rate-label{
-    font-size:12px;
+    font-size:10px;
     font-weight:800;
     color:#dbe6f6;
     white-space:nowrap;
@@ -607,12 +1095,12 @@
   }
 
   .speech-rate-select{
-    width:84px;
-    min-width:84px;
-    height:34px;
+    width:68px;
+    min-width:68px;
+    height:32px;
     border-radius:10px;
-    padding:0 8px;
-    font-size:13px;
+    padding:0 6px;
+    font-size:11px;
     font-weight:800;
     background:#0e1626 !important;
     color:#f8fbff !important;
@@ -746,6 +1234,18 @@
     align-items:center;
     gap:8px;
     flex-wrap:wrap;
+  }
+
+  #recordList .rounded-3xl,
+  #selectedDayRecords .rounded-3xl{
+    width:100% !important;
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+
+  #recordList .p-4,
+  #selectedDayRecords .p-4{
+    box-sizing:border-box;
   }
 
   .record-pill-btn{
@@ -1001,13 +1501,11 @@
 
   #contentEditor{
     width:100%;
-    min-height:260px;
+    min-height:180px;
     background:#0a1220 !important;
-    border:2px solid rgba(95,132,221,.55) !important;
-    box-shadow:
-      inset 0 0 0 1px rgba(255,255,255,.04),
-      0 0 0 2px rgba(95,132,221,.10);
-    border-radius:18px;
+    border:1px solid rgba(255,255,255,.10) !important;
+    box-shadow:none;
+    border-radius:16px;
     padding:16px;
     font-size:18px;
     line-height:1.8;
@@ -1074,10 +1572,11 @@
   }
 
   .detail-content{
-    font-size:24px;
+    font-size:21px;
     font-weight:900;
-    line-height:1.72;
-    word-break:break-word;
+    line-height:1.62;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
   }
 
   .detail-meta{
@@ -1166,9 +1665,26 @@
 
   .inline-add-row,
   .inline-photo-row{
-    display:flex;
-    gap:8px;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
     align-items:center;
+  }
+
+  .photo-action-btn{
+    min-height:56px;
+    padding:0 12px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.05);
+    color:#eef4ff;
+    font-size:15px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    line-height:1.2;
   }
 
   .inline-add-row input{
@@ -1237,7 +1753,804 @@
     filter:grayscale(.18);
   }
 
-  </style>
+  
+  /* ===== UI cleanup overrides ===== */
+  :root{
+    --page-x: 12px;
+    --card-bg: #101827;
+    --card-border: rgba(255,255,255,.08);
+    --card-radius: 18px;
+    --control-bg: #0d1523;
+    --control-border: rgba(255,255,255,.12);
+    --text-main: #edf3fb;
+    --text-sub: #b8c6da;
+    --primary: #2563eb;
+    --primary-2: #3b82f6;
+  }
+
+  html, body{
+    overflow-x:hidden;
+  }
+
+  body{
+    padding:16px var(--page-x) 28px !important;
+    background:
+      radial-gradient(circle at top left, rgba(79,125,243,.10), transparent 26%),
+      linear-gradient(180deg, #09111d 0%, #0b1322 52%, #08101b 100%) !important;
+  }
+
+  body > .card,
+  body > .grid,
+  body > #querySection,
+  body > #calendarSection,
+  body > #filterSection,
+  body > #goalSection,
+  body > #chartSection,
+  body > #tagChartSection,
+  body > #backupSection{
+    margin-left:0 !important;
+    margin-right:0 !important;
+  }
+
+  .card{
+    background: var(--card-bg) !important;
+    border:1px solid var(--card-border) !important;
+    border-radius: var(--card-radius) !important;
+    box-shadow:none !important;
+  }
+
+  .sticky-nav{
+    top:10px;
+  }
+
+  .sticky-nav.card{
+    padding:10px !important;
+  }
+
+  .sticky-nav .flex{
+    gap:8px !important;
+    align-items:center;
+  }
+
+  .nav-divider{
+    width:1px;
+    align-self:stretch;
+    background:rgba(255,255,255,.08);
+    margin:0 2px;
+    border-radius:999px;
+  }
+
+  .action-chip,
+  .minute-toggle-btn,
+  .nav-minute-btn,
+  .record-pill-btn,
+  .calendar-action-btn,
+  .backup-btn,
+  .speak-btn,
+  .repeat-mini-trigger,
+  .speech-rate-step,
+  .record-icon-btn,
+  .query-close-btn{
+    min-height:42px !important;
+    height:42px !important;
+    border-radius:12px !important;
+    box-shadow:none !important;
+  }
+
+  .action-chip{
+    padding:0 14px !important;
+    font-size:13px !important;
+    background:#172033 !important;
+    border:1px solid rgba(255,255,255,.10) !important;
+    color:#e7eef9 !important;
+  }
+
+  .sticky-nav .action-chip.is-active,
+  .sticky-nav .action-chip.active,
+  .sticky-nav .action-chip[aria-pressed="true"],
+  .calendar-nav-btn.is-active,
+  #toggleMinuteBtn.is-active{
+    background:linear-gradient(135deg,var(--primary),var(--primary-2)) !important;
+    border-color:rgba(130,170,255,.38) !important;
+    color:#fff !important;
+  }
+
+  #saveCountText{
+    background:#0f1726 !important;
+    color:#dbe6f6 !important;
+    border-style:dashed !important;
+    min-width:92px !important;
+    text-align:center !important;
+    font-size:12px !important;
+    font-weight:800 !important;
+  }
+
+  input, select, textarea,
+  #contentEditor,
+  .repeat-mini-trigger,
+  .speech-rate-select,
+  .speech-repeat-input,
+  .top-minute-input{
+    background:var(--control-bg) !important;
+    border:1px solid var(--control-border) !important;
+    color:var(--text-main) !important;
+    box-shadow:none !important;
+  }
+
+  input, select{
+    min-height:44px;
+    border-radius:12px !important;
+  }
+
+  #contentEditor{
+    min-height:220px;
+    border-radius:16px !important;
+    padding:14px !important;
+    line-height:1.7 !important;
+    font-size:17px !important;
+  }
+
+  .paste-box{
+    border-radius:16px !important;
+    padding:14px !important;
+    background:#0d1523 !important;
+    border:1px solid rgba(255,255,255,.08) !important;
+  }
+
+  .inline-photo-row,
+  .inline-add-row{
+    gap:10px !important;
+  }
+
+  .inline-add-row{
+    display:grid !important;
+    grid-template-columns:1fr auto 1fr auto;
+    align-items:center;
+  }
+
+  .inline-add-row button,
+  .inline-photo-row button,
+  #saveBtn,
+  #goalSection button,
+  #backupSection button,
+  .calendar-action-btn,
+  .record-pill-btn,
+  .speak-btn,
+  .query-close-btn,
+  .detail-close{
+    transition:transform .08s ease, opacity .15s ease, border-color .15s ease !important;
+  }
+
+  .inline-add-row button:active,
+  .inline-photo-row button:active,
+  #saveBtn:active,
+  #goalSection button:active,
+  #backupSection button:active,
+  .calendar-action-btn:active,
+  .record-pill-btn:active,
+  .speak-btn:active,
+  .query-close-btn:active,
+  .detail-close:active{
+    transform:scale(.98);
+  }
+
+  .photo-half-btn,
+  .inline-add-row button,
+  #saveBtn,
+  #goalSection button{
+    min-height:44px !important;
+    border-radius:12px !important;
+  }
+
+  .photo-half-btn,
+  .inline-add-row button{
+    background:rgba(255,255,255,.04) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+    color:#edf3fb !important;
+  }
+
+  #saveBtn,
+  #goalSection button,
+  .calendar-action-btn.primary,
+  .record-pill-btn.primary{
+    background:linear-gradient(135deg,var(--primary),var(--primary-2)) !important;
+    color:#fff !important;
+    border:1px solid rgba(130,170,255,.32) !important;
+  }
+
+  .grid.grid-cols-2.gap-2{
+    gap:12px !important;
+  }
+
+  .section-headline{
+    display:flex;
+    align-items:flex-end;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:14px;
+  }
+
+  .section-headline .title{
+    font-size:20px;
+    font-weight:900;
+    color:#f8fbff;
+    letter-spacing:-0.02em;
+  }
+
+  .section-headline .sub{
+    font-size:12px;
+    color:#9eb0c8;
+    font-weight:700;
+  }
+
+  #querySection,
+  #filterSection,
+  #goalSection,
+  #chartSection,
+  #tagChartSection,
+  #backupSection,
+  #calendarSection{
+    padding:16px !important;
+  }
+
+  #querySection .query-topbar{
+    gap:14px !important;
+  }
+
+  .query-header-row{
+    margin-bottom:0 !important;
+  }
+
+  .query-view-switch{
+    gap:10px !important;
+  }
+
+  .query-actions{
+    gap:10px !important;
+    padding-bottom:4px !important;
+  }
+
+  .speech-rate-box,
+  .speech-repeat-box{
+    min-height:44px;
+    border-radius:14px !important;
+    background:rgba(255,255,255,.04) !important;
+    border:1px solid rgba(255,255,255,.10) !important;
+  }
+
+  .speech-repeat-bar{
+    gap:10px !important;
+    align-items:flex-start !important;
+  }
+
+  .speech-repeat-help{
+    width:100%;
+    padding-left:2px;
+    line-height:1.45;
+  }
+
+  .query-close-btn,
+  .detail-close{
+    background:rgba(255,255,255,.04) !important;
+    border:1px solid rgba(255,255,255,.12) !important;
+  }
+
+  #calendarTitle,
+  #queryTitle,
+  #topStudyText,
+  #goalMinutesText,
+  #weekMinutesText,
+  #streakText{
+    color:#f8fbff !important;
+  }
+
+  #calendarSection .text-\[34px\]{
+    font-size:24px !important;
+    line-height:1.15 !important;
+    margin-bottom:16px !important;
+  }
+
+  #calendarHeatmap{
+    gap:8px !important;
+    margin-top:8px !important;
+    margin-bottom:12px !important;
+  }
+
+  #calendarHeatmap button{
+    height:50px !important;
+    border-radius:14px !important;
+    box-shadow:none !important;
+  }
+
+  .backup-stack{
+    gap:12px !important;
+  }
+
+  .backup-btn{
+    min-height:46px !important;
+    border-radius:14px !important;
+    font-size:13px !important;
+  }
+
+  .record-actions{
+    gap:12px !important;
+  }
+
+  .record-preview.collapsed{
+    -webkit-line-clamp:5;
+  }
+
+  .stat-strip{
+    gap:10px !important;
+    padding-bottom:4px;
+  }
+
+  .stat-card{
+    min-width:120px !important;
+    border-radius:16px !important;
+    padding:12px !important;
+    box-shadow:none !important;
+  }
+
+  .stat-value{
+    font-size:18px !important;
+  }
+
+  .color-palette{
+    gap:10px !important;
+  }
+
+  .color-dot{
+    width:30px !important;
+    height:30px !important;
+  }
+
+  @media (max-width: 640px){
+    .inline-add-row{
+      grid-template-columns:1fr auto;
+    }
+
+    .inline-add-row input{
+      min-width:0;
+    }
+
+    .inline-add-row button{
+      white-space:nowrap;
+    }
+
+    .query-view-switch{
+      display:grid !important;
+      grid-template-columns:1fr 1fr;
+    }
+
+    .speech-rate-box{
+      width:100%;
+      justify-content:space-between;
+    }
+
+    .speak-btn.compact-query-btn{
+      min-width:110px !important;
+    }
+  }
+
+
+  
+  /* v5: record card readability cleanup */
+  #querySection{
+    padding:14px;
+  }
+
+  #queryScrollArea{
+    max-height:68vh;
+    overflow-y:auto;
+    padding-right:0;
+    padding-left:0;
+  }
+
+  #recordList,
+  #selectedDayRecords{
+    width:100%;
+  }
+
+  #recordList > *,
+  #selectedDayRecords > *{
+    width:100%;
+  }
+
+  .query-card{
+    width:100%;
+    margin-bottom:12px;
+  }
+
+  .query-card-body{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+    padding:0;
+  }
+
+  .record-preview,
+  .content-preview,
+  .detail-content-preview{
+    width:100%;
+    max-width:none;
+    font-size:18px;
+    line-height:1.55;
+    word-break:keep-all;
+    overflow-wrap:break-word;
+  }
+
+  .query-card .card{
+    width:100%;
+  }
+
+  .query-card .card.p-4,
+  .query-card .card .p-4{
+    padding:14px !important;
+  }
+
+  .query-card .text-3xl{
+    font-size:1.95rem !important;
+    line-height:1.45 !important;
+  }
+
+  .query-card .text-2xl{
+    font-size:1.65rem !important;
+    line-height:1.42 !important;
+  }
+
+  .query-card img{
+    width:100% !important;
+    height:auto !important;
+    max-height:none !important;
+    object-fit:contain !important;
+    border-radius:16px;
+    display:block;
+  }
+
+  .query-card .grid.grid-cols-2{
+    grid-template-columns:1fr !important;
+    gap:12px !important;
+  }
+
+  .query-card .record-image,
+  .query-card .record-image-wrap,
+  .query-card .image-row{
+    width:100% !important;
+  }
+
+
+/* v15 세련된 그라데이션 + 아이콘 */
+.speak-btn{
+  background:
+    radial-gradient(circle at center, rgba(95,145,255,.28) 0%, rgba(95,145,255,.14) 28%, rgba(95,145,255,0) 60%),
+    linear-gradient(180deg, rgba(28,39,61,.96), rgba(18,27,43,.96)) !important;
+  color:#f8fbff !important;
+  border:1px solid rgba(115,155,255,.24) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 10px 22px rgba(0,0,0,.18) !important;
+  font-weight:900 !important;
+  letter-spacing:-0.01em;
+}
+
+.speak-btn.stop{
+  background:
+    radial-gradient(circle at center, rgba(255,112,112,.22) 0%, rgba(255,112,112,.10) 28%, rgba(255,112,112,0) 60%),
+    linear-gradient(180deg, rgba(42,24,31,.96), rgba(27,17,22,.96)) !important;
+  color:#ffd3d3 !important;
+  border:1px solid rgba(255,120,120,.24) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.04),
+    0 10px 22px rgba(0,0,0,.18) !important;
+}
+
+.toggle-btn{
+  font-weight:900 !important;
+  letter-spacing:0.2px;
+}
+
+.toggle-btn.active{
+  background:
+    radial-gradient(circle at center, rgba(102,153,255,.24) 0%, rgba(102,153,255,.10) 28%, rgba(102,153,255,0) 60%),
+    linear-gradient(180deg, rgba(26,39,63,.96), rgba(19,30,49,.96)) !important;
+  border:1px solid rgba(107,156,255,.28) !important;
+  color:#edf4ff !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.06),
+    0 8px 18px rgba(0,0,0,.16) !important;
+}
+
+.speech-rate-box{
+  background:rgba(255,255,255,.02) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+}
+
+.repeat-mini-trigger,
+.speech-rate-select{
+  background:#0b1220 !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  font-weight:900 !important;
+}
+
+.speech-rate-label,
+.speech-repeat-box span{
+  color:#c7d2e5 !important;
+  font-weight:900 !important;
+}
+
+.speak-btn .btn-icon{
+  font-size:15px;
+  line-height:1;
+  margin-right:8px;
+  opacity:.95;
+}
+
+button[aria-label="닫기"],
+.close-btn{
+  opacity:0.5 !important;
+}
+
+
+/* v16 완성 다듬기 */
+
+/* 탭 비활성 상태 더 어둡게 */
+.toggle-btn{
+  background: linear-gradient(180deg, rgba(20,28,44,.9), rgba(14,20,32,.9)) !important;
+  border:1px solid rgba(255,255,255,.08) !important;
+  color:#9fb0c9 !important;
+}
+
+.toggle-btn.active{
+  background:
+    radial-gradient(circle at center, rgba(110,160,255,.25) 0%, rgba(110,160,255,.10) 35%, rgba(110,160,255,0) 70%),
+    linear-gradient(180deg, rgba(26,39,63,.96), rgba(19,30,49,.96)) !important;
+  color:#ffffff !important;
+  border:1px solid rgba(120,170,255,.35) !important;
+}
+
+/* 읽기속도 영역 더 '설정' 느낌 */
+.speech-rate-box{
+  background: rgba(255,255,255,.015) !important;
+  border:1px solid rgba(255,255,255,.06) !important;
+  box-shadow: inset 0 2px 6px rgba(0,0,0,.4);
+}
+
+/* 값 영역 강조 (숫자 가독성) */
+.repeat-mini-trigger span:first-child,
+.speech-rate-select{
+  font-size:13px !important;
+  font-weight:900 !important;
+  letter-spacing:0.3px;
+}
+
+/* 시작/끝/횟수 라벨 대비 */
+.speech-repeat-box span{
+  color:#aebed6 !important;
+  font-weight:800 !important;
+}
+
+/* 숫자 박스 대비 강화 */
+.repeat-mini-trigger{
+  background:#0a1220 !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+}
+
+
+/* v17 bottom player bar */
+body{
+  padding-bottom:110px !important;
+}
+
+.bottom-player-bar{
+  position:fixed;
+  left:12px;
+  right:12px;
+  bottom:calc(env(safe-area-inset-bottom, 0px) + 10px);
+  z-index:9999;
+  border-radius:20px;
+  border:1px solid rgba(255,255,255,.10);
+  background:
+    radial-gradient(circle at center, rgba(88,132,255,.10) 0%, rgba(88,132,255,0) 58%),
+    linear-gradient(180deg, rgba(15,23,38,.96), rgba(10,16,28,.98));
+  box-shadow:
+    0 18px 40px rgba(0,0,0,.36),
+    inset 0 1px 0 rgba(255,255,255,.05);
+  padding:10px 12px 12px;
+  backdrop-filter:blur(10px);
+}
+
+.bottom-player-top{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.bottom-player-btn{
+  min-width:92px;
+  height:44px;
+  padding:0 14px;
+  border-radius:14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  font-weight:900;
+  white-space:nowrap;
+}
+
+.bottom-player-btn .btn-icon{
+  font-size:16px;
+  margin-right:7px;
+}
+
+.bottom-player-btn.play{
+  background:
+    radial-gradient(circle at center, rgba(95,145,255,.28) 0%, rgba(95,145,255,.14) 28%, rgba(95,145,255,0) 60%),
+    linear-gradient(180deg, rgba(28,39,61,.96), rgba(18,27,43,.96)) !important;
+  color:#f8fbff !important;
+  border:1px solid rgba(115,155,255,.24) !important;
+}
+
+.bottom-player-btn.stop{
+  background:
+    radial-gradient(circle at center, rgba(255,112,112,.22) 0%, rgba(255,112,112,.10) 28%, rgba(255,112,112,0) 60%),
+    linear-gradient(180deg, rgba(42,24,31,.96), rgba(27,17,22,.96)) !important;
+  color:#ffd3d3 !important;
+  border:1px solid rgba(255,120,120,.24) !important;
+}
+
+.bottom-player-rate{
+  margin-left:auto;
+  min-width:78px;
+  height:44px;
+  border-radius:14px;
+  padding:0 10px;
+  font-size:13px;
+  font-weight:900;
+  background:#0b1220;
+  color:#f8fbff;
+  border:1px solid rgba(255,255,255,.12);
+}
+
+.bottom-player-meta{
+  margin-top:8px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  font-size:12px;
+  color:#c9d6e8;
+  font-weight:800;
+}
+
+.bottom-player-progress{
+  margin-top:8px;
+  height:8px;
+  border-radius:999px;
+  overflow:hidden;
+  background:rgba(255,255,255,.08);
+}
+
+.bottom-player-progress-fill{
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:linear-gradient(90deg, rgba(88,132,255,.78), rgba(132,170,255,.98));
+  transition:width .22s ease;
+}
+
+body.player-reading .bottom-player-btn.play{
+  box-shadow:0 0 0 1px rgba(126,165,255,.22), 0 10px 24px rgba(37,99,235,.18);
+}
+
+@media (max-width: 420px){
+  .bottom-player-top{ gap:8px; }
+  .bottom-player-btn{ min-width:84px; }
+  .bottom-player-rate{ min-width:72px; }
+}
+
+
+/* v19 안정 재조정 */
+#queryActionsScroller,
+#queryActionsDots,
+#toggleCalendarBtn{
+  display:none !important;
+}
+
+.query-view-switch{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr;
+  gap:12px;
+}
+
+.query-view-switch .speak-btn{
+  min-width:0 !important;
+}
+
+/* bottom speed popup */
+.bottom-rate-picker{
+  position:relative;
+  flex:0 0 auto;
+}
+
+.bottom-player-rate{
+  min-width:86px;
+  height:44px;
+  border-radius:14px;
+  padding:0 12px;
+  font-size:13px;
+  font-weight:900;
+  background:#0b1220;
+  color:#f8fbff;
+  border:1px solid rgba(255,255,255,.12);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+
+.bottom-rate-menu{
+  position:absolute;
+  right:0;
+  bottom:calc(100% + 8px);
+  width:86px;
+  max-height:180px;
+  overflow-y:auto;
+  display:none;
+  padding:6px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.12);
+  background:linear-gradient(180deg,#172134,#121a29);
+  box-shadow:0 16px 32px rgba(0,0,0,.32);
+  z-index:10020;
+  scrollbar-width:thin;
+}
+
+.bottom-rate-picker.is-open .bottom-rate-menu{
+  display:block;
+}
+
+.bottom-rate-option{
+  width:100%;
+  height:32px;
+  border-radius:8px;
+  border:0;
+  background:transparent;
+  color:#dfe8f6;
+  font-size:13px;
+  font-weight:800;
+}
+
+.bottom-rate-option.active{
+  background:rgba(59,130,246,.18);
+  color:#ffffff;
+}
+
+
+/* v20 가독성 최적화 */
+.record-card{
+  padding:18px 14px !important; /* 좌우 축소 */
+}
+
+.record-content{
+  line-height:1.45 !important; /* 줄간격 압축 */
+  letter-spacing:-0.2px; /* 미세하게 밀도 증가 */
+}
+
+.record-content strong,
+.record-content span{
+  letter-spacing:-0.1px;
+}
+
+/* 카드 최대폭 확장 (모바일 체감 큼) */
+.record-list{
+  padding-left:6px !important;
+  padding-right:6px !important;
+}
+
+</style>
 </head>
 <body class="space-y-2">
 
@@ -1340,34 +2653,35 @@
       </div>
     </details>
 
-    <div
-      id="contentEditor"
-      contenteditable="true"
-      data-placeholder="내용을 입력하세요
+    <div class="editor-box">
+      <div
+        id="contentEditor"
+        contenteditable="true"
+        data-placeholder="내용을 입력하세요
 
 사진은 아래 버튼으로 추가할 수 있습니다."
-    ></div>
+      ></div>
+    </div>
 
     <div class="paste-box p-3 space-y-3">
       <div class="flex items-center justify-between gap-2">
         <div class="text-sm font-bold text-slate-200">사진 추가</div>
-        <div class="text-xs text-slate-400">Chrome 권장</div>
       </div>
 
       <div class="inline-photo-row">
         <button
           type="button"
           onclick="openImagePicker()"
-          class="press photo-half-btn h-11 rounded-xl border border-slate-500 bg-white/5 text-sm font-bold text-slate-100"
+          class="press photo-half-btn photo-action-btn"
         >
-          사진 파일 선택
+          사진 파일
         </button>
 
         <button
           onclick="pasteFromClipboard()"
-          class="press photo-half-btn h-11 rounded-xl border text-sm font-bold"
+          class="press photo-half-btn photo-action-btn"
         >
-          클립보드 이미지 붙여넣기
+          클립보드
         </button>
       </div>
 
@@ -1449,6 +2763,7 @@
       <div class="query-view-switch">
         <button type="button" id="latestViewBtn" onclick="showLatestRecordView()" class="press speak-btn compact-query-btn">최근 1건</button>
         <button type="button" id="allViewBtn" onclick="showAllRecordsView()" class="press speak-btn compact-query-btn">전체</button>
+        <button type="button" id="inlineCalendarBtn" onclick="toggleCalendarSection(); syncInlineCalendarButton();" class="press speak-btn compact-query-btn">달력</button>
       </div>
 
       <div class="query-actions" id="queryActionsScroller">
@@ -1466,15 +2781,13 @@
           </select>
           <button type="button" class="speech-rate-step" onclick="stepSpeechRate(1)" aria-label="속도 높이기">＋</button>
         </div>
-        <button type="button" onclick="readFilteredRecords()" class="press speak-btn compact-query-btn">조회결과 읽기</button>
-        <button type="button" onclick="readAllRecords()" class="press speak-btn compact-query-btn">전체 읽기</button>
-        <button type="button" onclick="stopSpeech()" class="press speak-btn stop">읽기 중지</button>
+        <button type="button" onclick="readUnifiedAction()" class="press speak-btn compact-query-btn"><span class="btn-icon">▶</span>읽기</button>
+        <button type="button" onclick="stopSpeech()" class="press speak-btn stop compact-query-btn"><span class="btn-icon">■</span>중단</button>
       </div>
       <div class="scroll-dot-bar" id="queryActionsDots" aria-hidden="true"></div>
 
       <div class="speech-repeat-bar">
         <div class="speech-repeat-box compact-repeat-box">
-          <span>선택구간반복</span>
           <span>시작</span>
           <input id="repeatStartInput" type="hidden" value="1" />
           <div class="repeat-mini-picker" id="repeatStartPicker">
@@ -1494,17 +2807,16 @@
             <div id="repeatEndMenu" class="repeat-mini-menu"></div>
           </div>
           <span>횟수</span>
-          <input id="repeatCountInput" type="hidden" value="2" />
+          <input id="repeatCountInput" type="hidden" value="1" />
           <div class="repeat-mini-picker" id="repeatCountPicker">
             <button type="button" id="repeatCountTrigger" class="repeat-mini-trigger" onclick="toggleRepeatMiniPicker('count', event)">
-              <span id="repeatCountValue">2</span>
+              <span id="repeatCountValue">1</span>
               <span class="repeat-mini-caret">⌄</span>
             </button>
             <div id="repeatCountMenu" class="repeat-mini-menu"></div>
           </div>
         </div>
-        <button type="button" onclick="readRepeatSection()" class="press speak-btn compact-query-btn">선택구간반복 읽기</button>
-        <div class="speech-repeat-help">현재 조회 결과에서 선택한 번호 구간만 반복합니다.</div>
+        <div id="repeatRangeSummary" class="speech-repeat-help">현재 조회 1건 · 페이지 1 ~ 1</div>
       </div>
     </div>
 
@@ -1611,6 +2923,29 @@
       </div>
     </div>
   </div>
+
+  
+  <div id="bottomPlayerBar" class="bottom-player-bar">
+    <div class="bottom-player-top">
+      <button type="button" id="bottomPlayBtn" class="press bottom-player-btn play" onclick="readUnifiedAction()"><span class="btn-icon">▶</span>읽기</button>
+      <button type="button" id="bottomStopBtn" class="press bottom-player-btn stop" onclick="stopSpeech(); updateBottomPlayerState(false);"><span class="btn-icon">■</span>중단</button>
+      <div class="bottom-rate-picker" id="bottomRatePicker">
+        <button type="button" id="bottomRateTrigger" class="bottom-player-rate" onclick="toggleBottomRatePicker(event)">
+          <span id="bottomRateValue">1.0x</span>
+          <span class="repeat-mini-caret">⌄</span>
+        </button>
+        <div id="bottomRateMenu" class="bottom-rate-menu"></div>
+      </div>
+    </div>
+    <div class="bottom-player-meta">
+      <div id="bottomPlayerStatus">대기 중</div>
+      <div id="bottomPlayerPage">0 / 0</div>
+    </div>
+    <div class="bottom-player-progress">
+      <div id="bottomPlayerProgressFill" class="bottom-player-progress-fill"></div>
+    </div>
+  </div>
+
 
   <div id="toast" class="fixed left-1/2 bottom-6 -translate-x-1/2 px-5 py-3 rounded-2xl opacity-0 pointer-events-none transition-all duration-200"></div>
 
@@ -1865,6 +3200,8 @@ function normalizeStringList(list){
   let speechQueueIndex = 0;
   let speechQueueOnEnd = null;
   let activeRepeatMiniPicker = '';
+  let repeatRangeTouched = false;
+  let repeatCountTouched = false;
 
   function uid(){ return 'id_' + Math.random().toString(36).slice(2) + Date.now(); }
 
@@ -3149,6 +4486,8 @@ function addCustomTag(){
   }
 
   async function showLatestRecordView(){
+    repeatRangeTouched = false;
+    repeatCountTouched = false;
     closeCalendarSection();
     const panel = document.getElementById('selectedDayRecords');
     const recent = document.getElementById('recentSection');
@@ -3164,6 +4503,7 @@ function addCustomTag(){
     if(!latest){
       panel.innerHTML = '<div class="text-sm text-slate-400">저장된 기록이 없습니다.</div>';
       currentDaySpeechItems = [];
+      autoSyncRepeatRange(true);
       if(area) area.scrollTop = 0;
       return;
     }
@@ -3171,6 +4511,8 @@ function addCustomTag(){
     const imageMap = await getImagesByIds(Array.isArray(latest.imageIds) ? latest.imageIds : []);
     panel.innerHTML = buildRecordCardHtml(latest, imageMap, '');
     currentDaySpeechItems = [latest];
+    autoSyncRepeatRange(true);
+    setTimeout(() => autoSyncRepeatRange(true), 0);
     if(area) area.scrollTop = 0;
   }
 
@@ -3181,6 +4523,7 @@ function addCustomTag(){
 
   if (!items.length) {
     container.innerHTML = '<div class="text-sm text-slate-400">기록이 없습니다.</div>';
+    autoSyncRepeatRange(true);
     return;
   }
 
@@ -3188,6 +4531,8 @@ function addCustomTag(){
   const imageMap = await getImagesByIds(allImageIds);
 
   container.innerHTML = items.map(record => buildRecordCardHtml(record, imageMap, q)).join('');
+  autoSyncRepeatRange(true);
+  setTimeout(() => autoSyncRepeatRange(true), 0);
 }
 
   function computeStats(){
@@ -3418,6 +4763,8 @@ function addCustomTag(){
   }
 
   function showAllRecordsView(){
+  repeatRangeTouched = false;
+  repeatCountTouched = false;
   closeCalendarSection();
   document.getElementById('queryTitle').textContent = '전체 조회';
   document.getElementById('selectedDayRecords').classList.add('hidden');
@@ -3453,6 +4800,8 @@ function addCustomTag(){
     .sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
 
   currentDaySpeechItems = items.slice();
+  autoSyncRepeatRange(true);
+  setTimeout(() => autoSyncRepeatRange(true), 0);
 
   const total = items.reduce((s,r)=>s+Number(r.minutes||0),0);
   document.getElementById('calendarDetail').textContent = `${dateKey} · 총 ${total}분`;
@@ -3469,6 +4818,7 @@ function addCustomTag(){
 
   if(!items.length){
     panel.innerHTML = '<div class="text-sm text-slate-400">해당 날짜 기록이 없습니다.</div>';
+    autoSyncRepeatRange(true);
     if(area) area.scrollTop = 0;
     return;
   }
@@ -3565,7 +4915,7 @@ function addCustomTag(){
   }
 
   function renderQuickInsights(){
-    document.getElementById('saveCountText').textContent = `현재 ${records.length}건`;
+    syncHeaderRecordCount();
 
     const latest = records.slice().sort((a,b)=>+new Date(b.updatedAt||b.studiedAt)-+new Date(a.updatedAt||a.studiedAt))[0];
     document.getElementById('lastSavedText').textContent = latest
@@ -3978,6 +5328,103 @@ function addCustomTag(){
     return getFilteredRecords();
   }
 
+
+  function getVisibleSpeechItemCount(){
+    const dayWrap = document.getElementById('selectedDayRecords');
+    const recentWrap = document.getElementById('recentSection');
+    const listWrap = document.getElementById('recordList');
+
+    if(dayWrap && !dayWrap.classList.contains('hidden')){
+      const n = dayWrap.querySelectorAll('.query-card').length;
+      if(n > 0) return n;
+      return Array.isArray(currentDaySpeechItems) && currentDaySpeechItems.length ? currentDaySpeechItems.length : 1;
+    }
+
+    if(recentWrap && !recentWrap.classList.contains('hidden')){
+      const n = listWrap ? listWrap.querySelectorAll('.query-card').length : 0;
+      if(n > 0) return n;
+      const filtered = typeof getFilteredRecords === 'function' ? getFilteredRecords() : [];
+      return filtered.length || 1;
+    }
+
+    return Array.isArray(currentDaySpeechItems) && currentDaySpeechItems.length ? currentDaySpeechItems.length : 1;
+  }
+
+  function syncHeaderRecordCount(){
+    const el = document.getElementById('saveCountText');
+    if(el) el.textContent = `현재 ${Array.isArray(records) ? records.length : 0}건`;
+  }
+
+  function updateRepeatRangeSummary(){
+    const summary = document.getElementById('repeatRangeSummary');
+    const startEl = document.getElementById('repeatStartInput');
+    const endEl = document.getElementById('repeatEndInput');
+    if(!summary || !startEl || !endEl) return;
+
+    const total = Math.max(1, getVisibleSpeechItemCount());
+    const start = Number(startEl.value || 1);
+    const end = Number(endEl.value || total);
+
+    summary.textContent = `현재 조회 ${total}건 · 페이지 ${start} ~ ${end}`;
+  }
+
+  function autoSyncRepeatRange(force = false){
+    const total = Math.max(1, getVisibleSpeechItemCount());
+    const startEl = document.getElementById('repeatStartInput');
+    const endEl = document.getElementById('repeatEndInput');
+    const countEl = document.getElementById('repeatCountInput');
+    if(!startEl || !endEl || !countEl) return;
+
+    let start = Number(startEl.value || 1);
+    let end = Number(endEl.value || total);
+    let count = Number(countEl.value || 1);
+
+    if(force || !repeatRangeTouched){
+      start = 1;
+      end = total;
+    }else{
+      start = Math.max(1, Math.min(start || 1, total));
+      end = Math.max(start, Math.min(end || total, total));
+    }
+
+    if(force || !repeatCountTouched){
+      count = 1;
+    }else{
+      count = Math.max(1, Math.min(count || 1, 20));
+    }
+
+    startEl.value = String(start);
+    endEl.value = String(end);
+    countEl.value = String(count);
+
+    const startValue = document.getElementById('repeatStartValue');
+    const endValue = document.getElementById('repeatEndValue');
+    const countValue = document.getElementById('repeatCountValue');
+    if(startValue) startValue.textContent = String(start);
+    if(endValue) endValue.textContent = String(end);
+    if(countValue) countValue.textContent = String(count);
+
+    updateRepeatRangeSummary();
+    syncHeaderRecordCount();
+  }
+
+  function readUnifiedAction(){
+    const total = Math.max(1, getVisibleSpeechItemCount());
+    const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+    const end = Number(document.getElementById('repeatEndInput')?.value || total);
+    const count = Number(document.getElementById('repeatCountInput')?.value || 1);
+
+    const customRange = repeatRangeTouched || start !== 1 || end !== total;
+    const repeatMore = repeatCountTouched && count > 1;
+
+    if(customRange || repeatMore){
+      readRepeatSection();
+      return;
+    }
+
+    readFilteredRecords();
+  }
+
   function getSpeechRate(){
     const el = document.getElementById('speechRateSelect');
     const rate = Number(el?.value || 1);
@@ -4284,6 +5731,9 @@ function setRepeatMiniPickerValue(type, value, event){
 
   input.value = String(value);
 
+  if(type === 'start' || type === 'end') repeatRangeTouched = true;
+  if(type === 'count') repeatCountTouched = true;
+
   if(type === 'start'){
     const endEl = document.getElementById('repeatEndInput');
     if(endEl && Number(endEl.value || 1) < value) endEl.value = String(value);
@@ -4295,6 +5745,7 @@ function setRepeatMiniPickerValue(type, value, event){
   }
 
   syncRepeatMiniPickerValues();
+  updateRepeatRangeSummary();
   closeRepeatMiniPickers();
 }
 
@@ -4400,6 +5851,8 @@ function readRepeatSection(){
   openQuerySection(false);
   showAllRecordsView();
   await renderRecords();
+  autoSyncRepeatRange(true);
+  setTimeout(() => autoSyncRepeatRange(true), 50);
   startLiveTime();
 });
 
@@ -4560,7 +6013,228 @@ async function warnStorageUsage(){
     console.log('localStorage keys:', keys);
     showToast(`저장된 키 ${keys.length}개. 콘솔에서 확인하세요.`);
   }
-  </script>
+  
+function syncBottomRateToTop(value){
+  const top = document.getElementById('speechRateSelect');
+  if(top){
+    top.value = String(value);
+    if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+  }
+}
+
+function syncTopRateToBottom(){
+  const top = document.getElementById('speechRateSelect');
+  const bottom = document.getElementById('bottomPlayerRate');
+  if(top && bottom){
+    bottom.value = String(top.value || '1');
+  }
+}
+
+function updateBottomPlayerState(isReading){
+  document.body.classList.toggle('player-reading', !!isReading);
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = isReading ? '읽는 중' : '대기 중';
+  }
+}
+
+function updateBottomPlayerProgress(current, total){
+  const safeTotal = Math.max(0, Number(total || 0));
+  const safeCurrent = Math.max(0, Number(current || 0));
+  const pageEl = document.getElementById('bottomPlayerPage');
+  const fillEl = document.getElementById('bottomPlayerProgressFill');
+
+  if(pageEl){
+    if(safeTotal > 0){
+      pageEl.textContent = `${safeCurrent} / ${safeTotal}`;
+    }else{
+      pageEl.textContent = '0 / 0';
+    }
+  }
+
+  if(fillEl){
+    const pct = safeTotal > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeTotal) * 100)) : 0;
+    fillEl.style.width = `${pct}%`;
+  }
+}
+
+function refreshBottomPlayerFromView(){
+  syncTopRateToBottom();
+  const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 0;
+  const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+  const end = Number(document.getElementById('repeatEndInput')?.value || total);
+  const usingRange = total > 0 ? !(start === 1 && end === total) : false;
+
+  const statusEl = document.getElementById('bottomPlayerStatus');
+  if(statusEl){
+    statusEl.textContent = usingRange ? `구간 ${start}~${end}` : '전체 준비';
+  }
+  updateBottomPlayerProgress(0, total);
+}
+
+(function(){
+  const originalReadUnifiedAction = window.readUnifiedAction;
+  if(typeof originalReadUnifiedAction === 'function'){
+    window.readUnifiedAction = function(){
+      updateBottomPlayerState(true);
+      refreshBottomPlayerFromView();
+      return originalReadUnifiedAction.apply(this, arguments);
+    };
+  }
+
+  const originalStopSpeech = window.stopSpeech;
+  if(typeof originalStopSpeech === 'function'){
+    window.stopSpeech = function(){
+      const result = originalStopSpeech.apply(this, arguments);
+      updateBottomPlayerState(false);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  const originalReadFilteredRecords = window.readFilteredRecords;
+  if(typeof originalReadFilteredRecords === 'function'){
+    window.readFilteredRecords = function(){
+      const result = originalReadFilteredRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadAllRecords = window.readAllRecords;
+  if(typeof originalReadAllRecords === 'function'){
+    window.readAllRecords = function(){
+      const result = originalReadAllRecords.apply(this, arguments);
+      const total = typeof getVisibleSpeechItemCount === 'function' ? Math.max(1, getVisibleSpeechItemCount()) : 1;
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      return result;
+    };
+  }
+
+  const originalReadRepeatSection = window.readRepeatSection;
+  if(typeof originalReadRepeatSection === 'function'){
+    window.readRepeatSection = function(){
+      const start = Number(document.getElementById('repeatStartInput')?.value || 1);
+      const end = Number(document.getElementById('repeatEndInput')?.value || start);
+      const total = Math.max(1, end - start + 1);
+      const result = originalReadRepeatSection.apply(this, arguments);
+      updateBottomPlayerProgress(1, total);
+      updateBottomPlayerState(true);
+      const statusEl = document.getElementById('bottomPlayerStatus');
+      if(statusEl) statusEl.textContent = `구간 ${start}~${end} 읽는 중`;
+      return result;
+    };
+  }
+
+  const originalUpdateSpeechRateLabel = window.updateSpeechRateLabel;
+  if(typeof originalUpdateSpeechRateLabel === 'function'){
+    window.updateSpeechRateLabel = function(){
+      const result = originalUpdateSpeechRateLabel.apply(this, arguments);
+      syncTopRateToBottom();
+      return result;
+    };
+  }
+
+  const originalAutoSyncRepeatRange = window.autoSyncRepeatRange;
+  if(typeof originalAutoSyncRepeatRange === 'function'){
+    window.autoSyncRepeatRange = function(){
+      const result = originalAutoSyncRepeatRange.apply(this, arguments);
+      refreshBottomPlayerFromView();
+      return result;
+    };
+  }
+
+  window.addEventListener('load', function(){
+    syncTopRateToBottom();
+    refreshBottomPlayerFromView();
+  });
+})();
+
+
+function renderBottomRateMenu(){
+  const menu = document.getElementById('bottomRateMenu');
+  const top = document.getElementById('speechRateSelect');
+  if(!menu || !top) return;
+
+  const values = ['0.8','0.9','1','1.1','1.2','1.35','1.5'];
+  const current = String(top.value || '1');
+
+  menu.innerHTML = values.map(v => {
+    const label = `${Number(v).toFixed(1)}x`;
+    const active = current === v ? ' active' : '';
+    return `<button type="button" class="bottom-rate-option${active}" onclick="selectBottomRate('${v}', event)">${label}</button>`;
+  }).join('');
+}
+
+function toggleBottomRatePicker(event){
+  if(event) event.stopPropagation();
+  const picker = document.getElementById('bottomRatePicker');
+  if(!picker) return;
+  picker.classList.toggle('is-open');
+  renderBottomRateMenu();
+}
+
+function selectBottomRate(value, event){
+  if(event) event.stopPropagation();
+  syncBottomRateToTop(value);
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker) picker.classList.remove('is-open');
+}
+
+(function(){
+  const originalSyncBottomRateToTop = window.syncBottomRateToTop;
+  window.syncBottomRateToTop = function(value){
+    if(typeof originalSyncBottomRateToTop === 'function'){
+      originalSyncBottomRateToTop(value);
+    }else{
+      const top = document.getElementById('speechRateSelect');
+      if(top){
+        top.value = String(value);
+        if(typeof updateSpeechRateLabel === 'function') updateSpeechRateLabel();
+      }
+    }
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(bottomValue) bottomValue.textContent = `${Number(value).toFixed(1)}x`;
+    renderBottomRateMenu();
+  };
+
+  const originalSyncTopRateToBottom = window.syncTopRateToBottom;
+  window.syncTopRateToBottom = function(){
+    if(typeof originalSyncTopRateToBottom === 'function'){
+      originalSyncTopRateToBottom();
+    }
+    const top = document.getElementById('speechRateSelect');
+    const bottomValue = document.getElementById('bottomRateValue');
+    if(top && bottomValue){
+      bottomValue.textContent = `${Number(top.value || '1').toFixed(1)}x`;
+    }
+    renderBottomRateMenu();
+  };
+})();
+
+function syncInlineCalendarButton(){
+  const inlineBtn = document.getElementById('inlineCalendarBtn');
+  const section = document.getElementById('calendarSection');
+  if(!inlineBtn || !section) return;
+  inlineBtn.classList.toggle('active', section.classList.contains('is-open'));
+}
+
+document.addEventListener('click', function(e){
+  const picker = document.getElementById('bottomRatePicker');
+  if(picker && !picker.contains(e.target)){
+    picker.classList.remove('is-open');
+  }
+});
+
+window.addEventListener('load', function(){
+  if(typeof syncTopRateToBottom === 'function') syncTopRateToBottom();
+  syncInlineCalendarButton();
+});
+
+</script>
 
   <div id="imagePreviewModal" onclick="closeImagePreview()">
     <button id="imagePreviewClose" type="button" onclick="closeImagePreview()">×</button>
