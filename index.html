@@ -1162,6 +1162,81 @@
     flex:0 0 auto;
   }
 
+
+
+  .inline-add-row,
+  .inline-photo-row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  .inline-add-row input{
+    flex:1 1 0;
+    min-width:0;
+  }
+
+  .inline-add-row button,
+  .inline-photo-row button{
+    flex:0 0 auto;
+  }
+
+  .inline-photo-row .photo-half-btn{
+    flex:1 1 0;
+  }
+
+  .backup-stack{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+  }
+
+  .backup-stack .backup-full{
+    grid-column:1 / -1;
+  }
+
+  .backup-btn{
+    min-height:50px !important;
+    border-radius:16px !important;
+    font-size:14px !important;
+    font-weight:900 !important;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    line-height:1.2;
+    background:linear-gradient(180deg, rgba(24,34,51,.95), rgba(14,22,38,.96)) !important;
+    border:1px solid rgba(255,255,255,.14) !important;
+    color:#f8fbff !important;
+    -webkit-text-fill-color:#f8fbff !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04), 0 10px 22px rgba(0,0,0,.18);
+  }
+
+  .backup-btn.warn,
+  .backup-btn.danger-soft,
+  .backup-btn.safe-soft{
+    background:linear-gradient(180deg, rgba(24,34,51,.95), rgba(14,22,38,.96)) !important;
+    color:#f8fbff !important;
+    -webkit-text-fill-color:#f8fbff !important;
+  }
+
+  .backup-btn.warn{
+    border-color:rgba(245, 214, 125, .30) !important;
+  }
+
+  .backup-btn.safe-soft{
+    border-color:rgba(74,222,128,.26) !important;
+  }
+
+  .backup-btn.danger-soft{
+    border-color:rgba(248,113,113,.26) !important;
+  }
+
+  .backup-btn:disabled{
+    opacity:.55 !important;
+    filter:grayscale(.18);
+  }
+
   </style>
 </head>
 <body class="space-y-2">
@@ -1227,10 +1302,10 @@
         <div class="flex gap-2 overflow-x-auto" id="specialButtons"></div>
         <div class="flex gap-2 overflow-x-auto" id="tagButtons"></div>
 
-        <div class="flex gap-2 items-center min-w-0">
+        <div class="inline-add-row min-w-0">
           <input
             id="customTagInput"
-            class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
+            class="min-w-0 h-10 rounded-xl px-3 text-sm"
             placeholder="새 태그 추가"
           />
           <button
@@ -1239,12 +1314,9 @@
           >
             태그 추가
           </button>
-        </div>
-
-        <div class="flex gap-2 items-center min-w-0">
           <input
             id="customSymbolInput"
-            class="flex-1 min-w-0 h-10 rounded-xl px-3 text-sm"
+            class="min-w-0 h-10 rounded-xl px-3 text-sm"
             placeholder="새 기호 추가"
           />
           <button
@@ -1282,20 +1354,22 @@
         <div class="text-xs text-slate-400">Chrome 권장</div>
       </div>
 
-      <button
-        type="button"
-        onclick="openImagePicker()"
-        class="press h-11 w-full rounded-xl border border-slate-500 bg-white/5 text-sm font-bold text-slate-100"
-      >
-        사진 파일 선택
-      </button>
+      <div class="inline-photo-row">
+        <button
+          type="button"
+          onclick="openImagePicker()"
+          class="press photo-half-btn h-11 rounded-xl border border-slate-500 bg-white/5 text-sm font-bold text-slate-100"
+        >
+          사진 파일 선택
+        </button>
 
-      <button
-        onclick="pasteFromClipboard()"
-        class="press h-11 w-full rounded-xl border text-sm font-bold"
-      >
-        클립보드 이미지 붙여넣기
-      </button>
+        <button
+          onclick="pasteFromClipboard()"
+          class="press photo-half-btn h-11 rounded-xl border text-sm font-bold"
+        >
+          클립보드 이미지 붙여넣기
+        </button>
+      </div>
 
       <input
         id="imageFileInput"
@@ -1498,22 +1572,20 @@
 
   <div id="backupSection" class="card p-4 toggle-panel">
     <div class="section-headline"><div class="title">백업 / 복원</div><div class="sub">내 기록 안전하게 보관</div></div>
-    <div class="grid grid-cols-1 gap-2">
-      <button id="restoreLatestBtn" onclick="restoreLatestTrash()" class="press h-11 rounded-xl bg-amber-100 text-amber-800 font-bold border">최근 삭제 1건 복구</button>
-      <button onclick="exportJson()" class="press h-11 rounded-xl bg-slate-900 text-white font-bold">JSON 백업</button>
-      <button onclick="exportCsv()" class="press h-11 rounded-xl border font-bold text-slate-700">CSV 내보내기</button>
-
-      
-      <button onclick="showRemainingStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
+    <div class="backup-stack">
+      <button id="restoreLatestBtn" onclick="restoreLatestTrash()" class="press backup-btn warn backup-full">최근 삭제 1건 복구</button>
+      <button onclick="restoreAllTrash()" class="press backup-btn safe-soft">휴지통 전체 복구</button>
+      <button onclick="emptyTrash()" class="press backup-btn danger-soft">휴지통 비우기</button>
+      <button onclick="exportJson()" class="press backup-btn bg-slate-900 text-white">JSON 백업</button>
+      <button onclick="exportCsv()" class="press backup-btn border font-bold text-slate-700">CSV 내보내기</button>
+      <button onclick="showRemainingStorage()" class="press backup-btn border font-bold text-slate-700">
         남은 저장용량 확인
       </button>
-      
-      <button onclick="clearAllStudyStorage()" class="press h-11 rounded-xl border font-bold text-slate-700">
-        학습기록 저장공간 전체 비우기
-      </button>
-
-      <button onclick="document.getElementById('importFile').click()" class="press h-11 rounded-xl border font-bold text-slate-700">
+      <button onclick="document.getElementById('importFile').click()" class="press backup-btn border font-bold text-slate-700">
         백업 불러오기
+      </button>
+      <button onclick="clearAllStudyStorage()" class="press backup-btn border font-bold text-slate-700 backup-full">
+        학습기록 저장공간 전체 비우기
       </button>
 
       <input id="importFile" type="file" accept="application/json" class="hidden" onchange="importJson(event)" />
@@ -2493,8 +2565,6 @@ function scrollToSection(id){
 
   
   function setActiveSymbol(symbol){
-    const input = document.getElementById('customSymbolInput');
-    if(input) input.value = symbol || '';
     draft.customSymbol = symbol || '';
     saveDraft();
     renderSpecialButtons();
@@ -3511,6 +3581,12 @@ function addCustomTag(){
     const btn = document.getElementById('restoreLatestBtn');
     btn.disabled = !trash.length;
     btn.textContent = trash.length ? `최근 삭제 1건 복구 (${trash.length})` : '복구할 삭제 기록 없음';
+
+    const restoreAllBtn = document.querySelector('#backupSection button[onclick="restoreAllTrash()"]');
+    if(restoreAllBtn) restoreAllBtn.disabled = !trash.length;
+
+    const emptyTrashBtn = document.querySelector('#backupSection button[onclick="emptyTrash()"]');
+    if(emptyTrashBtn) emptyTrashBtn.disabled = !trash.length;
   }
   function restoreLatestTrash(){
     if(!trash.length){
@@ -3527,6 +3603,40 @@ function addCustomTag(){
     renderStats();
     renderQuickInsights();
     showToast('가장 최근 삭제 기록을 복구했습니다.');
+  }
+
+  function restoreAllTrash(){
+    if(!trash.length){
+      showToast('복구할 삭제 기록이 없습니다.');
+      return;
+    }
+    const restored = trash.map(item => {
+      const copy = { ...item };
+      delete copy.deletedAt;
+      return copy;
+    });
+    records = restored.concat(records);
+    trash = [];
+    saveRecords();
+    saveTrash();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    showToast('휴지통 전체를 복구했습니다.');
+  }
+
+  function emptyTrash(){
+    if(!trash.length){
+      showToast('휴지통이 비어 있습니다.');
+      return;
+    }
+    if(!confirm('휴지통을 완전히 비울까요?')) return;
+    trash = [];
+    saveTrash();
+    renderRecords();
+    renderStats();
+    renderQuickInsights();
+    showToast('휴지통을 비웠습니다.');
   }
 
   async function clearAllRecords(){
