@@ -490,6 +490,14 @@
     gap:10px;
   }
 
+
+  .record-preview.collapsed{
+    display:-webkit-box;
+    -webkit-box-orient:vertical;
+    -webkit-line-clamp:4;
+    overflow:hidden;
+  }
+
   .query-topbar{
     display:flex;
     flex-direction:column;
@@ -508,6 +516,37 @@
     overflow-y:hidden;
     -webkit-overflow-scrolling:touch;
     padding-bottom:2px;
+    scroll-snap-type:x mandatory;
+    scrollbar-width:none;
+  }
+
+  .query-actions::-webkit-scrollbar{
+    display:none;
+  }
+
+  .query-actions > *{
+    scroll-snap-align:start;
+  }
+
+  .scroll-dot-bar{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:6px;
+    margin-top:8px;
+  }
+
+  .scroll-dot{
+    width:7px;
+    height:7px;
+    border-radius:999px;
+    background:rgba(255,255,255,.18);
+    transition:transform .18s ease, background .18s ease;
+  }
+
+  .scroll-dot.active{
+    background:rgba(96,165,250,.95);
+    transform:scale(1.2);
   }
 
   .query-view-switch{
@@ -536,6 +575,27 @@
     border:1px solid rgba(255,255,255,.12);
     background:rgba(255,255,255,.04);
     flex:0 0 auto;
+    min-width:0;
+    max-width:100%;
+    white-space:nowrap;
+  }
+
+  .speech-rate-step{
+    width:36px;
+    min-width:36px;
+    height:36px;
+    padding:0;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+    color:#f8fbff;
+    font-size:22px;
+    font-weight:900;
+    line-height:1;
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    flex:0 0 auto;
   }
 
   .speech-rate-label{
@@ -543,10 +603,12 @@
     font-weight:800;
     color:#dbe6f6;
     white-space:nowrap;
+    flex:0 0 auto;
   }
 
   .speech-rate-select{
-    min-width:78px;
+    width:84px;
+    min-width:84px;
     height:34px;
     border-radius:10px;
     padding:0 8px;
@@ -554,6 +616,119 @@
     font-weight:800;
     background:#0e1626 !important;
     color:#f8fbff !important;
+    flex:0 0 auto;
+  }
+
+  .speech-repeat-bar{
+    display:flex;
+    gap:8px;
+    align-items:center;
+    flex-wrap:wrap;
+    width:100%;
+  }
+
+  .speech-repeat-box{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    padding:7px 10px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.04);
+    color:#dbe6f6;
+    font-size:12px;
+    font-weight:800;
+  }
+
+  .speech-repeat-input{
+    width:58px;
+    height:34px;
+    border-radius:10px;
+    padding:0 8px;
+    font-size:13px;
+    font-weight:800;
+    text-align:center;
+    background:#0e1626 !important;
+    color:#f8fbff !important;
+  }
+
+  .speech-repeat-help{
+    font-size:11px;
+    color:#b8c6da;
+  }
+
+  .compact-repeat-box{
+    position:relative;
+    gap:4px;
+  }
+
+  .repeat-mini-picker{
+    position:relative;
+    width:58px;
+    flex:0 0 auto;
+  }
+
+  .repeat-mini-trigger{
+    width:100%;
+    height:34px;
+    border-radius:10px;
+    border:1px solid rgba(255,255,255,.12);
+    background:#0e1626;
+    color:#f8fbff;
+    font-size:13px;
+    font-weight:800;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:6px;
+  }
+
+  .repeat-mini-caret{
+    font-size:11px;
+    opacity:.8;
+    transform:translateY(-1px);
+  }
+
+  .repeat-mini-picker.is-open .repeat-mini-trigger{
+    border-color:rgba(96,165,250,.55);
+    box-shadow:0 0 0 3px rgba(59,130,246,.14);
+  }
+
+  .repeat-mini-menu{
+    position:absolute;
+    top:calc(100% + 6px);
+    left:0;
+    width:100%;
+    max-height:132px;
+    overflow-y:auto;
+    display:none;
+    padding:6px;
+    border-radius:12px;
+    border:1px solid rgba(255,255,255,.12);
+    background:linear-gradient(180deg,#172134,#121a29);
+    box-shadow:0 16px 32px rgba(0,0,0,.32);
+    z-index:120;
+    scrollbar-width:thin;
+  }
+
+  .repeat-mini-picker.is-open .repeat-mini-menu{
+    display:block;
+  }
+
+  .repeat-mini-option{
+    width:100%;
+    height:32px;
+    border-radius:8px;
+    border:0;
+    background:transparent;
+    color:#dfe8f6;
+    font-size:13px;
+    font-weight:800;
+  }
+
+  .repeat-mini-option.active{
+    background:rgba(59,130,246,.18);
+    color:#ffffff;
   }
 
   .record-actions{
@@ -1202,9 +1377,10 @@
         <button type="button" id="allViewBtn" onclick="showAllRecordsView()" class="press speak-btn compact-query-btn">전체</button>
       </div>
 
-      <div class="query-actions">
+      <div class="query-actions" id="queryActionsScroller">
         <div class="speech-rate-box">
           <span class="speech-rate-label">읽기속도</span>
+          <button type="button" class="speech-rate-step" onclick="stepSpeechRate(-1)" aria-label="속도 낮추기">−</button>
           <select id="speechRateSelect" class="speech-rate-select" onchange="updateSpeechRateLabel()">
             <option value="0.8">0.8x</option>
             <option value="0.9">0.9x</option>
@@ -1214,10 +1390,47 @@
             <option value="1.35">1.35x</option>
             <option value="1.5">1.5x</option>
           </select>
+          <button type="button" class="speech-rate-step" onclick="stepSpeechRate(1)" aria-label="속도 높이기">＋</button>
         </div>
         <button type="button" onclick="readFilteredRecords()" class="press speak-btn compact-query-btn">조회결과 읽기</button>
         <button type="button" onclick="readAllRecords()" class="press speak-btn compact-query-btn">전체 읽기</button>
         <button type="button" onclick="stopSpeech()" class="press speak-btn stop">읽기 중지</button>
+      </div>
+      <div class="scroll-dot-bar" id="queryActionsDots" aria-hidden="true"></div>
+
+      <div class="speech-repeat-bar">
+        <div class="speech-repeat-box compact-repeat-box">
+          <span>선택구간반복</span>
+          <span>시작</span>
+          <input id="repeatStartInput" type="hidden" value="1" />
+          <div class="repeat-mini-picker" id="repeatStartPicker">
+            <button type="button" id="repeatStartTrigger" class="repeat-mini-trigger" onclick="toggleRepeatMiniPicker('start', event)">
+              <span id="repeatStartValue">1</span>
+              <span class="repeat-mini-caret">⌄</span>
+            </button>
+            <div id="repeatStartMenu" class="repeat-mini-menu"></div>
+          </div>
+          <span>끝</span>
+          <input id="repeatEndInput" type="hidden" value="1" />
+          <div class="repeat-mini-picker" id="repeatEndPicker">
+            <button type="button" id="repeatEndTrigger" class="repeat-mini-trigger" onclick="toggleRepeatMiniPicker('end', event)">
+              <span id="repeatEndValue">1</span>
+              <span class="repeat-mini-caret">⌄</span>
+            </button>
+            <div id="repeatEndMenu" class="repeat-mini-menu"></div>
+          </div>
+          <span>횟수</span>
+          <input id="repeatCountInput" type="hidden" value="2" />
+          <div class="repeat-mini-picker" id="repeatCountPicker">
+            <button type="button" id="repeatCountTrigger" class="repeat-mini-trigger" onclick="toggleRepeatMiniPicker('count', event)">
+              <span id="repeatCountValue">2</span>
+              <span class="repeat-mini-caret">⌄</span>
+            </button>
+            <div id="repeatCountMenu" class="repeat-mini-menu"></div>
+          </div>
+        </div>
+        <button type="button" onclick="readRepeatSection()" class="press speak-btn compact-query-btn">선택구간반복 읽기</button>
+        <div class="speech-repeat-help">현재 조회 결과에서 선택한 번호 구간만 반복합니다.</div>
       </div>
     </div>
 
@@ -1576,6 +1789,10 @@ function normalizeStringList(list){
   let longPressTimer = null;
   let editorSelectionRange = null;
   let currentEditorColor = '#edf3fb';
+  let speechQueueItems = [];
+  let speechQueueIndex = 0;
+  let speechQueueOnEnd = null;
+  let activeRepeatMiniPicker = '';
 
   function uid(){ return 'id_' + Math.random().toString(36).slice(2) + Date.now(); }
 
@@ -2667,9 +2884,22 @@ function addCustomTag(){
   }
 
   async function toggleExpand(id){
+    const area = document.getElementById('queryScrollArea');
+    const prevScrollTop = area ? area.scrollTop : 0;
     expanded[id] = !expanded[id];
-    await renderRecords();
-    await refreshCurrentQueryView();
+
+    if(currentQueryViewMode === 'day' && selectedCalendarDateKey){
+      await showDayRecords(selectedCalendarDateKey, { preserveScroll: true, scrollTop: prevScrollTop });
+    }else{
+      await renderRecords();
+      await refreshCurrentQueryView({ preserveScroll: true, scrollTop: prevScrollTop });
+    }
+
+    if(area){
+      requestAnimationFrame(() => {
+        area.scrollTop = prevScrollTop;
+      });
+    }
   }
 
   function getFilteredRecords(){
@@ -2705,9 +2935,7 @@ function addCustomTag(){
   }
 
   function getPreviewHtml(html, expandedFlag){
-    const text = stripHtml(html || '');
-    if(expandedFlag || text.length <= PREVIEW_LENGTH) return html || '';
-    return highlightText(text.slice(0, PREVIEW_LENGTH) + '...', '');
+    return html || '';
   }
 
 
@@ -2760,32 +2988,47 @@ function addCustomTag(){
     });
   }
 
-  async function refreshCurrentQueryView(){
+  async function refreshCurrentQueryView(options = {}){
     const section = document.getElementById('querySection');
     const isOpen = section && (section.classList.contains('is-open') || section.style.display === 'block' || getComputedStyle(section).display !== 'none');
     if(!isOpen) return;
 
     if(currentQueryViewMode === 'day' && selectedCalendarDateKey){
-      await showDayRecords(selectedCalendarDateKey);
+      await showDayRecords(selectedCalendarDateKey, options);
       return;
     }
 
     if(currentQueryViewMode === 'all'){
       showAllRecordsView();
       await renderRecords();
+      if(options.preserveScroll){
+        const area = document.getElementById('queryScrollArea');
+        if(area){
+          requestAnimationFrame(() => {
+            area.scrollTop = Number(options.scrollTop || 0);
+          });
+        }
+      }
       return;
     }
 
     await showLatestRecordView();
+    if(options.preserveScroll){
+      const area = document.getElementById('queryScrollArea');
+      if(area){
+        requestAnimationFrame(() => {
+          area.scrollTop = Number(options.scrollTop || 0);
+        });
+      }
+    }
   }
 
   function buildRecordCardHtml(record, imageMap = {}, q = ''){
     const isExpanded = !!expanded[record.id];
     const text = record.contentText || stripHtml(record.contentHtml || '') || '[내용 없음]';
     const isLong = text.length > PREVIEW_LENGTH;
-    const bodyHtml = isExpanded || !isLong
-      ? (record.contentHtml || escapeHtml(text))
-      : highlightText(text.slice(0, PREVIEW_LENGTH) + '...', q);
+    const bodyHtml = record.contentHtml || escapeHtml(text);
+    const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
 
     const images = (record.imageIds || []).map(id => imageMap[id]).filter(Boolean);
 
@@ -2794,7 +3037,7 @@ function addCustomTag(){
         <div class="query-card-body">
           <div class="text-sm text-slate-400">${formatDateTime(record.studiedAt)} | ${record.minutes}분</div>
 
-          <div class="text-xl font-black leading-[1.6] break-words">
+          <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}">
             ${bodyHtml}
           </div>
 
@@ -3131,7 +3374,7 @@ function addCustomTag(){
   if(area) area.scrollTop = 0;
   }
 
-  async function showDayRecords(dateKey){
+  async function showDayRecords(dateKey, options = {}){
   selectedCalendarDateKey = dateKey;
   updateSelectedDayButton();
 
@@ -3169,9 +3412,8 @@ function addCustomTag(){
         const isExpanded = !!expanded[item.id];
         const text = item.contentText || stripHtml(item.contentHtml || '') || '[내용 없음]';
         const isLong = text.length > PREVIEW_LENGTH;
-        const bodyHtml = isExpanded || !isLong
-          ? (item.contentHtml || escapeHtml(text))
-          : escapeHtml(text.slice(0, PREVIEW_LENGTH) + '...');
+        const bodyHtml = item.contentHtml || escapeHtml(text);
+        const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
 
         const images = (item.imageIds || []).map(id => imageMap[id]).filter(Boolean);
 
@@ -3180,7 +3422,7 @@ function addCustomTag(){
             <div class="query-card-body">
               <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
 
-              <div class="text-xl font-black leading-[1.6] break-words">
+              <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}">
                 ${bodyHtml}
               </div>
 
@@ -3537,30 +3779,94 @@ function addCustomTag(){
 }
 
   function stopSpeech(){
+    speechQueueItems = [];
+    speechQueueIndex = 0;
+    speechQueueOnEnd = null;
     if('speechSynthesis' in window) window.speechSynthesis.cancel();
   }
   
 
   function sanitizeSpeechText(text){
     return String(text || '')
-      .replace(/\s+/g, ' ')
+      .replace(/Thermal\s+Resistance/gi, ' 써멀 리지스턴스 ')
+      .replace(/thermal/gi, ' 써멀 ')
+      .replace(/resistance/gi, ' 리지스턴스 ')
+      .replace(/conductivity/gi, ' 컨덕티비티 ')
+      .replace(/capacity/gi, ' 커패시티 ')
+      .replace(/coefficient/gi, ' 코이피션트 ')
+      .replace(/temperature/gi, ' 템퍼러처 ')
+      .replace(/lambda/gi, ' 람다 ')
+      .replace(/delta/gi, ' 델타 ')
+      .replace(/alpha/gi, ' 알파 ')
+      .replace(/beta/gi, ' 베타 ')
+      .replace(/gamma/gi, ' 감마 ')
+      .replace(/theta/gi, ' 세타 ')
+      .replace(/sigma/gi, ' 시그마 ')
+      .replace(/omega/gi, ' 오메가 ')
+      .replace(/mu/gi, ' 뮤 ')
+      .replace(/rho/gi, ' 로 ')
+      .replace(/eta/gi, ' 에타 ')
+      .replace(/pi/gi, ' 파이 ')
+      .replace(/λ/g, ' 람다 ')
+      .replace(/Δ/g, ' 델타 ')
+      .replace(/δ/g, ' 델타 ')
+      .replace(/α/g, ' 알파 ')
+      .replace(/β/g, ' 베타 ')
+      .replace(/γ/g, ' 감마 ')
+      .replace(/θ/g, ' 세타 ')
+      .replace(/σ/g, ' 시그마 ')
+      .replace(/ω/g, ' 오메가 ')
+      .replace(/μ/g, ' 뮤 ')
+      .replace(/ρ/g, ' 로 ')
+      .replace(/η/g, ' 에타 ')
+      .replace(/π/g, ' 파이 ')
+      .replace(/√/g, ' 루트 ')
+      .replace(/%/g, ' 퍼센트 ')
+      .replace(/‰/g, ' 퍼밀 ')
+      .replace(/℃/g, ' 도씨 ')
+      .replace(/°C/g, ' 도씨 ')
+      .replace(/°/g, ' 도 ')
+      .replace(/㎥/g, ' 세제곱미터 ')
+      .replace(/㎡/g, ' 제곱미터 ')
+      .replace(/m³/gi, ' 세제곱미터 ')
+      .replace(/m²/gi, ' 제곱미터 ')
+      .replace(/km\/h/gi, ' 킬로미터 퍼 아워 ')
+      .replace(/m\/s/gi, ' 미터 퍼 세컨드 ')
+      .replace(/kg/g, ' 킬로그램 ')
+      .replace(/mm/g, ' 밀리미터 ')
+      .replace(/cm/g, ' 센티미터 ')
+      .replace(/km/g, ' 킬로미터 ')
+      .replace(/ml/g, ' 밀리리터 ')
+      .replace(/l/g, ' 리터 ')
+      .replace(/×/g, ' 곱하기 ')
+      .replace(/÷/g, ' 나누기 ')
+      .replace(/=/g, ' 는 ')
+      .replace(/\+/g, ' 더하기 ')
+      .replace(/~/g, ' 부터 ')
+      .replace(/:/g, ' ')
+      .replace(/;/g, ' ')
+      .replace(/\//g, ' 나누기 ')
+      .replace(/C_p/gi, ' 씨 피 ')
+      .replace(/Q/g, ' 큐 ')
+      .replace(/V/g, ' 브이 ')
+      .replace(/W/g, ' 더블유 ')
+      .replace(/COP/gi, ' 씨 오 피 ')
+      .replace(/h₁/gi, ' 에이치 원 ')
+      .replace(/h₂/gi, ' 에이치 투 ')
+      .replace(/\s*-\s*/g, ' 빼기 ')
       .replace(/\.{2,}/g, '. ')
+      .replace(/\s+/g, ' ')
       .trim();
   }
-function buildSpeechText(items, mode='filtered'){
-  if(!items.length) return '읽어드릴 학습 기록이 없습니다.';
 
-  const body = items.map(r => {
-    const baseText = (r.contentText || stripHtml(r.contentHtml || '') || '')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    return baseText || '내용 없음';
-  }).join(' ');
-
-  return body;
-}
-  
+  function getCurrentSpeechItems(){
+    if(currentQueryViewMode === 'day') return currentDaySpeechItems.slice();
+    if(currentQueryViewMode === 'latest'){
+      const latest = [...records].sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt))[0];
+      return latest ? [latest] : [];
+    }
+    return getFilteredRecords();
+  }
 
   function getSpeechRate(){
     const el = document.getElementById('speechRateSelect');
@@ -3572,28 +3878,177 @@ function buildSpeechText(items, mode='filtered'){
     const el = document.getElementById('speechRateSelect');
     if(el) el.title = `현재 읽기속도 ${el.value}배`;
   }
-function speakText(text){
-  if(!('speechSynthesis' in window)){
-    showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
-    return;
+
+  function stepSpeechRate(direction){
+    const el = document.getElementById('speechRateSelect');
+    if(!el) return;
+    const options = Array.from(el.options).map(opt => String(opt.value));
+    const current = String(el.value || '1');
+    let idx = options.indexOf(current);
+    if(idx < 0) idx = options.indexOf('1');
+    idx = Math.max(0, Math.min(options.length - 1, idx + (direction > 0 ? 1 : -1)));
+    el.value = options[idx];
+    updateSpeechRateLabel();
+  syncRepeatMiniPickerValues();
+    showToast(`읽기속도 ${el.value}배`);
   }
-  stopSpeech();
-  const utter = new SpeechSynthesisUtterance(text);
-  utter.lang = 'ko-KR';
 
-  const rateEl = document.getElementById('speechRateSelect');
-  const rate = Number(rateEl?.value || '1');
-  utter.rate = Number.isFinite(rate) ? rate : 1;
+  function initQueryActionDots(){
+    const scroller = document.getElementById('queryActionsScroller');
+    const dotsWrap = document.getElementById('queryActionsDots');
+    if(!scroller || !dotsWrap) return;
 
-  window.speechSynthesis.speak(utter);
-}
+    const pageCount = Math.max(1, Math.ceil(scroller.scrollWidth / Math.max(1, scroller.clientWidth)));
+    dotsWrap.innerHTML = '';
+
+    if(pageCount <= 1){
+      dotsWrap.style.display = 'none';
+      return;
+    }
+
+    dotsWrap.style.display = 'flex';
+
+    const renderActive = () => {
+      const maxScroll = Math.max(1, scroller.scrollWidth - scroller.clientWidth);
+      const progress = scroller.scrollLeft / maxScroll;
+      const activeIndex = Math.min(pageCount - 1, Math.round(progress * (pageCount - 1)));
+      Array.from(dotsWrap.children).forEach((dot, idx) => {
+        dot.classList.toggle('active', idx === activeIndex);
+      });
+    };
+
+    for(let idx = 0; idx < pageCount; idx += 1){
+      const dot = document.createElement('button');
+      dot.type = 'button';
+      dot.className = 'scroll-dot' + (idx === 0 ? ' active' : '');
+      dot.setAttribute('aria-label', `${idx + 1}번째 영역으로 이동`);
+      dot.onclick = () => {
+        const left = (scroller.scrollWidth - scroller.clientWidth) * (idx / Math.max(1, pageCount - 1));
+        scroller.scrollTo({ left, behavior:'smooth' });
+      };
+      dotsWrap.appendChild(dot);
+    }
+
+    scroller.addEventListener('scroll', renderActive, { passive:true });
+    renderActive();
+  }
+
+  function chunkSpeechText(text, maxLength = 120){
+    const source = sanitizeSpeechText(text);
+    if(!source) return [];
+
+    const basePieces = source
+      .replace(/\r/g, '')
+      .split(/(?<=[,，])\s*|\n+/)
+      .map(v => v.trim())
+      .filter(Boolean);
+
+    const chunks = [];
+
+    basePieces.forEach(piece => {
+      if(piece.length <= maxLength){
+        chunks.push(piece);
+        return;
+      }
+
+      let rest = piece;
+      while(rest.length > maxLength){
+        let cut = rest.lastIndexOf(' ', maxLength);
+        if(cut < Math.floor(maxLength * 0.6)){
+          cut = maxLength;
+        }
+        chunks.push(rest.slice(0, cut).trim());
+        rest = rest.slice(cut).trim();
+      }
+      if(rest) chunks.push(rest);
+    });
+
+    return chunks.filter(Boolean);
+  }
+
+  function buildSpeechQueue(items){
+    const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
+    const queue = [];
+
+    safeItems.forEach((r) => {
+      const baseText = sanitizeSpeechText(r.contentText || stripHtml(r.contentHtml || '') || '내용 없음');
+      const chunks = chunkSpeechText(baseText);
+      if(!chunks.length) return;
+
+      chunks.forEach((chunk, chunkIdx) => {
+        const isLastChunk = chunkIdx === chunks.length - 1;
+        queue.push({
+          text: chunk,
+          pauseAfter: isLastChunk ? 650 : 160
+        });
+      });
+    });
+
+    return queue;
+  }
+
+  function speakNextInQueue(){
+    if(!speechQueueItems.length || speechQueueIndex >= speechQueueItems.length){
+      const done = speechQueueOnEnd;
+      speechQueueItems = [];
+      speechQueueIndex = 0;
+      speechQueueOnEnd = null;
+      if(typeof done === 'function') done();
+      return;
+    }
+
+    const current = speechQueueItems[speechQueueIndex] || {};
+    const text = typeof current === 'string' ? current : String(current.text || '').trim();
+    const pauseAfter = typeof current === 'object' && Number.isFinite(current.pauseAfter) ? current.pauseAfter : 120;
+
+    if(!text){
+      speechQueueIndex += 1;
+      setTimeout(() => speakNextInQueue(), pauseAfter);
+      return;
+    }
+
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'ko-KR';
+    utter.rate = getSpeechRate();
+    utter.onend = () => {
+      speechQueueIndex += 1;
+      setTimeout(() => speakNextInQueue(), pauseAfter);
+    };
+    utter.onerror = () => {
+      speechQueueIndex += 1;
+      setTimeout(() => speakNextInQueue(), pauseAfter);
+    };
+    window.speechSynthesis.speak(utter);
+  }
+
+  function speakItems(items, onEnd){
+    if(!('speechSynthesis' in window)){
+      showToast('이 브라우저는 읽어주기 기능을 지원하지 않습니다.');
+      return;
+    }
+
+    const queue = buildSpeechQueue(items);
+    if(!queue.length){
+      showToast('읽을 내용이 없습니다.');
+      return;
+    }
+
+    stopSpeech();
+    speechQueueItems = queue;
+    speechQueueIndex = 0;
+    speechQueueOnEnd = typeof onEnd === 'function' ? onEnd : null;
+    speakNextInQueue();
+  }
+
   function readFilteredRecords(){
-  const items = getFilteredRecords();
+  const items = getCurrentSpeechItems();
+
   if(!items.length){
     showToast('조회 결과가 없습니다.');
     return;
   }
-  speakText(buildSpeechText(items, 'filtered'));
+
+  speakItems(items);
 }
 
 function readAllRecords(){
@@ -3601,7 +4056,7 @@ function readAllRecords(){
     showToast('전체 기록이 없습니다.');
     return;
   }
-  speakText(buildSpeechText(records, 'all'));
+  speakItems(records);
 }
 
   function readSelectedDayRecords(){
@@ -3609,7 +4064,175 @@ function readAllRecords(){
     showToast('선택된 날짜 기록이 없습니다.');
     return;
   }
-  speakText(buildSpeechText(currentDaySpeechItems, 'day'));
+  speakItems(currentDaySpeechItems);
+}
+
+function getRepeatMiniPickerMeta(type){
+  const map = {
+    start: { inputId:'repeatStartInput', valueId:'repeatStartValue', pickerId:'repeatStartPicker', menuId:'repeatStartMenu' },
+    end: { inputId:'repeatEndInput', valueId:'repeatEndValue', pickerId:'repeatEndPicker', menuId:'repeatEndMenu' },
+    count: { inputId:'repeatCountInput', valueId:'repeatCountValue', pickerId:'repeatCountPicker', menuId:'repeatCountMenu' }
+  };
+  return map[type];
+}
+
+function getRepeatMiniPickerMax(type){
+  if(type === 'count') return 20;
+  return Math.max(1, getCurrentSpeechItems().length || 1);
+}
+
+function syncRepeatMiniPickerValues(){
+  const itemsLength = Math.max(1, getCurrentSpeechItems().length || 1);
+  const startEl = document.getElementById('repeatStartInput');
+  const endEl = document.getElementById('repeatEndInput');
+  const countEl = document.getElementById('repeatCountInput');
+
+  let start = Number(startEl?.value || 1);
+  let end = Number(endEl?.value || 1);
+  let count = Number(countEl?.value || 2);
+
+  if(!Number.isFinite(start) || start < 1) start = 1;
+  if(!Number.isFinite(end) || end < 1) end = 1;
+  if(!Number.isFinite(count) || count < 1) count = 2;
+
+  start = Math.min(start, itemsLength);
+  end = Math.min(end, itemsLength);
+  count = Math.min(Math.max(1, count), 20);
+
+  if(end < start) end = start;
+
+  if(startEl) startEl.value = String(start);
+  if(endEl) endEl.value = String(end);
+  if(countEl) countEl.value = String(count);
+
+  const startValue = document.getElementById('repeatStartValue');
+  const endValue = document.getElementById('repeatEndValue');
+  const countValue = document.getElementById('repeatCountValue');
+  if(startValue) startValue.textContent = String(start);
+  if(endValue) endValue.textContent = String(end);
+  if(countValue) countValue.textContent = String(count);
+}
+
+function renderRepeatMiniPicker(type){
+  syncRepeatMiniPickerValues();
+  const meta = getRepeatMiniPickerMeta(type);
+  if(!meta) return;
+
+  const menu = document.getElementById(meta.menuId);
+  const input = document.getElementById(meta.inputId);
+  if(!menu || !input) return;
+
+  const current = Number(input.value || 1);
+  const max = getRepeatMiniPickerMax(type);
+  const options = [];
+
+  for(let i = 1; i <= max; i += 1){
+    options.push(`<button type="button" class="repeat-mini-option ${i === current ? 'active' : ''}" onclick="setRepeatMiniPickerValue('${type}', ${i}, event)">${i}</button>`);
+  }
+
+  menu.innerHTML = options.join('');
+
+  requestAnimationFrame(() => {
+    const active = menu.querySelector('.repeat-mini-option.active');
+    if(active){
+      const top = active.offsetTop - Math.max(0, (menu.clientHeight - active.offsetHeight) / 2);
+      menu.scrollTop = top;
+    }
+  });
+}
+
+function closeRepeatMiniPickers(){
+  ['start','end','count'].forEach(type => {
+    const meta = getRepeatMiniPickerMeta(type);
+    const picker = meta ? document.getElementById(meta.pickerId) : null;
+    if(picker) picker.classList.remove('is-open');
+  });
+  activeRepeatMiniPicker = '';
+}
+
+function toggleRepeatMiniPicker(type, event){
+  if(event) event.stopPropagation();
+  const meta = getRepeatMiniPickerMeta(type);
+  const picker = meta ? document.getElementById(meta.pickerId) : null;
+  if(!picker) return;
+
+  const willOpen = !picker.classList.contains('is-open');
+  closeRepeatMiniPickers();
+
+  if(willOpen){
+    renderRepeatMiniPicker(type);
+    picker.classList.add('is-open');
+    activeRepeatMiniPicker = type;
+  }
+}
+
+function setRepeatMiniPickerValue(type, value, event){
+  if(event) event.stopPropagation();
+  const meta = getRepeatMiniPickerMeta(type);
+  const input = meta ? document.getElementById(meta.inputId) : null;
+  if(!input) return;
+
+  input.value = String(value);
+
+  if(type === 'start'){
+    const endEl = document.getElementById('repeatEndInput');
+    if(endEl && Number(endEl.value || 1) < value) endEl.value = String(value);
+  }
+
+  if(type === 'end'){
+    const startEl = document.getElementById('repeatStartInput');
+    if(startEl && Number(startEl.value || 1) > value) startEl.value = String(value);
+  }
+
+  syncRepeatMiniPickerValues();
+  closeRepeatMiniPickers();
+}
+
+document.addEventListener('click', (event) => {
+  const insidePicker = event.target && event.target.closest ? event.target.closest('.repeat-mini-picker') : null;
+  if(!insidePicker) closeRepeatMiniPickers();
+});
+
+function readRepeatSection(){
+  const items = getCurrentSpeechItems();
+  if(!items.length){
+    showToast('반복할 조회 결과가 없습니다.');
+    return;
+  }
+
+  const startEl = document.getElementById('repeatStartInput');
+  const endEl = document.getElementById('repeatEndInput');
+  const countEl = document.getElementById('repeatCountInput');
+
+  let start = Number(startEl?.value || 1);
+  let end = Number(endEl?.value || start);
+  let repeatCount = Number(countEl?.value || 1);
+
+  if(!Number.isFinite(start) || start < 1) start = 1;
+  if(!Number.isFinite(end) || end < start) end = start;
+  if(!Number.isFinite(repeatCount) || repeatCount < 1) repeatCount = 1;
+
+  start = Math.min(start, items.length);
+  end = Math.min(end, items.length);
+
+  if(start > end){
+    showToast('구간 번호를 다시 확인해 주세요.');
+    return;
+  }
+
+  const targetItems = items.slice(start - 1, end);
+  let cycle = 0;
+
+  const speakCycle = () => {
+    cycle += 1;
+    speakItems(targetItems, () => {
+      if(cycle < repeatCount){
+        setTimeout(speakCycle, 180);
+      }
+    });
+  };
+
+  speakCycle();
 }
 
   
@@ -3623,6 +4246,7 @@ function readAllRecords(){
   renderQuickButtons();
   renderSpecialButtons();
   renderTagButtons();
+  initQueryActionDots();
   await syncFormFromDraft();
   document.getElementById('goalInput').value = goalMinutes;
   updateSpeechRateLabel();
