@@ -841,6 +841,8 @@ window.addEventListener('load', function(){
     background:rgba(10,16,28,.96);
     color:#f8fbff;
     border:1px solid rgba(255,255,255,.08);
+    z-index:12000 !important;
+    bottom:calc(env(safe-area-inset-bottom, 0px) + 124px) !important;
   }
 
   #querySection{
@@ -2550,6 +2552,12 @@ body.player-reading .bottom-player-btn.play{
   padding-right:6px !important;
 }
 
+
+/* v21 fixes */
+#queryScrollArea{
+  scroll-behavior:auto !important;
+}
+
 </style>
 </head>
 <body class="space-y-2">
@@ -4119,6 +4127,11 @@ function addCustomTag(){
     return records.some(r => r.id !== editingId && r.studiedAt === payload.studiedAt && r.contentText === payload.contentText);
   }
   async function saveRecord(){
+  const area = document.getElementById('queryScrollArea');
+  const prevScrollTop = area ? area.scrollTop : 0;
+  const prevViewMode = currentQueryViewMode;
+  const prevDayKey = selectedCalendarDateKey;
+
   draft.minutes = (document.getElementById('minutesInput')?.value) || draft.minutes || '10';
   draft.contentHtml = getEditorHtml();
   draft.contentText = getEditorText();
@@ -4195,7 +4208,26 @@ function addCustomTag(){
   await renderRecords();
   renderStats();
   renderQuickInsights();
-  await refreshCurrentQueryView();
+
+  if(wasEditing){
+    currentQueryViewMode = prevViewMode;
+    selectedCalendarDateKey = prevDayKey;
+
+    if(prevViewMode === 'day' && prevDayKey){
+      await showDayRecords(prevDayKey, { preserveScroll: true, scrollTop: prevScrollTop });
+    }else if(prevViewMode === 'all'){
+      await renderRecords();
+      if(area){
+        requestAnimationFrame(() => {
+          area.scrollTop = prevScrollTop;
+        });
+      }
+    }else{
+      await showLatestRecordView();
+    }
+  }else{
+    await refreshCurrentQueryView();
+  }
 }
 
   async function editRecord(id){
@@ -4297,9 +4329,10 @@ function addCustomTag(){
 
     if(currentQueryViewMode === 'day' && selectedCalendarDateKey){
       await showDayRecords(selectedCalendarDateKey, { preserveScroll: true, scrollTop: prevScrollTop });
-    }else{
+    }else if(currentQueryViewMode === 'all'){
       await renderRecords();
-      await refreshCurrentQueryView({ preserveScroll: true, scrollTop: prevScrollTop });
+    }else{
+      await showLatestRecordView();
     }
 
     if(area){
