@@ -5281,6 +5281,10 @@ function addCustomTag(){
 
   function sanitizeSpeechText(text){
     return String(text || '')
+      .replace(/([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)\s*>=\s*([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)/g, '$1 가 $2 보다 크거나 같다')
+.replace(/([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)\s*<=\s*([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)/g, '$1 가 $2 보다 작거나 같다')
+.replace(/([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)\s*>\s*([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)/g, '$1 가 $2 보다 크다')
+.replace(/([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)\s*<\s*([A-Za-z가-힣εΔληQGhTq₀₁₂₃₄₅₆₇₈₉′']+)/g, '$1 가 $2 보다 작다')
     .replace(/k\s*j\s*\/\s*h/gi, '킬로줄 퍼 아워')
      .replace(/kg\s*\/\s*h/gi, '킬로그램 퍼 아워')
      .replace(/k\s*j\s*\/\s*kg/gi, '킬로줄 퍼 킬로그램')
