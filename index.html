@@ -29,8 +29,15 @@ function updateBottomPlayerState(isReading){
   document.body.classList.toggle('player-reading', !!isReading);
   const statusEl = document.getElementById('bottomPlayerStatus');
   if(statusEl){
-    statusEl.textContent = isReading ? '읽는 중' : '대기 중';
+    statusEl.textContent = isReading ? (speechPaused ? '일시정지' : '읽는 중') : '대기 중';
   }
+  if(!isReading){
+    setCurrentSpeechDisplay('');
+    clearReadingActiveState();
+    currentSpeechRecordId = '';
+    speechPaused = false;
+  }
+  updatePauseButtonUI();
 }
 
 function updateBottomPlayerProgress(current, total){
@@ -71,6 +78,10 @@ function refreshBottomPlayerFromView(){
   const originalReadUnifiedAction = window.readUnifiedAction;
   if(typeof originalReadUnifiedAction === 'function'){
     window.readUnifiedAction = function(){
+      if(speechPaused && speechQueueItems.length){
+        resumeSpeech();
+        return;
+      }
       updateBottomPlayerState(true);
       refreshBottomPlayerFromView();
       return originalReadUnifiedAction.apply(this, arguments);
@@ -81,6 +92,7 @@ function refreshBottomPlayerFromView(){
   if(typeof originalStopSpeech === 'function'){
     window.stopSpeech = function(){
       const result = originalStopSpeech.apply(this, arguments);
+      clearSpeechProgressTimer();
       updateBottomPlayerState(false);
       refreshBottomPlayerFromView();
       return result;
@@ -251,8 +263,15 @@ function updateBottomPlayerState(isReading){
   document.body.classList.toggle('player-reading', !!isReading);
   const statusEl = document.getElementById('bottomPlayerStatus');
   if(statusEl){
-    statusEl.textContent = isReading ? '읽는 중' : '대기 중';
+    statusEl.textContent = isReading ? (speechPaused ? '일시정지' : '읽는 중') : '대기 중';
   }
+  if(!isReading){
+    setCurrentSpeechDisplay('');
+    clearReadingActiveState();
+    currentSpeechRecordId = '';
+    speechPaused = false;
+  }
+  updatePauseButtonUI();
 }
 
 function updateBottomPlayerProgress(current, total){
@@ -303,6 +322,7 @@ function refreshBottomPlayerFromView(){
   if(typeof originalStopSpeech === 'function'){
     window.stopSpeech = function(){
       const result = originalStopSpeech.apply(this, arguments);
+      clearSpeechProgressTimer();
       updateBottomPlayerState(false);
       refreshBottomPlayerFromView();
       return result;
@@ -2342,24 +2362,25 @@ button[aria-label="닫기"],
 
 /* v17 bottom player bar */
 body{
-  padding-bottom:110px !important;
+  padding-bottom:128px !important;
 }
 
 .bottom-player-bar{
   position:fixed;
-  left:12px;
-  right:12px;
-  bottom:calc(env(safe-area-inset-bottom, 0px) + 10px);
+  left:0;
+  right:0;
+  bottom:0;
   z-index:9999;
-  border-radius:20px;
+  border-radius:22px 22px 0 0;
   border:1px solid rgba(255,255,255,.10);
+  border-bottom:none;
   background:
     radial-gradient(circle at center, rgba(88,132,255,.10) 0%, rgba(88,132,255,0) 58%),
-    linear-gradient(180deg, rgba(15,23,38,.96), rgba(10,16,28,.98));
+    linear-gradient(180deg, rgba(15,23,38,.97), rgba(10,16,28,.99));
   box-shadow:
-    0 18px 40px rgba(0,0,0,.36),
+    0 -8px 28px rgba(0,0,0,.30),
     inset 0 1px 0 rgba(255,255,255,.05);
-  padding:10px 12px 12px;
+  padding:10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
   backdrop-filter:blur(10px);
 }
 
@@ -2380,6 +2401,14 @@ body{
   font-size:14px;
   font-weight:900;
   white-space:nowrap;
+  background:
+    radial-gradient(circle at center, rgba(255,255,255,.06) 0%, rgba(255,255,255,.02) 38%, rgba(255,255,255,0) 68%),
+    linear-gradient(180deg, rgba(24,34,52,.96), rgba(16,24,38,.96)) !important;
+  color:#edf3fb !important;
+  border:1px solid rgba(255,255,255,.14) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.05),
+    0 8px 18px rgba(0,0,0,.16) !important;
 }
 
 .bottom-player-btn .btn-icon{
@@ -2558,6 +2587,100 @@ body.player-reading .bottom-player-btn.play{
   scroll-behavior:auto !important;
 }
 
+
+.current-speech-text{
+  margin-top:8px;
+  padding:10px 12px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.04);
+  color:#eef4ff;
+  font-size:13px;
+  font-weight:800;
+  line-height:1.45;
+  max-height:82px;
+  overflow:auto;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+  scrollbar-width:thin;
+}
+.current-speech-text.is-empty{
+  color:#aab8cd;
+  font-weight:700;
+}
+.query-card.reading-active{
+  border-color:rgba(96,165,250,.28) !important;
+  box-shadow:0 0 0 1px rgba(59,130,246,.10) !important;
+}
+.record-preview.reading-active{
+  background:none !important;
+}
+
+
+/* 최소 수정 3가지 */
+.current-speech-text{
+  display:none !important;
+}
+
+#bottomRestartBtn{
+  min-height:42px !important;
+  padding:0 18px !important;
+  border-radius:14px !important;
+  border:1px solid rgba(115,155,255,.24) !important;
+  background:
+    radial-gradient(circle at center, rgba(95,145,255,.28) 0%, rgba(95,145,255,.14) 28%, rgba(95,145,255,0) 60%),
+    linear-gradient(180deg, rgba(28,39,61,.96), rgba(18,27,43,.96)) !important;
+  color:#f8fbff !important;
+  font-weight:900 !important;
+  display:inline-flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+}
+
+.record-preview.reading-active{
+  background:none !important;
+}
+
+
+
+  .speech-inline-highlight{
+    display:inline;
+    position:relative;
+    -webkit-box-decoration-break:clone;
+    box-decoration-break:clone;
+    background:linear-gradient(180deg, transparent 0 60%, rgba(255,226,116,.30) 60% 100%) !important;
+    border-radius:0.08em;
+    box-shadow:inset 0 -1px 0 rgba(255,240,180,.22) !important;
+    outline:none !important;
+    padding:0 .01em;
+    text-decoration:none !important;
+    animation:none !important;
+  }
+
+  .record-preview.reading-active .speech-inline-highlight,
+  .detail-content.reading-active .speech-inline-highlight{
+    background:linear-gradient(180deg, transparent 0 58%, rgba(255,226,116,.38) 58% 100%) !important;
+    box-shadow:inset 0 -1px 0 rgba(255,244,196,.28) !important;
+    outline:none !important;
+  }
+
+
+
+/* reading highlight removed */
+.query-card.reading-active,
+.record-preview.reading-active,
+.detail-content.reading-active,
+.record-preview.reading-active .speech-inline-highlight,
+.detail-content.reading-active .speech-inline-highlight,
+.speech-inline-highlight,
+.speech-highlighted{
+  background: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+  border: 0 !important;
+  text-decoration: none !important;
+  filter: none !important;
+}
 </style>
 </head>
 <body class="space-y-2">
@@ -2935,7 +3058,8 @@ body.player-reading .bottom-player-btn.play{
   
   <div id="bottomPlayerBar" class="bottom-player-bar">
     <div class="bottom-player-top">
-      <button type="button" id="bottomPlayBtn" class="press bottom-player-btn play" onclick="readUnifiedAction()"><span class="btn-icon">▶</span>읽기</button>
+      <button type="button" id="bottomPlayBtn" class="press bottom-player-btn play" onclick="handlePlayButton()"><span class="btn-icon">▶</span>읽기</button>
+      <button type="button" id="bottomPauseBtn" class="press bottom-player-btn" onclick="togglePauseSpeech()"><span class="btn-icon">⏸</span>일시정지</button>
       <button type="button" id="bottomStopBtn" class="press bottom-player-btn stop" onclick="stopSpeech(); updateBottomPlayerState(false);"><span class="btn-icon">■</span>중단</button>
       <div class="bottom-rate-picker" id="bottomRatePicker">
         <button type="button" id="bottomRateTrigger" class="bottom-player-rate" onclick="toggleBottomRatePicker(event)">
@@ -2945,6 +3069,7 @@ body.player-reading .bottom-player-btn.play{
         <div id="bottomRateMenu" class="bottom-rate-menu"></div>
       </div>
     </div>
+    <div id="currentSpeechText" class="current-speech-text is-empty">현재 읽는 내용이 여기에 표시됩니다.</div>
     <div class="bottom-player-meta">
       <div id="bottomPlayerStatus">대기 중</div>
       <div id="bottomPlayerPage">0 / 0</div>
@@ -3207,6 +3332,13 @@ function normalizeStringList(list){
   let speechQueueItems = [];
   let speechQueueIndex = 0;
   let speechQueueOnEnd = null;
+  let speechPaused = false;
+  let speechPauseCancel = false;
+  let currentSpeechRecordId = '';
+  let currentSpeechTextValue = '';
+  let currentSpeechHighlightValue = '';
+  let speechProgressTimer = null;
+  let currentSpeechRangeItems = null;
   let activeRepeatMiniPicker = '';
   let repeatRangeTouched = false;
   let repeatCountTouched = false;
@@ -4338,7 +4470,10 @@ function addCustomTag(){
     if(area){
       requestAnimationFrame(() => {
         area.scrollTop = prevScrollTop;
+        restoreCurrentSpeechUIState({ keepScroll:true });
       });
+    }else{
+      restoreCurrentSpeechUIState({ keepScroll:true });
     }
   }
 
@@ -4473,11 +4608,11 @@ function addCustomTag(){
     const images = (record.imageIds || []).map(id => imageMap[id]).filter(Boolean);
 
     return `
-      <div class="card p-4 query-card">
+      <div class="card p-4 query-card" data-record-id="${record.id}" id="queryCard_${record.id}">
         <div class="query-card-body">
           <div class="text-sm text-slate-400">${formatDateTime(record.studiedAt)} | ${record.minutes}분</div>
 
-          <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}">
+          <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${record.id}">
             ${bodyHtml}
           </div>
 
@@ -4871,11 +5006,11 @@ function addCustomTag(){
         const images = (item.imageIds || []).map(id => imageMap[id]).filter(Boolean);
 
         return `
-          <div class="card p-4 query-card">
+          <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
             <div class="query-card-body">
               <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
 
-              <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}">
+              <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">
                 ${bodyHtml}
               </div>
 
@@ -5271,11 +5406,342 @@ function addCustomTag(){
   reader.readAsText(file,'utf-8');
 }
 
-  function stopSpeech(){
+  
+function setCurrentSpeechDisplay(text = ''){
+  currentSpeechTextValue = String(text || '').trim();
+  const el = document.getElementById('currentSpeechText');
+  if(el){
+    el.textContent = currentSpeechTextValue || '현재 읽는 내용이 여기에 표시됩니다.';
+    el.classList.toggle('is-empty', !currentSpeechTextValue);
+  }
+}
+
+function setCurrentSpeechHighlightText(text = ''){
+  currentSpeechHighlightValue = String(text || '').trim();
+}
+
+function getActiveSpeechHighlightText(){
+  return currentSpeechHighlightValue || currentSpeechTextValue || '';
+}
+
+function clearSpeechProgressTimer(){
+  if(speechProgressTimer){
+    clearInterval(speechProgressTimer);
+    speechProgressTimer = null;
+  }
+}
+
+function clearSpeechTextHighlight(){
+  document.querySelectorAll('.record-preview[data-speech-original-html]').forEach(el => {
+    el.innerHTML = el.dataset.speechOriginalHtml || '';
+    delete el.dataset.speechOriginalHtml;
+    el.classList.remove('speech-highlighted');
+  });
+}
+
+function normalizeSpeechMatchText(text){
+  return String(text || '').replace(/\s+/g, ' ').trim();
+}
+
+function buildNormalizedIndexMap(text){
+  const source = String(text || '');
+  let normalized = '';
+  const map = [];
+  let pendingSpace = false;
+
+  for(let i = 0; i < source.length; i += 1){
+    const ch = source[i];
+    if(/\s/.test(ch)){
+      if(normalized) pendingSpace = true;
+      continue;
+    }
+    if(pendingSpace && normalized){
+      normalized += ' ';
+      map.push(i);
+      pendingSpace = false;
+    }
+    normalized += ch;
+    map.push(i);
+  }
+
+  return { normalized, map };
+}
+
+function applySpeechHighlightToElement(el, text){
+  if(!el) return false;
+  const target = normalizeSpeechMatchText(text);
+  if(!target) return false;
+
+  const originalHtml = el.dataset.speechOriginalHtml ?? el.innerHTML;
+  el.dataset.speechOriginalHtml = originalHtml;
+  el.innerHTML = originalHtml;
+
+  const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+    acceptNode(node){
+      return node.nodeValue && node.nodeValue.trim()
+        ? NodeFilter.FILTER_ACCEPT
+        : NodeFilter.FILTER_REJECT;
+    }
+  });
+
+  const textNodes = [];
+  let fullText = '';
+  let node;
+  while((node = walker.nextNode())){
+    const value = node.nodeValue || '';
+    textNodes.push({ node, start: fullText.length, end: fullText.length + value.length, value });
+    fullText += value;
+  }
+
+  if(!fullText) return false;
+
+  const src = buildNormalizedIndexMap(fullText);
+  const normalizedTarget = normalizeSpeechMatchText(target);
+  let matchIdx = src.normalized.indexOf(normalizedTarget);
+
+  if(matchIdx < 0 && normalizedTarget.length > 12){
+    matchIdx = src.normalized.indexOf(normalizedTarget.slice(0, Math.max(12, Math.floor(normalizedTarget.length * 0.7))));
+  }
+  if(matchIdx < 0) return false;
+
+  const startOriginal = src.map[matchIdx];
+  const endMapIndex = Math.min(src.map.length - 1, matchIdx + Math.max(1, normalizedTarget.length) - 1);
+  const endOriginalExclusive = (src.map[endMapIndex] ?? startOriginal) + 1;
+
+  const overlaps = textNodes.filter(item => item.end > startOriginal && item.start < endOriginalExclusive);
+  if(!overlaps.length) return false;
+
+  for(let i = overlaps.length - 1; i >= 0; i -= 1){
+    const item = overlaps[i];
+    const currentNode = item.node;
+    if(!currentNode.parentNode) continue;
+
+    const localStart = Math.max(0, startOriginal - item.start);
+    const localEnd = Math.min(item.value.length, endOriginalExclusive - item.start);
+    if(localEnd <= localStart) continue;
+
+    const before = item.value.slice(0, localStart);
+    const middle = item.value.slice(localStart, localEnd);
+    const after = item.value.slice(localEnd);
+
+    const frag = document.createDocumentFragment();
+    if(before) frag.appendChild(document.createTextNode(before));
+
+    const mark = document.createElement('span');
+    mark.className = 'speech-inline-highlight';
+    mark.textContent = middle;
+    frag.appendChild(mark);
+
+    if(after) frag.appendChild(document.createTextNode(after));
+    currentNode.parentNode.replaceChild(frag, currentNode);
+  }
+
+  el.classList.add('speech-highlighted');
+  return true;
+}
+
+function setRecordSpeechHighlight(recordId, text){
+  clearSpeechTextHighlight();
+  const activeText = String(text || '').trim();
+  setCurrentSpeechHighlightText(activeText);
+  if(!recordId || !activeText) return;
+  const preview = document.getElementById(`recordPreview_${recordId}`);
+  applySpeechHighlightToElement(preview, activeText);
+
+  const detailContent = document.getElementById('detailContentHtml');
+  const detailModal = document.getElementById('recordDetailModal');
+  if(detailContent && detailModal && detailModal.classList.contains('show')){
+    applySpeechHighlightToElement(detailContent, activeText);
+    detailContent.classList.add('reading-active');
+  }
+}
+
+function restoreCurrentSpeechUIState(options = {}){
+  const { keepScroll = true } = options;
+  if(!currentSpeechRecordId) return;
+  if(keepScroll){
+    const card = document.getElementById(`queryCard_${currentSpeechRecordId}`);
+    const preview = document.getElementById(`recordPreview_${currentSpeechRecordId}`);
+    if(card) card.classList.add('reading-active');
+    if(preview) preview.classList.add('reading-active');
+    setRecordSpeechHighlight(currentSpeechRecordId, getActiveSpeechHighlightText());
+    return;
+  }
+  followSpeechViewport(currentSpeechRecordId);
+  setRecordSpeechHighlight(currentSpeechRecordId, getActiveSpeechHighlightText());
+}
+
+function clearReadingActiveState(){
+  clearSpeechTextHighlight();
+  document.querySelectorAll('.query-card.reading-active').forEach(el => el.classList.remove('reading-active'));
+  document.querySelectorAll('.record-preview.reading-active').forEach(el => el.classList.remove('reading-active'));
+  document.querySelectorAll('.detail-content.reading-active').forEach(el => el.classList.remove('reading-active'));
+}
+
+function followSpeechViewport(recordId){
+  clearReadingActiveState();
+  if(!recordId) return;
+  currentSpeechRecordId = recordId;
+
+  const card = document.getElementById(`queryCard_${recordId}`);
+  const preview = document.getElementById(`recordPreview_${recordId}`);
+  if(card) card.classList.add('reading-active');
+  if(preview) preview.classList.add('reading-active');
+
+  const area = document.getElementById('queryScrollArea');
+  if(area && card){
+    const areaRect = area.getBoundingClientRect();
+    const cardRect = card.getBoundingClientRect();
+    const topDelta = cardRect.top - areaRect.top;
+    const targetTop = area.scrollTop + topDelta - Math.max(20, area.clientHeight * 0.20);
+    area.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+  }
+}
+
+function updatePauseButtonUI(){
+  const btn = document.getElementById('bottomPauseBtn');
+  if(!btn) return;
+  btn.innerHTML = speechPaused
+    ? '<span class="btn-icon">▶</span>재시작'
+    : '<span class="btn-icon">⏸</span>일시정지';
+}
+
+function handlePlayButton(){
+  if(speechPaused && speechQueueItems.length){
+    resumeSpeech();
+    return;
+  }
+  readUnifiedAction();
+}
+
+function togglePauseSpeech(){
+  if(!speechQueueItems.length) return;
+  if(speechPaused){
+    resumeSpeech();
+    return;
+  }
+  pauseSpeech();
+}
+
+function pauseSpeech(){
+  if(!('speechSynthesis' in window)) return;
+  if(!speechQueueItems.length) return;
+  speechPaused = true;
+  speechPauseCancel = true;
+  clearSpeechProgressTimer();
+  try{ window.speechSynthesis.cancel(); }catch(e){}
+  updateBottomPlayerState(true);
+  updatePauseButtonUI();
+}
+
+function resumeSpeech(){
+  if(!('speechSynthesis' in window)) return;
+  if(!speechPaused || !speechQueueItems.length) return;
+  speechPaused = false;
+  speechPauseCancel = false;
+  updateBottomPlayerState(true);
+  updatePauseButtonUI();
+  followSpeechViewport(currentSpeechRecordId);
+  setRecordSpeechHighlight(currentSpeechRecordId, getActiveSpeechHighlightText());
+  setTimeout(() => speakNextInQueue(), 30);
+}
+
+let speechUiRefreshTimer = null;
+
+function scheduleSpeechUiRefresh(){
+  if(!currentSpeechRecordId || !getActiveSpeechHighlightText()) return;
+  clearTimeout(speechUiRefreshTimer);
+  speechUiRefreshTimer = setTimeout(() => {
+    restoreCurrentSpeechUIState({ keepScroll:true });
+  }, 120);
+}
+
+window.addEventListener('load', () => {
+  const area = document.getElementById('queryScrollArea');
+  if(!area) return;
+  area.addEventListener('scroll', scheduleSpeechUiRefresh, { passive:true });
+  area.addEventListener('touchend', scheduleSpeechUiRefresh, { passive:true });
+});
+
+function splitSpeechSentences(text){
+  return String(text || '')
+    .replace(/\n+/g, ' ')
+    .split(/(?<=[.!?]|다\.|요\.|니다\.)\s+/)
+    .map(s => s.trim())
+    .filter(Boolean);
+}
+
+async function renderSpeechRangeView(items){
+  currentSpeechRangeItems = Array.isArray(items) ? items.slice() : null;
+
+  if(currentQueryViewMode === 'day'){
+    const panel = document.getElementById('selectedDayRecords');
+    const recent = document.getElementById('recentSection');
+    const title = document.getElementById('queryTitle');
+    const list = Array.isArray(items) ? items : [];
+    const allImageIds = list.flatMap(item => Array.isArray(item.imageIds) ? item.imageIds : []);
+    const imageMap = await getImagesByIds(allImageIds);
+    title.textContent = list.length ? `${list.length}건 선택 읽기` : '선택 읽기';
+    recent.classList.add('hidden');
+    panel.classList.remove('hidden');
+    panel.innerHTML = list.length
+      ? `<div class="space-y-3">${list.map(item => {
+          const isExpanded = !!expanded[item.id];
+          const text = item.contentText || stripHtml(item.contentHtml || '') || '[내용 없음]';
+          const isLong = text.length > PREVIEW_LENGTH;
+          const bodyHtml = item.contentHtml || escapeHtml(text);
+          const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
+          const images = (item.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+          return `
+            <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
+              <div class="query-card-body">
+                <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
+                <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">${bodyHtml}</div>
+                ${images.length ? `<div class="grid grid-cols-2 gap-2">${images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}</div>` : ''}
+              </div>
+            </div>`;
+        }).join('')}</div>`
+      : '<div class="text-sm text-slate-400">표시할 기록이 없습니다.</div>';
+    autoSyncRepeatRange(true);
+    return;
+  }
+
+  const container = document.getElementById('recordList');
+  const panel = document.getElementById('selectedDayRecords');
+  const recent = document.getElementById('recentSection');
+  const title = document.getElementById('queryTitle');
+  const list = Array.isArray(items) ? items : [];
+
+  panel.classList.add('hidden');
+  recent.classList.remove('hidden');
+  title.textContent = list.length ? `${list.length}건 선택 읽기` : '선택 읽기';
+
+  if(!list.length){
+    container.innerHTML = '<div class="text-sm text-slate-400">표시할 기록이 없습니다.</div>';
+    autoSyncRepeatRange(true);
+    return;
+  }
+
+  const allImageIds = list.flatMap(record => Array.isArray(record.imageIds) ? record.imageIds : []);
+  const imageMap = await getImagesByIds(allImageIds);
+  const q = document.getElementById('searchInput')?.value?.trim?.() || '';
+  container.innerHTML = list.map(record => buildRecordCardHtml(record, imageMap, q)).join('');
+  autoSyncRepeatRange(true);
+}
+
+function stopSpeech(){
     speechQueueItems = [];
     speechQueueIndex = 0;
     speechQueueOnEnd = null;
+    speechPaused = false;
+    speechPauseCancel = false;
+    currentSpeechRecordId = '';
+    setCurrentSpeechDisplay('');
+    setCurrentSpeechHighlightText('');
+    clearSpeechProgressTimer();
+    clearReadingActiveState();
     if('speechSynthesis' in window) window.speechSynthesis.cancel();
+    updatePauseButtonUI();
   }
   
 
@@ -5578,20 +6044,132 @@ function addCustomTag(){
     return chunks.filter(Boolean);
   }
 
+
+
+  function splitSpeechHighlightUnits(text){
+    const source = String(text || '').replace(/\s+/g, ' ').trim();
+    if(!source) return [];
+
+    const phrasePieces = source
+      .split(/(?<=[,，])\s*|\s*[·•]\s*|\s{2,}/)
+      .map(v => String(v || '').trim())
+      .filter(Boolean);
+
+    const units = [];
+    phrasePieces.forEach(piece => {
+      if(piece.length <= 10){
+        units.push(piece);
+        return;
+      }
+
+      const words = piece.split(/\s+/).filter(Boolean);
+      if(words.length <= 3){
+        units.push(piece);
+        return;
+      }
+
+      for(let i = 0; i < words.length; i += 3){
+        const chunk = words.slice(i, i + 3).join(' ').trim();
+        if(chunk) units.push(chunk);
+      }
+    });
+
+    return units.length ? units : [source];
+  }
+
+  function getSpeechUnitBoundaries(units){
+    const safeUnits = Array.isArray(units) ? units.filter(Boolean) : [];
+    const boundaries = [];
+    let cursor = 0;
+    safeUnits.forEach((unit, idx) => {
+      const raw = String(unit || '');
+      const normalized = sanitizeSpeechText(raw);
+      const start = cursor;
+      const end = start + Math.max(1, normalized.length);
+      boundaries.push({ index: idx, start, end, text: raw });
+      cursor = end + 1;
+    });
+    return boundaries;
+  }
+
+  function updateSpeechProgressByChar(recordId, boundaries, charIndex){
+    const safeBoundaries = Array.isArray(boundaries) ? boundaries : [];
+    if(!safeBoundaries.length){
+      setRecordSpeechHighlight(recordId, getActiveSpeechHighlightText());
+      return;
+    }
+
+    const rawIdx = Number.isFinite(charIndex) ? Number(charIndex) : 0;
+    const rate = Math.max(0.5, Number(getSpeechRate()) || 1);
+    const lagChars = Math.max(2, Math.min(10, Math.round(4 / rate)));
+    const idx = Math.max(0, rawIdx - lagChars);
+    const active = safeBoundaries.find(item => idx >= item.start && idx < item.end)
+      || safeBoundaries.find(item => idx < item.end)
+      || safeBoundaries[safeBoundaries.length - 1];
+
+    if(active && active.text){
+      setRecordSpeechHighlight(recordId, active.text);
+    }
+  }
+
+  function startSpeechProgress(recordId, displayText, highlightUnits){
+    clearSpeechProgressTimer();
+
+    const safeUnits = Array.isArray(highlightUnits) && highlightUnits.length
+      ? highlightUnits.filter(Boolean)
+      : [String(displayText || '').trim()].filter(Boolean);
+
+    if(!safeUnits.length) return;
+
+    let unitIndex = 0;
+    const rate = Math.max(0.5, Number(getSpeechRate()) || 1);
+    const initialDelay = Math.max(140, Math.round(220 / rate));
+
+    speechProgressTimer = setTimeout(() => {
+      if(speechPaused) return;
+      setRecordSpeechHighlight(recordId, safeUnits[0]);
+
+      if(safeUnits.length === 1){
+        speechProgressTimer = null;
+        return;
+      }
+
+      const totalChars = Math.max(1, sanitizeSpeechText(displayText).length);
+      const interval = Math.max(140, Math.floor((totalChars * 62) / safeUnits.length / rate));
+
+      speechProgressTimer = setInterval(() => {
+        if(speechPaused){
+          clearSpeechProgressTimer();
+          return;
+        }
+        unitIndex += 1;
+        if(unitIndex >= safeUnits.length){
+          clearSpeechProgressTimer();
+          return;
+        }
+        setRecordSpeechHighlight(recordId, safeUnits[unitIndex]);
+      }, interval);
+    }, initialDelay);
+  }
+
   function buildSpeechQueue(items){
     const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
     const queue = [];
 
     safeItems.forEach((r) => {
-      const baseText = sanitizeSpeechText(r.contentText || stripHtml(r.contentHtml || '') || '내용 없음');
-      const chunks = chunkSpeechText(baseText);
-      if(!chunks.length) return;
+      const baseText = String(r.contentText || stripHtml(r.contentHtml || '') || '내용 없음').trim();
+      const sentences = splitSpeechSentences(baseText);
+      if(!sentences.length) return;
 
-      chunks.forEach((chunk, chunkIdx) => {
-        const isLastChunk = chunkIdx === chunks.length - 1;
+      sentences.forEach((sentence, sentenceIdx) => {
+        const displayText = String(sentence || '').trim();
+        const highlightUnits = splitSpeechHighlightUnits(displayText);
         queue.push({
-          text: chunk,
-          pauseAfter: isLastChunk ? 650 : 160
+          text: sanitizeSpeechText(displayText),
+          displayText,
+          highlightUnits,
+          pauseAfter: sentenceIdx === sentences.length - 1 ? 380 : 120,
+          recordId: r.id
         });
       });
     });
@@ -5600,18 +6178,30 @@ function addCustomTag(){
   }
 
   function speakNextInQueue(){
+    if(speechPaused) return;
+
     if(!speechQueueItems.length || speechQueueIndex >= speechQueueItems.length){
       const done = speechQueueOnEnd;
       speechQueueItems = [];
       speechQueueIndex = 0;
       speechQueueOnEnd = null;
+      clearSpeechProgressTimer();
+      updateBottomPlayerState(false);
       if(typeof done === 'function') done();
       return;
     }
 
     const current = speechQueueItems[speechQueueIndex] || {};
     const text = typeof current === 'string' ? current : String(current.text || '').trim();
+    const displayText = typeof current === 'object'
+      ? String(current.displayText || current.text || '').trim()
+      : String(current || '').trim();
     const pauseAfter = typeof current === 'object' && Number.isFinite(current.pauseAfter) ? current.pauseAfter : 120;
+    const recordId = typeof current === 'object' ? String(current.recordId || '') : '';
+    const highlightUnits = typeof current === 'object' && Array.isArray(current.highlightUnits) && current.highlightUnits.length
+      ? current.highlightUnits
+      : [displayText || text];
+    const highlightBoundaries = getSpeechUnitBoundaries(highlightUnits);
 
     if(!text){
       speechQueueIndex += 1;
@@ -5619,17 +6209,51 @@ function addCustomTag(){
       return;
     }
 
+    currentSpeechRecordId = recordId;
+    setCurrentSpeechDisplay(displayText || text);
+    setCurrentSpeechHighlightText(highlightUnits[0] || displayText || text);
+    followSpeechViewport(recordId);
+
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = 'ko-KR';
     utter.rate = getSpeechRate();
+
+    utter.onstart = () => {
+      speechPauseCancel = false;
+      speechPaused = false;
+      updateBottomPlayerState(true);
+      followSpeechViewport(recordId);
+      startSpeechProgress(recordId, displayText || text, highlightUnits);
+    };
+
+
+    utter.onboundary = (event) => {
+      if(typeof event.charIndex !== 'number') return;
+      updateSpeechProgressByChar(recordId, highlightBoundaries, event.charIndex);
+    };
+
     utter.onend = () => {
+      clearSpeechProgressTimer();
+      if(speechPauseCancel || speechPaused){
+        speechPauseCancel = false;
+        updateBottomPlayerState(true);
+        return;
+      }
       speechQueueIndex += 1;
       setTimeout(() => speakNextInQueue(), pauseAfter);
     };
+
     utter.onerror = () => {
+      clearSpeechProgressTimer();
+      if(speechPauseCancel || speechPaused){
+        speechPauseCancel = false;
+        updateBottomPlayerState(true);
+        return;
+      }
       speechQueueIndex += 1;
       setTimeout(() => speakNextInQueue(), pauseAfter);
     };
+
     window.speechSynthesis.speak(utter);
   }
 
@@ -5646,10 +6270,12 @@ function addCustomTag(){
     }
 
     stopSpeech();
+    speechPaused = false;
     speechQueueItems = queue;
     speechQueueIndex = 0;
     speechQueueOnEnd = typeof onEnd === 'function' ? onEnd : null;
-    speakNextInQueue();
+    updateBottomPlayerState(true);
+    setTimeout(() => speakNextInQueue(), 20);
   }
 
   function readFilteredRecords(){
@@ -5809,7 +6435,7 @@ document.addEventListener('click', (event) => {
   if(!insidePicker) closeRepeatMiniPickers();
 });
 
-function readRepeatSection(){
+async function readRepeatSection(){
   const items = getCurrentSpeechItems();
   if(!items.length){
     showToast('반복할 조회 결과가 없습니다.');
@@ -5837,8 +6463,9 @@ function readRepeatSection(){
   }
 
   const targetItems = items.slice(start - 1, end);
-  let cycle = 0;
+  await renderSpeechRangeView(targetItems);
 
+  let cycle = 0;
   const speakCycle = () => {
     cycle += 1;
     speakItems(targetItems, () => {
@@ -6141,6 +6768,7 @@ function refreshBottomPlayerFromView(){
   if(typeof originalStopSpeech === 'function'){
     window.stopSpeech = function(){
       const result = originalStopSpeech.apply(this, arguments);
+      clearSpeechProgressTimer();
       updateBottomPlayerState(false);
       refreshBottomPlayerFromView();
       return result;
@@ -6296,6 +6924,27 @@ window.addEventListener('load', function(){
     <img id="imagePreviewTarget" src="" alt="확대 이미지" onclick="event.stopPropagation()" />
   </div>
 
+
+<script>
+/* reading highlight removed */
+(function(){
+  function noop(){ return; }
+  window.clearSpeechTextHighlight = noop;
+  window.applySpeechHighlightToElement = noop;
+  window.setCurrentSpeechHighlightText = noop;
+  window.getActiveSpeechHighlightText = function(){ return ''; };
+  window.setRecordSpeechHighlight = noop;
+  const originalRestore = window.restoreCurrentSpeechUIState;
+  window.restoreCurrentSpeechUIState = function(options = {}){
+    document.querySelectorAll('.query-card.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
+    document.querySelectorAll('.record-preview.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
+    document.querySelectorAll('.detail-content.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
+    if(options && !options.keepScroll && typeof window.followSpeechViewport === 'function' && window.currentSpeechRecordId){
+      try{ window.followSpeechViewport(window.currentSpeechRecordId); }catch(e){}
+    }
+  };
+})();
+</script>
 </body>
   </html>
   
