@@ -4175,35 +4175,58 @@ function addCustomTag(){
   }
 
   async function pasteFromClipboard(){
-  try{
-    const items = await navigator.clipboard.read();
+    try{
+      const items = await navigator.clipboard.read();
 
-    for(const item of items){
-      for(const type of item.types){
-        if(type.startsWith('image/')){
-          const blob = await item.getType(type);
-          const dataUrl = await blobToCompressedDataUrl(blob);
-          const imageId = imageUid();
+      for(const item of items){
+        for(const type of item.types){
+          if(type.startsWith('image/')){
+            const blob = await item.getType(type);
 
-          await putImageRecord(imageId, dataUrl);
+            const reader = new FileReader();
+            reader.onload = function(e){
+              const result = e.target.result;
+              const img = new Image();
 
-          pastedImages.push(imageId);
-          draft.imageIds = [...pastedImages];
-          saveDraft();
+              img.onload = function(){
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                const max = 900;
 
-          await renderPastePreview();
-          showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
-          return;
+                if(w > max){
+                  const r = max / w;
+                  w *= r;
+                  h *= r;
+                }
+
+                canvas.width = w;
+                canvas.height = h;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                pastedImages = [compressed];
+                renderPastePreview();
+                showToast('클립보드 이미지 추가됨');
+              };
+
+              img.src = result;
+            };
+
+            reader.readAsDataURL(blob);
+            return;
+          }
         }
       }
-    }
 
-    showToast('클립보드에 이미지가 없습니다.');
-  }catch(e){
-    console.error(e);
-    showToast('클립보드 접근 실패 (HTTPS 필요)');
+      showToast('클립보드에 이미지가 없습니다.');
+    }catch(e){
+      console.error(e);
+      showToast('클립보드 접근 실패 (HTTPS 필요)');
+    }
   }
-}
 
   async function handleImageFileSelect(event){
   const input = event.target;
