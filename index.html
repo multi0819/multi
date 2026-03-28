@@ -5281,10 +5281,10 @@ function addCustomTag(){
 
   function sanitizeSpeechText(text){
     return String(text || '')
-    .replace(/kJ\/h/g, '킬로줄 퍼 아워')
-    .replace(/kg\/h/g, '킬로그램 퍼 아워')
-    .replace(/kJ\/kg/g, '킬로줄 퍼 킬로그램')
-    .replace(/kg\/min/g, '킬로그램 퍼 분')
+    .replace(/k\s*j\s*\/\s*h/gi, '킬로줄 퍼 아워')
+     .replace(/kg\s*\/\s*h/gi, '킬로그램 퍼 아워')
+     .replace(/k\s*j\s*\/\s*kg/gi, '킬로줄 퍼 킬로그램')
+     .replace(/kg\s*\/\s*min/gi, '킬로그램 퍼 분')
     .replace(/RT/g, '냉동톤')
     .replace(/℃/g, '도씨')
     .replace(/₀/g, ' 영')
