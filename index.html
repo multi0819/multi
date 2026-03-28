@@ -4174,76 +4174,59 @@ function addCustomTag(){
     input.click();
   }
 
-  
-   async function pasteFromClipboard() {
-  try {
-    // PC 환경에서는 navigator.clipboard.read()로 이미지가 올 수 있음
-    if (navigator.clipboard && navigator.clipboard.read) {
-      try {
-        const items = await navigator.clipboard.read();
-        for (const item of items) {
-          for (const type of item.types) {
-            if (type.startsWith("image/")) {
-              const blob = await item.getType(type);
-              handleClipboardBlob(blob);   // ← 여기서 이미지 처리
-              return;
-            }
+  async function pasteFromClipboard(){
+    try{
+      const items = await navigator.clipboard.read();
+
+      for(const item of items){
+        for(const type of item.types){
+          if(type.startsWith('image/')){
+            const blob = await item.getType(type);
+
+            const reader = new FileReader();
+            reader.onload = function(e){
+              const result = e.target.result;
+              const img = new Image();
+
+              img.onload = function(){
+                const canvas = document.createElement('canvas');
+                let w = img.width;
+                let h = img.height;
+                const max = 900;
+
+                if(w > max){
+                  const r = max / w;
+                  w *= r;
+                  h *= r;
+                }
+
+                canvas.width = w;
+                canvas.height = h;
+
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+
+                const compressed = canvas.toDataURL('image/jpeg', 0.7);
+                pastedImages = [compressed];
+                renderPastePreview();
+                showToast('클립보드 이미지 추가됨');
+              };
+
+              img.src = result;
+            };
+
+            reader.readAsDataURL(blob);
+            return;
           }
         }
-      } catch (e) {
-        // Android는 여기로 빠지는게 정상이라 무시
       }
-    }
 
-    // 이미지가 없는 경우 (Android는 대부분 이쪽)
-    const text = await navigator.clipboard.readText().catch(() => "");
-    showToast("클립보드에 붙여넣을 이미지가 없습니다.");
-  } catch (e) {
-    console.error(e);
-    showToast("클립보드 접근 실패");
+      showToast('클립보드에 이미지가 없습니다.');
+    }catch(e){
+      console.error(e);
+      showToast('클립보드 접근 실패 (HTTPS 필요)');
+    }
   }
-}
-    async function handleClipboardBlob(blob) {
-  console.log("blob:", blob);
-console.log("blob size:", blob ? blob.size : null);
-      const reader = new FileReader();
-
-  reader.onload = function (e) {
-    const img = new Image();
-
-    img.onload = function () {
-      let w = img.width;
-      let h = img.height;
-      const max = 900;
-
-      if (w > max) {
-        const r = max / w;
-        w *= r;
-        h *= r;
-      }
-
-      const canvas = document.createElement("canvas");
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, w, h);
-
-      const compressed = canvas.toDataURL("image/jpeg", 0.7);
-
-      // 기존 파일에서 이미 사용하던 전역변수일 것
-      pastedImages.push(compressed);
-
-      // 기존 파일에서 이미 있던 미리보기 갱신 함수
-      renderPastePreview();
-
-      showToast("클립보드 이미지 추가됨");
-    };
-
-    img.src = e.target.result;
-  };
-
-  reader.readAsDataURL(blob);
-    }
 
   async function handleImageFileSelect(event){
   const input = event.target;
