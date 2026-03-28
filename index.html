@@ -4185,11 +4185,37 @@ function addCustomTag(){
   showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
 }
 
+  async function handleClipboardImageEvent(e){
+    try{
+      const items = Array.from(e?.clipboardData?.items || []);
+      const imageItem = items.find(item => item.type && item.type.startsWith('image/'));
+      if(!imageItem) return false;
+      const blob = imageItem.getAsFile();
+      if(!blob) return false;
+      if(e && typeof e.preventDefault === 'function') e.preventDefault();
+      await addClipboardImageBlob(blob);
+      return true;
+    }catch(err){
+      console.error(err);
+      showToast('붙여넣기 이미지 처리 실패');
+      return false;
+    }
+  }
+
   function focusClipboardPasteCatcher(){
     const catcher = document.getElementById('clipboardPasteCatcher');
     if(!catcher) return;
-    catcher.innerHTML = '';
-    catcher.focus();
+
+    if('value' in catcher) catcher.value = '';
+    else catcher.innerHTML = '';
+
+    catcher.focus({ preventScroll:true });
+
+    if(typeof catcher.select === 'function'){
+      catcher.select();
+      return;
+    }
+
     const range = document.createRange();
     range.selectNodeContents(catcher);
     range.collapse(false);
@@ -4213,12 +4239,10 @@ function addCustomTag(){
           }
         }
       }
-      focusClipboardPasteCatcher();
-      showToast('자동으로 못 가져왔습니다. 길게 눌러 붙여넣기 해주세요.');
-      return;
     }
+
     focusClipboardPasteCatcher();
-    showToast('길게 눌러 붙여넣기 해주세요.');
+    showToast('자동으로 못 가져오면 길게 눌러 붙여넣기 해주세요.');
   }catch(e){
     console.error(e);
     focusClipboardPasteCatcher();
@@ -4226,18 +4250,20 @@ function addCustomTag(){
   }
 }
 
-document.addEventListener('paste', async function(e){
-  try{
-    const items = Array.from(e.clipboardData?.items || []);
-    const imageItem = items.find(item => item.type && item.type.startsWith('image/'));
-    if(!imageItem) return;
-    e.preventDefault();
-    const blob = imageItem.getAsFile();
-    if(!blob) return;
-    await addClipboardImageBlob(blob);
-  }catch(err){
-    console.error(err);
-    showToast('붙여넣기 이미지 처리 실패');
+document.addEventListener('paste', function(e){
+  handleClipboardImageEvent(e);
+}, true);
+
+window.addEventListener('paste', function(e){
+  handleClipboardImageEvent(e);
+}, true);
+
+window.addEventListener('load', function(){
+  const catcher = document.getElementById('clipboardPasteCatcher');
+  if(catcher){
+    catcher.addEventListener('paste', function(e){
+      handleClipboardImageEvent(e);
+    }, true);
   }
 });
 
@@ -6982,7 +7008,7 @@ window.addEventListener('load', function(){
 })();
 </script>
 
-<div id="clipboardPasteCatcher" contenteditable="true" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
+<textarea id="clipboardPasteCatcher" aria-hidden="true" tabindex="-1" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;z-index:-1;"></textarea>
 
 </body>
   </html>
