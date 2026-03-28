@@ -2849,7 +2849,7 @@ body.player-reading .bottom-player-btn.play{
         <option value="week">최근 7일</option>
         <option value="month">이번 달</option>
       </select>
-      <select id="sortMode" onchange="renderRecords()" class="w-full h-11 rounded-xl px-3">
+      <select id="sortMode" onchange="renderReco h-11 rounded-xl px-3">
         <option value="latest">최신순</option>
         <option value="oldest">오래된순</option>
         <option value="minutes">공부시간순</option>
@@ -3180,8 +3180,15 @@ async function putImageRecord(id, dataUrl){
   });
 }
 
+function isInlineImageValue(value){
+  return typeof value === 'string' && value.startsWith('data:image/');
+}
+
 async function getImageRecord(id){
   if(!id) return null;
+  if(isInlineImageValue(id)){
+    return { id, dataUrl: id, updatedAt: Date.now() };
+  }
 
   const db = await openImageDb();
 
@@ -3197,6 +3204,7 @@ async function getImageRecord(id){
 
 async function getImageDataUrlById(id){
   try{
+    if(isInlineImageValue(id)) return id;
     const rec = await getImageRecord(id);
     return rec?.dataUrl || '';
   }catch(e){
@@ -3205,7 +3213,7 @@ async function getImageDataUrlById(id){
 }
 
 async function deleteImageRecord(id){
-  if(!id) return;
+  if(!id || isInlineImageValue(id)) return;
 
   const db = await openImageDb();
 
@@ -3217,6 +3225,20 @@ async function deleteImageRecord(id){
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
+}
+
+async function saveImageWithFallback(dataUrl){
+  const imageId = imageUid();
+
+  try{
+    await putImageRecord(imageId, dataUrl);
+    const saved = await getImageDataUrlById(imageId);
+    if(saved) return imageId;
+  }catch(e){
+    console.error('IndexedDB image save failed, using inline fallback.', e);
+  }
+
+  return dataUrl;
 }
 
 async function clearImageStore(){
@@ -4175,58 +4197,33 @@ function addCustomTag(){
   }
 
   async function pasteFromClipboard(){
-    try{
-      const items = await navigator.clipboard.read();
+  try{
+    const items = await navigator.clipboard.read();
 
-      for(const item of items){
-        for(const type of item.types){
-          if(type.startsWith('image/')){
-            const blob = await item.getType(type);
+    for(const item of items){
+      for(const type of item.types){
+        if(type.startsWith('image/')){
+          const blob = await item.getType(type);
+          const dataUrl = await blobToCompressedDataUrl(blob);
+          const storedImageValue = await saveImageWithFallback(dataUrl);
 
-            const reader = new FileReader();
-            reader.onload = function(e){
-              const result = e.target.result;
-              const img = new Image();
+          pastedImages.push(storedImageValue);
+          draft.imageIds = [...pastedImages];
+          saveDraft();
 
-              img.onload = function(){
-                const canvas = document.createElement('canvas');
-                let w = img.width;
-                let h = img.height;
-                const max = 900;
-
-                if(w > max){
-                  const r = max / w;
-                  w *= r;
-                  h *= r;
-                }
-
-                canvas.width = w;
-                canvas.height = h;
-
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-
-                const compressed = canvas.toDataURL('image/jpeg', 0.7);
-                pastedImages = [compressed];
-                renderPastePreview();
-                showToast('클립보드 이미지 추가됨');
-              };
-
-              img.src = result;
-            };
-
-            reader.readAsDataURL(blob);
-            return;
-          }
+          await renderPastePreview();
+          showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
+          return;
         }
       }
-
-      showToast('클립보드에 이미지가 없습니다.');
-    }catch(e){
-      console.error(e);
-      showToast('클립보드 접근 실패 (HTTPS 필요)');
     }
+
+    showToast('클립보드에 이미지가 없습니다.');
+  }catch(e){
+    console.error(e);
+    showToast('클립보드 접근 실패 (HTTPS 필요)');
   }
+}
 
   async function handleImageFileSelect(event){
   const input = event.target;
@@ -4255,11 +4252,9 @@ function addCustomTag(){
 
     for(const file of imageFiles){
       const dataUrl = await blobToCompressedDataUrl(file);
-      const imageId = imageUid();
+      const storedImageValue = await saveImageWithFallback(dataUrl);
 
-      await putImageRecord(imageId, dataUrl);
-
-      pastedImages.push(imageId);
+      pastedImages.push(storedImageValue);
       addedCount += 1;
     }
 
