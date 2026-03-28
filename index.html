@@ -4213,15 +4213,16 @@ function addCustomTag(){
           }
         }
       }
-      showToast('클립보드에 이미지가 없습니다.');
+      focusClipboardPasteCatcher();
+      showToast('자동으로 못 가져왔습니다. 길게 눌러 붙여넣기 해주세요.');
       return;
     }
     focusClipboardPasteCatcher();
-    showToast('클립보드 붙여넣기를 실행해 주세요.');
+    showToast('길게 눌러 붙여넣기 해주세요.');
   }catch(e){
     console.error(e);
     focusClipboardPasteCatcher();
-    showToast('자동 읽기 실패. 붙여넣기로 이미지를 가져와 주세요.');
+    showToast('자동 읽기 실패. 길게 눌러 붙여넣기 해주세요.');
   }
 }
 
