@@ -4174,36 +4174,71 @@ function addCustomTag(){
     input.click();
   }
 
+  async function addClipboardImageBlob(blob){
+  const dataUrl = await blobToCompressedDataUrl(blob);
+  const imageId = imageUid();
+  await putImageRecord(imageId, dataUrl);
+  pastedImages.push(imageId);
+  draft.imageIds = [...pastedImages];
+  saveDraft();
+  await renderPastePreview();
+  showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
+}
+
+  function focusClipboardPasteCatcher(){
+    const catcher = document.getElementById('clipboardPasteCatcher');
+    if(!catcher) return;
+    catcher.innerHTML = '';
+    catcher.focus();
+    const range = document.createRange();
+    range.selectNodeContents(catcher);
+    range.collapse(false);
+    const sel = window.getSelection();
+    if(sel){
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+  }
+
   async function pasteFromClipboard(){
   try{
-    const items = await navigator.clipboard.read();
-
-    for(const item of items){
-      for(const type of item.types){
-        if(type.startsWith('image/')){
-          const blob = await item.getType(type);
-          const dataUrl = await blobToCompressedDataUrl(blob);
-          const imageId = imageUid();
-
-          await putImageRecord(imageId, dataUrl);
-
-          pastedImages.push(imageId);
-          draft.imageIds = [...pastedImages];
-          saveDraft();
-
-          await renderPastePreview();
-          showToast(`클립보드 이미지 추가됨 (${pastedImages.length}장)`);
-          return;
+    if(navigator.clipboard && navigator.clipboard.read){
+      const items = await navigator.clipboard.read();
+      for(const item of items){
+        for(const type of item.types){
+          if(type.startsWith('image/')){
+            const blob = await item.getType(type);
+            await addClipboardImageBlob(blob);
+            return;
+          }
         }
       }
+      showToast('클립보드에 이미지가 없습니다.');
+      return;
     }
-
-    showToast('클립보드에 이미지가 없습니다.');
+    focusClipboardPasteCatcher();
+    showToast('클립보드 붙여넣기를 실행해 주세요.');
   }catch(e){
     console.error(e);
-    showToast('클립보드 접근 실패 (HTTPS 필요)');
+    focusClipboardPasteCatcher();
+    showToast('자동 읽기 실패. 붙여넣기로 이미지를 가져와 주세요.');
   }
 }
+
+document.addEventListener('paste', async function(e){
+  try{
+    const items = Array.from(e.clipboardData?.items || []);
+    const imageItem = items.find(item => item.type && item.type.startsWith('image/'));
+    if(!imageItem) return;
+    e.preventDefault();
+    const blob = imageItem.getAsFile();
+    if(!blob) return;
+    await addClipboardImageBlob(blob);
+  }catch(err){
+    console.error(err);
+    showToast('붙여넣기 이미지 처리 실패');
+  }
+});
 
   async function handleImageFileSelect(event){
   const input = event.target;
@@ -6945,6 +6980,9 @@ window.addEventListener('load', function(){
   };
 })();
 </script>
+
+<div id="clipboardPasteCatcher" contenteditable="true" aria-hidden="true" style="position:fixed;left:-9999px;top:0;width:1px;height:1px;opacity:0;pointer-events:none;"></div>
+
 </body>
   </html>
   
