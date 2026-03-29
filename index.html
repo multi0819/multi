@@ -2666,20 +2666,25 @@ body.player-reading .bottom-player-btn.play{
 
 
 
-/* reading highlight removed */
-.query-card.reading-active,
+/* reading highlight visible */
+.query-card.reading-active{
+  outline:none !important;
+}
+
 .record-preview.reading-active,
-.detail-content.reading-active,
+.detail-content.reading-active{
+  outline:none !important;
+}
+
 .record-preview.reading-active .speech-inline-highlight,
 .detail-content.reading-active .speech-inline-highlight,
 .speech-inline-highlight,
 .speech-highlighted{
-  background: transparent !important;
-  box-shadow: none !important;
-  outline: none !important;
-  border: 0 !important;
-  text-decoration: none !important;
-  filter: none !important;
+  background:linear-gradient(180deg, transparent 0 58%, rgba(255,226,116,.40) 58% 100%) !important;
+  box-shadow:inset 0 -1px 0 rgba(255,244,196,.30) !important;
+  border:0 !important;
+  text-decoration:none !important;
+  filter:none !important;
 }
 </style>
 </head>
@@ -2849,7 +2854,7 @@ body.player-reading .bottom-player-btn.play{
         <option value="week">최근 7일</option>
         <option value="month">이번 달</option>
       </select>
-      <select id="sortMode" onchange="renderReco h-11 rounded-xl px-3">
+      <select id="sortMode" onchange="renderRecords()" class="w-full h-11 rounded-xl px-3">
         <option value="latest">최신순</option>
         <option value="oldest">오래된순</option>
         <option value="minutes">공부시간순</option>
@@ -5443,10 +5448,18 @@ function getActiveSpeechHighlightText(){
 }
 
 function clearSpeechProgressTimer(){
-  if(speechProgressTimer){
+  if(!speechProgressTimer) return;
+
+  if(typeof speechProgressTimer === 'number'){
     clearInterval(speechProgressTimer);
-    speechProgressTimer = null;
+    clearTimeout(speechProgressTimer);
+  }else if(typeof speechProgressTimer === 'object'){
+    if(speechProgressTimer.intervalId) clearInterval(speechProgressTimer.intervalId);
+    if(speechProgressTimer.timeoutId) clearTimeout(speechProgressTimer.timeoutId);
+    if(speechProgressTimer.rafId) cancelAnimationFrame(speechProgressTimer.rafId);
   }
+
+  speechProgressTimer = null;
 }
 
 function clearSpeechTextHighlight(){
@@ -5682,9 +5695,19 @@ window.addEventListener('load', () => {
 });
 
 function splitSpeechSentences(text){
-  return String(text || '')
-    .replace(/\n+/g, ' ')
-    .split(/(?<=[.!?]|다\.|요\.|니다\.)\s+/)
+  const normalized = String(text || '')
+    .replace(/\r/g, '')
+    .replace(/\n{2,}/g, '\n')
+    .replace(/\s*([①②③④⑤⑥⑦⑧⑨⑩])/g, '\n$1')
+    .replace(/\s*((?:\d+\)|\d+\.))\s*/g, '\n$1 ')
+    .replace(/\s*([•·●▪▸▶►])/g, '\n$1 ')
+    .replace(/([가-힣A-Za-z0-9])\s*:\s*(?=[가-힣A-Za-z0-9])/g, '$1. ')
+    .replace(/\s+/g, ' ')
+    .replace(/\s*\n\s*/g, '\n')
+    .trim();
+
+  return normalized
+    .split(/\n+|(?<=[.!?]|다\.|요\.|니다\.)\s+/)
     .map(s => s.trim())
     .filter(Boolean);
 }
@@ -5714,8 +5737,44 @@ async function renderSpeechRangeView(items){
             <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
               <div class="query-card-body">
                 <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
-                <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">${bodyHtml}</div>
-                ${images.length ? `<div class="grid grid-cols-2 gap-2">${images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}</div>` : ''}
+
+                <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">
+                  ${bodyHtml}
+                </div>
+
+                ${images.length ? `
+                  <div class="grid grid-cols-2 gap-2">
+                    ${images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
+                  </div>
+                ` : ''}
+
+                <div class="flex flex-wrap gap-2">
+                  ${(item.tags || []).map(tag => `
+                    <span class="px-2 py-1 rounded-xl border border-cyan-400/40 bg-cyan-400/10 text-cyan-200 text-xs font-bold">
+                      #${escapeHtml(tag)}
+                    </span>
+                  `).join('')}
+                  ${item.favorite ? `<span class="px-2 py-1 rounded-xl border border-yellow-400/40 bg-yellow-400/10 text-yellow-200 text-xs font-bold">중요</span>` : ''}
+                  ${(item.tags || []).includes('복습필요') ? `<span class="px-2 py-1 rounded-xl border border-red-400/40 bg-red-400/10 text-red-200 text-xs font-bold">복습 필요</span>` : ''}
+                </div>
+
+                <div class="record-actions">
+                  <div class="record-actions-left">
+                    ${isLong
+                      ? `<button type="button" class="press record-pill-btn" onclick="toggleExpand('${item.id}'); renderSpeechRangeView(currentSpeechRangeItems || [])">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
+                      : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
+                    }
+
+                    <button type="button" class="press record-icon-btn" onclick="toggleFavorite('${item.id}'); renderSpeechRangeView(currentSpeechRangeItems || [])" aria-label="중요 표시">${item.favorite ? '⭐' : '☆'}</button>
+                    <button type="button" class="press record-icon-btn" onclick="toggleReview('${item.id}'); renderSpeechRangeView(currentSpeechRangeItems || [])" aria-label="복습 표시">${(item.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
+                  </div>
+
+                  <div class="record-actions-right">
+                    <button type="button" class="press record-pill-btn primary" onclick="openRecordDetail('${item.id}')">상세보기</button>
+                    <button type="button" class="press record-pill-btn" onclick="editRecord('${item.id}')">수정</button>
+                    <button type="button" class="press record-pill-btn danger" onclick="deleteRecord('${item.id}'); renderSpeechRangeView((currentSpeechRangeItems || []).filter(v => v.id !== '${item.id}'))">삭제</button>
+                  </div>
+                </div>
               </div>
             </div>`;
         }).join('')}</div>`
@@ -5855,6 +5914,25 @@ function stopSpeech(){
       .replace(/\s*-\s*/g, ' 빼기 ')
       .replace(/\.{2,}/g, '. ')
       .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  function makeSpeechFriendlyText(text){
+    return String(text || '')
+      .replace(/\r/g, '')
+      .replace(/\n{2,}/g, '\n')
+      .replace(/\n+/g, ', ')
+      .replace(/\s*([①②③④⑤⑥⑦⑧⑨⑩])/g, ', $1 ')
+      .replace(/\s*((?:\d+\)|\d+\.))\s*/g, ', $1 ')
+      .replace(/\s*([•·●▪▸▶►])/g, ', $1 ')
+      .replace(/\s*(즉|예를 들면|그래서|하지만|또한|그리고)\s+/g, ', $1 ')
+      .replace(/(산출|정리|계산|조건|정의|예제|풀이)(?=\s*[①②③④⑤⑥⑦⑧⑨⑩]|\s*(?:\d+\)|\d+\.)|\s*[•·●▪▸▶►])/g, '$1, ')
+      .replace(/([%Δ])/g, ' $1 ')
+      .replace(/([A-Za-z]{2,})(?=[가-힣])/g, '$1 ')
+      .replace(/([가-힣])([A-Za-z]{2,})/g, '$1 $2')
+      .replace(/,\s*,+/g, ', ')
+      .replace(/\s+/g, ' ')
+      .replace(/^,\s*/, '')
       .trim();
   }
 
@@ -6068,46 +6146,57 @@ function stopSpeech(){
     const source = String(text || '').replace(/\s+/g, ' ').trim();
     if(!source) return [];
 
+    const words = source.split(/\s+/).filter(Boolean);
+    if(words.length >= 2){
+      return words;
+    }
+
     const phrasePieces = source
       .split(/(?<=[,，])\s*|\s*[·•]\s*|\s{2,}/)
       .map(v => String(v || '').trim())
       .filter(Boolean);
 
-    const units = [];
-    phrasePieces.forEach(piece => {
-      if(piece.length <= 10){
-        units.push(piece);
-        return;
-      }
-
-      const words = piece.split(/\s+/).filter(Boolean);
-      if(words.length <= 3){
-        units.push(piece);
-        return;
-      }
-
-      for(let i = 0; i < words.length; i += 3){
-        const chunk = words.slice(i, i + 3).join(' ').trim();
-        if(chunk) units.push(chunk);
-      }
-    });
-
-    return units.length ? units : [source];
+    return phrasePieces.length ? phrasePieces : [source];
   }
 
-  function getSpeechUnitBoundaries(units){
+  function getSpeechUnitBoundaries(units, spokenText = ''){
     const safeUnits = Array.isArray(units) ? units.filter(Boolean) : [];
-    const boundaries = [];
-    let cursor = 0;
-    safeUnits.forEach((unit, idx) => {
-      const raw = String(unit || '');
-      const normalized = sanitizeSpeechText(raw);
-      const start = cursor;
-      const end = start + Math.max(1, normalized.length);
-      boundaries.push({ index: idx, start, end, text: raw });
-      cursor = end + 1;
+    if(!safeUnits.length) return [];
+
+    const spokenNormalized = sanitizeSpeechText(spokenText || '');
+    const spokenLength = Math.max(1, spokenNormalized.length);
+
+    const unitMeta = safeUnits.map((unit, idx) => {
+      const raw = String(unit || '').trim();
+      const normalized = normalizeSpeechMatchText(raw);
+      return {
+        index: idx,
+        text: raw,
+        length: Math.max(1, normalized.length)
+      };
     });
-    return boundaries;
+
+    const totalUnitLength = Math.max(1, unitMeta.reduce((sum, item) => sum + item.length, 0));
+    let cursor = 0;
+
+    return unitMeta.map((item, idx) => {
+      const start = cursor;
+      const isLast = idx === unitMeta.length - 1;
+      const rawSpan = isLast
+        ? (spokenLength - start)
+        : Math.max(1, Math.round((item.length / totalUnitLength) * spokenLength));
+      const end = isLast
+        ? spokenLength
+        : Math.max(start + 1, Math.min(spokenLength, start + rawSpan));
+
+      cursor = end;
+      return {
+        index: item.index,
+        start,
+        end,
+        text: item.text
+      };
+    });
   }
 
   function updateSpeechProgressByChar(recordId, boundaries, charIndex){
@@ -6118,8 +6207,8 @@ function stopSpeech(){
     }
 
     const rawIdx = Number.isFinite(charIndex) ? Number(charIndex) : 0;
-    const rate = Math.max(0.5, Number(getSpeechRate()) || 1);
-    const lagChars = Math.max(2, Math.min(10, Math.round(4 / rate)));
+    const rate = Math.max(0.7, Number(getSpeechRate()) || 1);
+    const lagChars = Math.max(0, Math.min(3, Math.round(1.2 / rate)));
     const idx = Math.max(0, rawIdx - lagChars);
     const active = safeBoundaries.find(item => idx >= item.start && idx < item.end)
       || safeBoundaries.find(item => idx < item.end)
@@ -6139,40 +6228,62 @@ function stopSpeech(){
 
     if(!safeUnits.length) return;
 
-    let unitIndex = 0;
-    const rate = Math.max(0.5, Number(getSpeechRate()) || 1);
-    const initialDelay = Math.max(140, Math.round(220 / rate));
+    const rate = Math.max(0.7, Number(getSpeechRate()) || 1);
+    const spoken = sanitizeSpeechText(displayText || '');
+    const totalChars = Math.max(1, spoken.length);
+    const totalUnits = Math.max(1, safeUnits.length);
 
-    speechProgressTimer = setTimeout(() => {
-      if(speechPaused) return;
-      setRecordSpeechHighlight(recordId, safeUnits[0]);
+    // Android/브라우저별 onboundary 지연 문제를 피하기 위해
+    // 문장 전체 길이와 읽기속도를 기준으로 부드럽게 이동시킨다.
+    const estimatedDuration = Math.max(
+      700,
+      Math.round((totalChars * 135) / rate)
+    );
 
-      if(safeUnits.length === 1){
-        speechProgressTimer = null;
-        return;
+    const state = {
+      rafId: null,
+      startAt: 0,
+      lastIndex: -1
+    };
+    speechProgressTimer = state;
+
+    const tick = (now) => {
+      if(speechPaused || speechProgressTimer !== state) return;
+
+      if(!state.startAt) state.startAt = now;
+      const elapsed = now - state.startAt;
+      const progress = Math.max(0, Math.min(0.985, elapsed / estimatedDuration));
+      const nextIndex = Math.min(
+        totalUnits - 1,
+        Math.floor(progress * totalUnits)
+      );
+
+      if(nextIndex !== state.lastIndex){
+        state.lastIndex = nextIndex;
+        setRecordSpeechHighlight(recordId, safeUnits[nextIndex]);
       }
 
-      const totalChars = Math.max(1, sanitizeSpeechText(displayText).length);
-      const interval = Math.max(140, Math.floor((totalChars * 62) / safeUnits.length / rate));
+      state.rafId = requestAnimationFrame(tick);
+    };
 
-      speechProgressTimer = setInterval(() => {
-        if(speechPaused){
-          clearSpeechProgressTimer();
-          return;
-        }
-        unitIndex += 1;
-        if(unitIndex >= safeUnits.length){
-          clearSpeechProgressTimer();
-          return;
-        }
-        setRecordSpeechHighlight(recordId, safeUnits[unitIndex]);
-      }, interval);
-    }, initialDelay);
+    setRecordSpeechHighlight(recordId, safeUnits[0]);
+    state.lastIndex = 0;
+    state.rafId = requestAnimationFrame(tick);
   }
 
   function buildSpeechQueue(items){
     const safeItems = Array.isArray(items) ? items.filter(Boolean) : [];
     const queue = [];
+
+    const getSentencePause = (sentence, isLastSentence) => {
+      const token = String(sentence || '').trim();
+      if(!token) return 24;
+      if(/[.!?]$/.test(token) || /(니다\.|어요\.|아요\.|다\.)$/.test(token)){
+        return isLastSentence ? 90 : 68;
+      }
+      if(/[,，:;]$/.test(token)) return 42;
+      return isLastSentence ? 56 : 34;
+    };
 
     safeItems.forEach((r) => {
       const baseText = String(r.contentText || stripHtml(r.contentHtml || '') || '내용 없음').trim();
@@ -6180,13 +6291,16 @@ function stopSpeech(){
       if(!sentences.length) return;
 
       sentences.forEach((sentence, sentenceIdx) => {
-        const displayText = String(sentence || '').trim();
+        const displayText = String(sentence || '').replace(/\s+/g, ' ').trim();
+        if(!displayText) return;
+
+        const speakText = sanitizeSpeechText(makeSpeechFriendlyText(sentence));
         const highlightUnits = splitSpeechHighlightUnits(displayText);
         queue.push({
-          text: sanitizeSpeechText(displayText),
+          text: speakText,
           displayText,
           highlightUnits,
-          pauseAfter: sentenceIdx === sentences.length - 1 ? 380 : 120,
+          pauseAfter: getSentencePause(displayText, sentenceIdx === sentences.length - 1),
           recordId: r.id
         });
       });
@@ -6219,7 +6333,7 @@ function stopSpeech(){
     const highlightUnits = typeof current === 'object' && Array.isArray(current.highlightUnits) && current.highlightUnits.length
       ? current.highlightUnits
       : [displayText || text];
-    const highlightBoundaries = getSpeechUnitBoundaries(highlightUnits);
+    const highlightBoundaries = getSpeechUnitBoundaries(highlightUnits, text);
 
     if(!text){
       speechQueueIndex += 1;
@@ -6245,13 +6359,13 @@ function stopSpeech(){
     };
 
 
-    utter.onboundary = (event) => {
-      if(typeof event.charIndex !== 'number') return;
-      updateSpeechProgressByChar(recordId, highlightBoundaries, event.charIndex);
-    };
+    utter.onboundary = null;
 
     utter.onend = () => {
       clearSpeechProgressTimer();
+      if(highlightUnits.length){
+        setRecordSpeechHighlight(recordId, highlightUnits[Math.max(0, highlightUnits.length - 1)]);
+      }
       if(speechPauseCancel || speechPaused){
         speechPauseCancel = false;
         updateBottomPlayerState(true);
@@ -6944,24 +7058,7 @@ window.addEventListener('load', function(){
 
 
 <script>
-/* reading highlight removed */
-(function(){
-  function noop(){ return; }
-  window.clearSpeechTextHighlight = noop;
-  window.applySpeechHighlightToElement = noop;
-  window.setCurrentSpeechHighlightText = noop;
-  window.getActiveSpeechHighlightText = function(){ return ''; };
-  window.setRecordSpeechHighlight = noop;
-  const originalRestore = window.restoreCurrentSpeechUIState;
-  window.restoreCurrentSpeechUIState = function(options = {}){
-    document.querySelectorAll('.query-card.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
-    document.querySelectorAll('.record-preview.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
-    document.querySelectorAll('.detail-content.reading-active').forEach(function(el){ el.classList.remove('reading-active'); });
-    if(options && !options.keepScroll && typeof window.followSpeechViewport === 'function' && window.currentSpeechRecordId){
-      try{ window.followSpeechViewport(window.currentSpeechRecordId); }catch(e){}
-    }
-  };
-})();
+/* reading highlight enabled */
 </script>
 </body>
   </html>
