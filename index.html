@@ -3166,6 +3166,89 @@ body.reader-bar-folded #bottomPlayerBar{
 }
 </style>
 
+
+<style id="oai_drawer_size_handle_patch_v3">
+/* 1) 상단 선택 버튼 더 작고 균일 */
+#leftEditorDrawer .drawer-mode-tabs{
+  grid-template-columns:repeat(3, 42px) !important;
+  justify-content:flex-start !important;
+  gap:6px !important;
+  margin:0 0 8px 0 !important;
+}
+#leftEditorDrawer .drawer-mode-tab{
+  width:42px !important;
+  min-width:42px !important;
+  max-width:42px !important;
+  height:28px !important;
+  min-height:28px !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  padding:0 !important;
+}
+
+/* 2) 기호/태그/색상 아이템 크기 통일 */
+#leftEditorDrawer .drawer-mode-list{
+  justify-items:flex-start !important;
+  gap:10px !important;
+  padding:2px 0 30px 0 !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list > *,
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list > *,
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list > *{
+  width:54px !important;
+  min-width:54px !important;
+  max-width:54px !important;
+  display:block !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list .editor-tool-chip,
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list .editor-tag-chip,
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list .color-dot{
+  width:54px !important;
+  min-width:54px !important;
+  max-width:54px !important;
+  height:54px !important;
+  min-height:54px !important;
+  max-height:54px !important;
+  border-radius:16px !important;
+  padding:0 !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  box-sizing:border-box !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list .editor-tool-chip{
+  font-size:20px !important;
+}
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list .editor-tag-chip{
+  font-size:20px !important;
+}
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list .color-dot{
+  border-width:1.5px !important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.22) !important;
+}
+
+/* 3) 핸들을 조금 더 좌측(안쪽)으로 정리 */
+#leftEditorDrawer,
+#leftEditorDrawer.editor-tools-drawer{
+  width:174px !important;
+  max-width:174px !important;
+  left:calc(-174px + 22px) !important;
+}
+#leftEditorDrawer .editor-tools-drawer-body{
+  padding:8px 24px 8px 8px !important;
+}
+#leftEditorDrawer .editor-tools-drawer-handle,
+#leftEditorDrawerHandle{
+  right:4px !important;
+  width:18px !important;
+  min-width:18px !important;
+  max-width:18px !important;
+  border-radius:9px 0 0 9px !important;
+  font-size:9px !important;
+  letter-spacing:-0.02em !important;
+}
+</style>
 </head>
 <body class="space-y-2">
 
@@ -3223,50 +3306,75 @@ body.reader-bar-folded #bottomPlayerBar{
 
   <div class="card px-4 pt-1 pb-4 space-y-2">
     <input id="minutesInput" type="hidden" value="10" />
+    
+    <div class="compact-selector-card compact-selector-card--singleline">
+      <div class="compact-selector-row">
+        <select id="compactSelectorMode" class="compact-selector-mode-select" aria-label="선택 종류">
+          <option value="specialButtons">기호</option>
+          <option value="tagButtons">태그</option>
+          <option value="colorPalette">색상</option>
+        </select>
 
-    <details class="rounded-2xl px-3 pt-0 pb-3">
-      <summary class="cursor-pointer text-sm font-bold text-slate-300">기호 / 태그 관리</summary>
-      <div class="mt-3 space-y-3">
-        <div class="flex gap-2 overflow-x-auto" id="specialButtons"></div>
-        <div class="flex gap-2 overflow-x-auto" id="tagButtons"></div>
-
-        <div class="inline-add-row min-w-0">
-          <input
-            id="customTagInput"
-            class="min-w-0 h-10 rounded-xl px-3 text-sm"
-            placeholder="새 태그 추가"
-          />
-          <button
-            onclick="addCustomTag()"
-            class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
-          >
-            태그 추가
-          </button>
-          <input
-            id="customSymbolInput"
-            class="min-w-0 h-10 rounded-xl px-3 text-sm"
-            placeholder="새 기호 추가"
-          />
-          <button
-            onclick="addCustomSymbol()"
-            class="press h-10 px-3 shrink-0 rounded-xl bg-slate-900 text-white text-sm font-bold"
-          >
-            기호 추가
-          </button>
-        </div>
-
-        <div class="space-y-2">
-          <div class="color-label">강조 색상</div>
-          <div class="color-palette" id="colorPalette">
-            <button type="button" class="color-dot active" data-color="#edf3fb" style="background:#edf3fb" onclick="applyEditorColor('#edf3fb')"></button>
-            <button type="button" class="color-dot" data-color="#93c5fd" style="background:#93c5fd" onclick="applyEditorColor('#93c5fd')"></button>
-            <button type="button" class="color-dot" data-color="#86efac" style="background:#86efac" onclick="applyEditorColor('#86efac')"></button>
-            <button type="button" class="color-dot" data-color="#fde68a" style="background:#fde68a" onclick="applyEditorColor('#fde68a')"></button>
-            <button type="button" class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4" onclick="applyEditorColor('#f9a8d4')"></button>
+        <div class="compact-selector-body compact-selector-body--singleline">
+          <div class="compact-selector-panel is-active" data-compact-panel="specialButtons">
+            <div class="compact-selector-rail" id="specialButtons"></div>
+          </div>
+          <div class="compact-selector-panel" data-compact-panel="tagButtons" hidden>
+            <div class="compact-selector-rail" id="tagButtons"></div>
+          </div>
+          <div class="compact-selector-panel" data-compact-panel="colorPalette" hidden>
+            <div class="compact-selector-rail compact-color-rail color-palette" id="colorPalette">
+              <button type="button" class="color-dot active" data-color="#edf3fb" style="background:#edf3fb" onclick="applyEditorColor('#edf3fb')"></button>
+              <button type="button" class="color-dot" data-color="#93c5fd" style="background:#93c5fd" onclick="applyEditorColor('#93c5fd')"></button>
+              <button type="button" class="color-dot" data-color="#86efac" style="background:#86efac" onclick="applyEditorColor('#86efac')"></button>
+              <button type="button" class="color-dot" data-color="#fde68a" style="background:#fde68a" onclick="applyEditorColor('#fde68a')"></button>
+              <button type="button" class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4" onclick="applyEditorColor('#f9a8d4')"></button>
+            </div>
           </div>
         </div>
+
+        <button type="button" class="compact-selector-manage-icon" id="compactSelectorManageBtn" aria-expanded="false" aria-label="추가">＋</button>
       </div>
-    </details>
+
+      <div class="compact-selector-manage" id="compactSelectorManagePanel" hidden>
+        <div class="compact-manage-group" data-manage-group="specialButtons">
+          <div class="compact-manage-row">
+            <input
+              id="customSymbolInput"
+              class="compact-manage-input"
+              placeholder="새 기호 추가"
+            />
+            <button
+              type="button"
+              onclick="addCustomSymbol()"
+              class="compact-manage-action"
+            >
+              기호추가
+            </button>
+          </div>
+        </div>
+        <div class="compact-manage-group" data-manage-group="tagButtons" hidden>
+          <div class="compact-manage-row">
+            <input
+              id="customTagInput"
+              class="compact-manage-input"
+              placeholder="새 태그 추가"
+            />
+            <button
+              type="button"
+              onclick="addCustomTag()"
+              class="compact-manage-action"
+            >
+              태그추가
+            </button>
+          </div>
+        </div>
+        <div class="compact-manage-group compact-manage-guide" data-manage-group="colorPalette" hidden>
+          색상은 오른쪽 목록에서 바로 선택됩니다.
+        </div>
+      </div>
+    </div>
+
 
     <div class="editor-tools-drawer" id="leftEditorDrawer">
       <div class="editor-tools-drawer-handle" id="leftEditorDrawerHandle">기호</div>
@@ -9730,6 +9838,233 @@ window.addEventListener('load', function(){
 }
 </style>
 
+
+<style id="drawer-verified-toprow-v5">
+#leftEditorDrawer,
+#leftEditorDrawer.editor-tools-drawer{
+  width:174px !important;
+  max-width:174px !important;
+  left:calc(-174px + 22px) !important;
+}
+#leftEditorDrawer.is-open,
+#leftEditorDrawer.editor-tools-drawer.is-open{
+  left:0 !important;
+}
+#leftEditorDrawer .editor-tools-drawer-body{
+  padding:6px 22px 8px 6px !important;
+}
+#leftEditorDrawer .unified-toggle-section{
+  padding:0 !important;
+  gap:6px !important;
+}
+#leftEditorDrawer .drawer-mode-tabs{
+  display:grid !important;
+  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:4px !important;
+  margin:0 !important;
+  padding:0 !important;
+  min-height:32px !important;
+}
+#leftEditorDrawer .drawer-mode-tab{
+  height:32px !important;
+  min-width:0 !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.04em !important;
+  padding:0 !important;
+}
+#leftEditorDrawer .drawer-mode-panels{
+  margin-top:0 !important;
+}
+#leftEditorDrawer .drawer-mode-list{
+  padding:2px 6px 18px 0 !important;
+}
+#leftEditorDrawer .editor-tools-drawer-handle,
+#leftEditorDrawerHandle{
+  top:6px !important;
+  right:0 !important;
+  width:22px !important;
+  min-width:22px !important;
+  max-width:22px !important;
+  height:32px !important;
+  min-height:32px !important;
+  max-height:32px !important;
+  border-radius:10px 0 0 10px !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.04em !important;
+  box-shadow:none !important;
+}
+</style>
+<script id="drawer-verified-toprow-v5-script">
+(function(){
+  function syncDrawerTopRow(){
+    var drawer = document.getElementById('leftEditorDrawer');
+    var handle = document.getElementById('leftEditorDrawerHandle');
+    var tabs = drawer && drawer.querySelector('.drawer-mode-tabs');
+    if(!drawer || !handle || !tabs) return;
+    handle.style.top = tabs.offsetTop + 'px';
+    handle.style.height = tabs.offsetHeight + 'px';
+  }
+  function verifyModeStructure(){
+    var drawer = document.getElementById('leftEditorDrawer');
+    if(!drawer) return false;
+    return !!(drawer.querySelector('.drawer-mode-tabs') && drawer.querySelector('.drawer-mode-panels') && drawer.querySelectorAll('.drawer-mode-tab').length===3);
+  }
+  function boot(){
+    if(!verifyModeStructure()) return;
+    syncDrawerTopRow();
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', boot, {once:true});
+  }else{
+    boot();
+  }
+  window.addEventListener('load', function(){ setTimeout(boot, 50); });
+  window.addEventListener('resize', syncDrawerTopRow);
+  setTimeout(boot, 250);
+  setTimeout(boot, 900);
+})();
+</script>
+
+
+
+
+
+<script id="compact-selector-manage-fix">
+(function(){
+  function getCompactMode(){
+    return document.getElementById('compactSelectorMode')?.value || 'specialButtons';
+  }
+
+  function syncCompactManagePanel(){
+    var mode = getCompactMode();
+    var manageBtn = document.getElementById('compactSelectorManageBtn');
+    var managePanel = document.getElementById('compactSelectorManagePanel');
+    if(!manageBtn || !managePanel) return;
+
+    managePanel.querySelectorAll('[data-manage-group]').forEach(function(node){
+      node.hidden = node.dataset.manageGroup !== mode;
+    });
+
+    manageBtn.style.display = mode === 'colorPalette' ? 'none' : '';
+    if(mode === 'colorPalette'){
+      managePanel.hidden = true;
+      manageBtn.classList.remove('is-open');
+      manageBtn.setAttribute('aria-expanded', 'false');
+    }
+  }
+
+  function openCompactManage(){
+    var managePanel = document.getElementById('compactSelectorManagePanel');
+    var manageBtn = document.getElementById('compactSelectorManageBtn');
+    if(!managePanel || !manageBtn) return;
+    syncCompactManagePanel();
+    if(manageBtn.style.display === 'none') return;
+    managePanel.hidden = false;
+    manageBtn.classList.add('is-open');
+    manageBtn.setAttribute('aria-expanded', 'true');
+    var mode = getCompactMode();
+    var target = mode === 'tagButtons' ? document.getElementById('customTagInput') : document.getElementById('customSymbolInput');
+    if(target){
+      setTimeout(function(){ target.focus(); }, 0);
+    }
+  }
+
+  function closeCompactManage(){
+    var managePanel = document.getElementById('compactSelectorManagePanel');
+    var manageBtn = document.getElementById('compactSelectorManageBtn');
+    if(!managePanel || !manageBtn) return;
+    managePanel.hidden = true;
+    manageBtn.classList.remove('is-open');
+    manageBtn.setAttribute('aria-expanded', 'false');
+  }
+
+  var oldActivate = window.activateCompactSelector;
+  if(typeof oldActivate === 'function' && !oldActivate.__compactPatched){
+    var wrapped = function(targetId){
+      var result = oldActivate.apply(this, arguments);
+      syncCompactManagePanel();
+      return result;
+    };
+    wrapped.__compactPatched = true;
+    window.activateCompactSelector = wrapped;
+  }
+
+  var oldAddSymbol = window.addCustomSymbol;
+  if(typeof oldAddSymbol === 'function' && !oldAddSymbol.__compactPatched){
+    var wrappedAddSymbol = function(){
+      var before = (document.getElementById('customSymbolInput')?.value || '').trim();
+      var result = oldAddSymbol.apply(this, arguments);
+      if(before) closeCompactManage();
+      return result;
+    };
+    wrappedAddSymbol.__compactPatched = true;
+    window.addCustomSymbol = wrappedAddSymbol;
+  }
+
+  var oldAddTag = window.addCustomTag;
+  if(typeof oldAddTag === 'function' && !oldAddTag.__compactPatched){
+    var wrappedAddTag = function(){
+      var before = (document.getElementById('customTagInput')?.value || '').trim();
+      var result = oldAddTag.apply(this, arguments);
+      if(before) closeCompactManage();
+      return result;
+    };
+    wrappedAddTag.__compactPatched = true;
+    window.addCustomTag = wrappedAddTag;
+  }
+
+  function bindManageControls(){
+    var manageBtn = document.getElementById('compactSelectorManageBtn');
+    if(manageBtn && manageBtn.dataset.manageFixBound !== '1'){
+      manageBtn.dataset.manageFixBound = '1';
+      manageBtn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopPropagation();
+        var managePanel = document.getElementById('compactSelectorManagePanel');
+        if(!managePanel || manageBtn.style.display === 'none') return;
+        if(managePanel.hidden){
+          openCompactManage();
+        }else{
+          closeCompactManage();
+        }
+      }, true);
+    }
+
+    [['customSymbolInput', window.addCustomSymbol], ['customTagInput', window.addCustomTag]].forEach(function(pair){
+      var input = document.getElementById(pair[0]);
+      if(input && input.dataset.enterBound !== '1'){
+        input.dataset.enterBound = '1';
+        input.addEventListener('keydown', function(e){
+          if(e.key === 'Enter'){
+            e.preventDefault();
+            pair[1] && pair[1]();
+          }
+        });
+      }
+    });
+
+    var mode = document.getElementById('compactSelectorMode');
+    if(mode && mode.dataset.manageFixModeBound !== '1'){
+      mode.dataset.manageFixModeBound = '1';
+      mode.addEventListener('change', function(){
+        syncCompactManagePanel();
+      });
+    }
+
+    syncCompactManagePanel();
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', bindManageControls);
+  } else {
+    bindManageControls();
+  }
+  window.addEventListener('load', bindManageControls);
+})();
+</script>
 </body>
   </html>
   
@@ -10054,3 +10389,557 @@ window.addEventListener('load', function(){
   overflow-x:hidden !important;
 }
 </style>
+
+
+<style id="drawer-singleline-toggle-style">
+#leftEditorDrawer .editor-tools-drawer-body{
+  padding:8px 28px 8px 6px !important;
+}
+#leftEditorDrawer .editor-drawer-section.unified-toggle-section{
+  display:flex !important;
+  flex-direction:column !important;
+  height:100% !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+#leftEditorDrawer .drawer-unified-help{display:none !important;}
+#leftEditorDrawer .drawer-mode-tabs{
+  display:grid !important;
+  grid-template-columns:repeat(3,1fr) !important;
+  gap:5px !important;
+  margin:0 0 10px 0 !important;
+}
+#leftEditorDrawer .drawer-mode-tab{
+  min-width:0 !important;
+  height:30px !important;
+  border-radius:999px !important;
+  border:1px solid rgba(255,255,255,.10) !important;
+  background:rgba(255,255,255,.04) !important;
+  color:#dfe8f6 !important;
+  font-size:11px !important;
+  font-weight:900 !important;
+  line-height:1 !important;
+  padding:0 !important;
+}
+#leftEditorDrawer .drawer-mode-tab.is-active{
+  background:linear-gradient(135deg,#315ea8,#5f8fff) !important;
+  color:#fff !important;
+  border-color:rgba(130,170,255,.35) !important;
+}
+#leftEditorDrawer .drawer-mode-panels{
+  position:relative !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow:hidden !important;
+}
+#leftEditorDrawer .drawer-mode-panel{
+  display:none !important;
+  height:100% !important;
+  min-height:0 !important;
+}
+#leftEditorDrawer .drawer-mode-panel.is-active{
+  display:block !important;
+}
+#leftEditorDrawer .drawer-mode-list{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) !important;
+  justify-items:stretch !important;
+  align-content:start !important;
+  gap:10px !important;
+  width:100% !important;
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  height:100% !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  padding:2px 6px 28px 0 !important;
+  scrollbar-width:none !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior:contain !important;
+  touch-action:pan-y !important;
+}
+#leftEditorDrawer .drawer-mode-list::-webkit-scrollbar{
+  display:none !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list > *,
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list > *,
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list > *{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  display:flex !important;
+  justify-content:center !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list .editor-tool-chip,
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list .editor-tag-chip,
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list .color-dot{
+  width:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  height:48px !important;
+  min-height:48px !important;
+  max-height:48px !important;
+  border-radius:14px !important;
+  padding:0 8px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  text-align:center !important;
+  line-height:1 !important;
+  overflow:hidden !important;
+  white-space:nowrap !important;
+}
+#leftEditorDrawer #drawerSpecialButtons.drawer-mode-list .editor-tool-chip{
+  font-size:22px !important;
+}
+#leftEditorDrawer #drawerTagButtons.drawer-mode-list .editor-tag-chip{
+  font-size:24px !important;
+}
+#leftEditorDrawer #drawerColorPalette.drawer-mode-list .color-dot{
+  border-width:1px !important;
+}
+#leftEditorDrawer .drawer-tag-rail,
+#leftEditorDrawer .drawer-color-rail,
+#leftEditorDrawer .drawer-dual-rail,
+#leftEditorDrawer .drawer-column-heads,
+#leftEditorDrawer .drawer-tag-title,
+#leftEditorDrawer .editor-drawer-label{
+  display:none !important;
+}
+</style>
+
+<script id="drawer-singleline-toggle-script">
+(function(){
+  const STORE_KEY = 'leftEditorDrawerMode';
+  const COLOR_LIST = ['#edf3fb','#93c5fd','#86efac','#fde68a','#f9a8d4'];
+  const TAG_ITEMS = [
+    { key:'important', icon:'★', title:'중요' },
+    { key:'review', icon:'↻', title:'복습' },
+    { key:'warn', icon:'!', title:'주의' }
+  ];
+
+  function getMode(){
+    try{ return localStorage.getItem(STORE_KEY) || 'symbol'; }catch(e){ return 'symbol'; }
+  }
+  function setMode(mode){
+    try{ localStorage.setItem(STORE_KEY, mode); }catch(e){}
+  }
+
+  function ensureLayout(){
+    const drawer = document.getElementById('leftEditorDrawer');
+    if(!drawer) return null;
+    const section = drawer.querySelector('.editor-drawer-section');
+    if(!section) return null;
+    section.classList.add('unified-toggle-section');
+    section.innerHTML = `
+      <div class="drawer-mode-tabs">
+        <button type="button" class="drawer-mode-tab" data-mode="symbol">기호</button>
+        <button type="button" class="drawer-mode-tab" data-mode="tag">태그</button>
+        <button type="button" class="drawer-mode-tab" data-mode="color">색상</button>
+      </div>
+      <div class="drawer-mode-panels">
+        <div class="drawer-mode-panel" data-panel="symbol"><div class="drawer-mode-list" id="drawerSpecialButtons"></div></div>
+        <div class="drawer-mode-panel" data-panel="tag"><div class="drawer-mode-list" id="drawerTagButtons"></div></div>
+        <div class="drawer-mode-panel" data-panel="color"><div class="drawer-mode-list" id="drawerColorPalette"></div></div>
+      </div>`;
+
+    section.querySelectorAll('.drawer-mode-tab').forEach(btn => {
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        activateMode(btn.dataset.mode);
+      });
+    });
+    return section;
+  }
+
+  function buildSymbols(){
+    const wrap = document.getElementById('drawerSpecialButtons');
+    if(!wrap || typeof getAllSymbols !== 'function') return;
+    const symbols = getAllSymbols() || [];
+    const activeSymbols = (typeof splitSymbolTokens === 'function') ? splitSymbolTokens((window.draft && draft.customSymbol) || '') : [];
+    wrap.innerHTML = symbols.map(function(ch){
+      const active = activeSymbols.indexOf(ch) !== -1 ? ' is-active' : '';
+      const esc = String(ch).replace(/'/g, "\\'");
+      return '<button class="editor-tool-chip'+active+'" type="button" '
+        + 'onclick="insertChar(\''+esc+'\'); toggleActiveSymbol(\''+esc+'\')" '
+        + 'ontouchstart="startLongPressDelete(\'symbol\',\''+esc+'\')" '
+        + 'ontouchend="cancelLongPress()" '
+        + 'onmousedown="startLongPressDelete(\'symbol\',\''+esc+'\')" '
+        + 'onmouseup="cancelLongPress()" onmouseleave="cancelLongPress()">'
+        + ch + '</button>';
+    }).join('');
+  }
+
+  function buildTags(){
+    const wrap = document.getElementById('drawerTagButtons');
+    if(!wrap) return;
+    const chosen = new Set((window.draft && Array.isArray(draft.tags)) ? draft.tags : []);
+    wrap.innerHTML = TAG_ITEMS.map(function(item){
+      const active = chosen.has(item.key) ? ' active' : '';
+      return '<button class="editor-tag-chip'+active+'" type="button" title="'+item.title+'" aria-label="'+item.title+'" onclick="toggleTag(\''+item.key+'\')">'+item.icon+'</button>';
+    }).join('');
+  }
+
+  function buildColors(){
+    const wrap = document.getElementById('drawerColorPalette');
+    if(!wrap) return;
+    const current = window.currentEditorColor || '#edf3fb';
+    wrap.innerHTML = COLOR_LIST.map(function(color){
+      const active = current === color ? ' active' : '';
+      return '<button type="button" class="color-dot'+active+'" data-color="'+color+'" style="background:'+color+'" onclick="applyEditorColor(\''+color+'\')"></button>';
+    }).join('');
+  }
+
+  function activateMode(mode){
+    const drawer = document.getElementById('leftEditorDrawer');
+    if(!drawer) return;
+
+    if(mode === 'symbol'){
+      buildSymbols();
+    }else if(mode === 'tag'){
+      buildTags();
+    }else if(mode === 'color'){
+      buildColors();
+    }
+
+    drawer.querySelectorAll('.drawer-mode-tab').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.mode === mode);
+    });
+    drawer.querySelectorAll('.drawer-mode-panel').forEach(panel => {
+      panel.classList.toggle('is-active', panel.dataset.panel === mode);
+    });
+    const handle = document.getElementById('leftEditorDrawerHandle');
+    if(handle){
+      handle.textContent = mode === 'tag' ? '태그' : mode === 'color' ? '색상' : '기호';
+    }
+    setMode(mode);
+  }
+
+  function refreshAll(){
+    ensureLayout();
+    buildSymbols();
+    buildTags();
+    buildColors();
+    activateMode(getMode());
+  }
+
+  const wrapFn = (name, after) => {
+    if(typeof window[name] !== 'function' || window['__singlelineWrapped_' + name]) return;
+    window['__singlelineWrapped_' + name] = true;
+    const orig = window[name];
+    window[name] = function(){
+      const result = orig.apply(this, arguments);
+      setTimeout(after, 0);
+      return result;
+    };
+  };
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', refreshAll, { once:true });
+  }else{
+    refreshAll();
+  }
+  window.addEventListener('load', function(){ setTimeout(refreshAll, 60); });
+  setTimeout(refreshAll, 400);
+  setTimeout(refreshAll, 1200);
+
+  wrapFn('renderSpecialButtons', function(){ buildSymbols(); activateMode(getMode()); });
+  wrapFn('renderTagButtons', function(){ buildTags(); activateMode(getMode()); });
+  wrapFn('renderColorPalette', function(){ buildColors(); activateMode(getMode()); });
+  wrapFn('toggleTag', function(){ buildTags(); activateMode('tag'); });
+  wrapFn('toggleActiveSymbol', function(){ buildSymbols(); activateMode('symbol'); });
+  wrapFn('applyEditorColor', function(){ buildColors(); activateMode('color'); });
+})();
+</script>
+
+
+<style id="drawer-toprow-handle-v4">
+#leftEditorDrawer,
+#leftEditorDrawer.editor-tools-drawer{
+  width:176px !important;
+  max-width:176px !important;
+  left:calc(-176px + 20px) !important;
+}
+#leftEditorDrawer.is-open,
+#leftEditorDrawer.editor-tools-drawer.is-open{
+  left:0 !important;
+}
+#leftEditorDrawer .editor-tools-drawer-body{
+  padding:8px 24px 8px 8px !important;
+}
+#leftEditorDrawer .unified-toggle-section{
+  padding:8px 8px 10px 8px !important;
+  gap:8px !important;
+}
+#leftEditorDrawer .drawer-mode-tabs{
+  display:flex !important;
+  align-items:center !important;
+  gap:4px !important;
+  margin:0 !important;
+  padding:0 !important;
+  min-height:34px !important;
+}
+#leftEditorDrawer .drawer-mode-tab{
+  flex:1 1 0 !important;
+  height:34px !important;
+  min-width:0 !important;
+  border-radius:999px !important;
+  font-size:10px !important;
+  font-weight:900 !important;
+  letter-spacing:-0.04em !important;
+  padding:0 2px !important;
+}
+#leftEditorDrawer .drawer-mode-panels{
+  margin-top:2px !important;
+}
+#leftEditorDrawer .editor-tools-drawer-handle,
+#leftEditorDrawerHandle{
+  top:8px !important;
+  right:0 !important;
+  width:20px !important;
+  min-width:20px !important;
+  max-width:20px !important;
+  height:34px !important;
+  border-radius:10px 0 0 10px !important;
+  font-size:10px !important;
+  letter-spacing:-0.02em !important;
+  box-shadow:none !important;
+}
+#leftEditorDrawer .drawer-mode-list{
+  padding-top:0 !important;
+}
+</style>
+
+<script id="drawer-toprow-handle-v4-script">
+(function(){
+  function syncHandleTop(){
+    var drawer=document.getElementById('leftEditorDrawer');
+    var handle=document.getElementById('leftEditorDrawerHandle');
+    var tabs=drawer && drawer.querySelector('.drawer-mode-tabs');
+    if(!drawer || !handle || !tabs) return;
+    var top = tabs.offsetTop;
+    handle.style.top = top + 'px';
+    handle.style.height = tabs.offsetHeight + 'px';
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', syncHandleTop);
+  }else{
+    syncHandleTop();
+  }
+  window.addEventListener('load', syncHandleTop);
+  window.addEventListener('resize', syncHandleTop);
+  setTimeout(syncHandleTop, 50);
+  setTimeout(syncHandleTop, 300);
+})();
+</script>
+
+
+<style id="compact-selector-singleline-final">
+/* ultra compact selector */
+.compact-selector-card--singleline{
+  margin:0 0 2px;
+  padding:2px 4px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(180deg, rgba(14,22,38,.90), rgba(10,17,29,.92));
+}
+.compact-selector-row{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  min-width:0;
+}
+.compact-selector-mode-select{
+  flex:0 0 56px;
+  width:56px;
+  min-width:56px;
+  height:32px;
+  border-radius:10px;
+  padding:0 8px;
+  font-size:12px;
+  font-weight:900;
+  background:#315ea8 !important;
+  color:#fff !important;
+  border:1px solid rgba(130,170,255,.34) !important;
+}
+.compact-selector-body--singleline{
+  flex:1 1 auto;
+  min-width:0;
+  margin-top:0 !important;
+}
+.compact-selector-body--singleline .compact-selector-panel{
+  display:none;
+}
+.compact-selector-body--singleline .compact-selector-panel.is-active{
+  display:block;
+}
+.compact-selector-rail{
+  display:flex;
+  align-items:center;
+  gap:4px;
+  overflow-x:auto;
+  overflow-y:hidden;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  scroll-snap-type:x proximity;
+  padding:0;
+  min-width:0;
+}
+.compact-selector-rail::after{
+  content:'';
+  flex:0 0 6px;
+}
+.compact-selector-rail::-webkit-scrollbar{ display:none; }
+.compact-selector-rail > *{
+  flex:0 0 auto;
+  scroll-snap-align:start;
+}
+.compact-selector-rail#specialButtons button,
+.compact-selector-rail#tagButtons .chip,
+.compact-selector-rail#tagButtons button{
+  min-height:32px !important;
+  height:32px !important;
+  min-width:48px !important;
+  padding:0 8px !important;
+  border-radius:10px !important;
+  font-size:13px !important;
+  font-weight:800 !important;
+  box-shadow:none !important;
+}
+.compact-selector-rail#specialButtons button{
+  background:#f1f3f7 !important;
+  color:#111827 !important;
+  border:1px solid rgba(0,0,0,.10) !important;
+}
+.compact-selector-rail#specialButtons button.is-active,
+.compact-selector-rail#tagButtons .chip.active,
+.compact-selector-rail#tagButtons button.active{
+  background:linear-gradient(135deg,#3b82f6,#60a5fa) !important;
+  color:#ffffff !important;
+  border-color:rgba(255,255,255,.28) !important;
+  transform:scale(1.03);
+}
+.compact-color-rail{
+  gap:6px;
+}
+.compact-color-rail .color-dot{
+  width:24px !important;
+  height:24px !important;
+  border-radius:999px !important;
+}
+.compact-selector-manage-icon{
+  flex:0 0 32px;
+  width:32px;
+  min-width:32px;
+  height:32px;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,.10);
+  background:#172033;
+  color:#e7eef9;
+  font-size:22px;
+  line-height:1;
+  font-weight:700;
+  box-shadow:none !important;
+}
+.compact-selector-manage-icon.is-open{
+  background:rgba(59,130,246,.14);
+  color:#bfdbfe;
+  border-color:rgba(96,165,250,.35);
+}
+.compact-selector-manage{
+  margin-top:3px;
+  padding-top:3px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.compact-manage-group[hidden]{
+  display:none !important;
+}
+.compact-manage-row{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  align-items:center;
+}
+.compact-manage-input{
+  width:100%;
+  min-width:0;
+  height:34px;
+  border-radius:10px;
+  padding:0 10px;
+  font-size:13px;
+  font-weight:700;
+  background:#0d1523 !important;
+  border:1px solid rgba(255,255,255,.12) !important;
+  color:#edf3fb !important;
+}
+.compact-manage-action{
+  height:34px;
+  padding:0 10px;
+  border-radius:10px;
+  border:1px solid rgba(130,170,255,.32);
+  background:linear-gradient(135deg,#2563eb,#3b82f6);
+  color:#fff;
+  font-size:12px;
+  font-weight:900;
+  white-space:nowrap;
+}
+.compact-manage-guide{
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  padding:0 2px;
+  color:#9eb0c8;
+  font-size:11px;
+  font-weight:700;
+}
+#leftEditorDrawer,#leftEditorDrawer,
+#leftEditorDrawerHandle{
+  display:none !important;
+}
+</style>
+<script id="compact-selector-singleline-final-script">
+(function(){
+  function activateCompactSelector(targetId){
+    document.querySelectorAll('.compact-selector-panel').forEach(function(panel){
+      var on = panel.dataset.compactPanel === targetId;
+      panel.classList.toggle('is-active', on);
+      panel.hidden = !on;
+    });
+    var mode = document.getElementById('compactSelectorMode');
+    if(mode && mode.value !== targetId){
+      mode.value = targetId;
+    }
+  }
+
+  function initCompactSelectorSingleline(){
+    var mode = document.getElementById('compactSelectorMode');
+    if(mode && mode.dataset.compactBound !== '1'){
+      mode.dataset.compactBound = '1';
+      mode.addEventListener('change', function(){
+        activateCompactSelector(mode.value);
+      });
+    }
+
+    var manageBtn = document.getElementById('compactSelectorManageBtn');
+    var managePanel = document.getElementById('compactSelectorManagePanel');
+    if(manageBtn && managePanel && manageBtn.dataset.compactBound !== '1'){
+      manageBtn.dataset.compactBound = '1';
+      manageBtn.addEventListener('click', function(){
+        var open = managePanel.hidden;
+        managePanel.hidden = !open;
+        manageBtn.classList.toggle('is-open', open);
+        manageBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      });
+    }
+
+    activateCompactSelector((mode && mode.value) || 'specialButtons');
+  }
+
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', initCompactSelectorSingleline);
+  }else{
+    initCompactSelectorSingleline();
+  }
+  window.addEventListener('load', initCompactSelectorSingleline);
+})();
+</script>
