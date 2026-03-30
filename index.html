@@ -6235,6 +6235,39 @@ function applySpeechHighlightToElement(el, text){
   return true;
 }
 
+
+function scrollSpeechHighlightIntoView(recordId){
+  const safeRecordId = String(recordId || '').trim();
+  if(!safeRecordId) return;
+
+  const area = document.getElementById('queryScrollArea');
+  const preview = document.getElementById(`recordPreview_${safeRecordId}`);
+  if(!area || !preview) return;
+
+  const mark = preview.querySelector('.speech-inline-highlight');
+  if(!mark) return;
+
+  const areaRect = area.getBoundingClientRect();
+  const markRect = mark.getBoundingClientRect();
+  const topPadding = Math.max(16, area.clientHeight * 0.18);
+  const bottomPadding = Math.max(48, area.clientHeight * 0.22);
+
+  const above = markRect.top < areaRect.top + topPadding;
+  const below = markRect.bottom > areaRect.bottom - bottomPadding;
+
+  if(!above && !below) return;
+
+  const delta = below
+    ? (markRect.bottom - (areaRect.bottom - bottomPadding))
+    : (markRect.top - (areaRect.top + topPadding));
+
+  area.scrollTo({
+    top: Math.max(0, area.scrollTop + delta),
+    behavior: 'smooth'
+  });
+}
+
+
 function setRecordSpeechHighlight(recordId, text){
   clearSpeechTextHighlight();
   const activeText = String(text || '').trim();
@@ -6242,6 +6275,7 @@ function setRecordSpeechHighlight(recordId, text){
   if(!recordId || !activeText) return;
   const preview = document.getElementById(`recordPreview_${recordId}`);
   applySpeechHighlightToElement(preview, activeText);
+  requestAnimationFrame(() => scrollSpeechHighlightIntoView(recordId));
 
   const detailContent = document.getElementById('detailContentHtml');
   const detailModal = document.getElementById('recordDetailModal');
@@ -10941,172 +10975,5 @@ window.addEventListener('load', function(){
     initCompactSelectorSingleline();
   }
   window.addEventListener('load', initCompactSelectorSingleline);
-})();
-</script>
-
-
-<style id="oai-fix-compact-selector-scroll-and-expand-highlight">
-#specialButtons.compact-selector-rail,
-#tagButtons.compact-selector-rail,
-#colorPalette.compact-selector-rail{
-  touch-action: pan-x !important;
-  overscroll-behavior-x: contain !important;
-  overscroll-behavior-y: none !important;
-  -webkit-overflow-scrolling: touch !important;
-}
-#specialButtons.compact-selector-rail button{
-  touch-action: manipulation;
-}
-.record-pill-btn.expand-toggle-btn.has-hidden-content{
-  background:linear-gradient(135deg,#2563eb,#60a5fa) !important;
-  color:#ffffff !important;
-  border-color:rgba(130,170,255,.38) !important;
-}
-</style>
-<script id="oai-fix-compact-selector-scroll-and-expand-highlight-script">
-(function(){
-  function clearCompactSymbolVisualSelection(){
-    document.querySelectorAll('#specialButtons .is-active').forEach(function(el){
-      el.classList.remove('is-active','active');
-    });
-  }
-
-  window.renderSpecialButtons = function(){
-    const symbols = (typeof getAllSymbols === 'function') ? getAllSymbols() : [];
-    const activeSymbols = (typeof getSelectedSymbols === 'function') ? getSelectedSymbols() : [];
-    const html = symbols.map(function(ch){
-      const safe = String(ch).replaceAll("'","\\'");
-      return `
-        <button
-          class="press h-10 min-w-[58px] rounded-xl border border-slate-300 bg-white text-lg font-bold shrink-0"
-          onclick="insertChar('${safe}')"
-          ontouchstart="startLongPressDelete('symbol','${safe}')"
-          ontouchend="cancelLongPress()"
-          onmousedown="startLongPressDelete('symbol','${safe}')"
-          onmouseup="cancelLongPress()"
-          onmouseleave="cancelLongPress()"
-        >${ch}</button>
-      `;
-    }).join('');
-
-    const quickHtml = symbols.map(function(ch){
-      const safe = String(ch).replaceAll("'","\\'");
-      const isActive = activeSymbols.includes(ch) ? 'is-active' : '';
-      return `<button class="editor-tool-chip ${isActive}" type="button" onclick="insertChar('${safe}'); toggleActiveSymbol('${safe}')">${ch}</button>`;
-    }).join('');
-
-    const normalWrap = document.getElementById('specialButtons');
-    const drawerWrap = document.getElementById('drawerSpecialButtons');
-    if(normalWrap) normalWrap.innerHTML = html;
-    if(drawerWrap) drawerWrap.innerHTML = quickHtml;
-    clearCompactSymbolVisualSelection();
-  };
-
-  window.insertChar = function(ch){
-    const editor = (typeof getEditor === 'function') ? getEditor() : document.getElementById('contentEditor');
-    if(!editor) return;
-    editor.focus({ preventScroll:true });
-    if(typeof restoreEditorSelection === 'function' && !restoreEditorSelection()){
-      if(typeof placeCaretAtEnd === 'function') placeCaretAtEnd(editor);
-    }
-    document.execCommand('insertText', false, ch);
-    if(typeof rememberEditorSelection === 'function') rememberEditorSelection();
-    if(typeof persistDraftFromDom === 'function') persistDraftFromDom();
-    clearCompactSymbolVisualSelection();
-  };
-
-  let restoreTimer = null;
-  function restoreEditorAfterRailInteraction(){
-    const editor = (typeof getEditor === 'function') ? getEditor() : document.getElementById('contentEditor');
-    if(!editor) return;
-    clearTimeout(restoreTimer);
-    restoreTimer = setTimeout(function(){
-      try{ editor.focus({ preventScroll:true }); }catch(_e){ editor.focus(); }
-      if(typeof restoreEditorSelection === 'function') restoreEditorSelection();
-      if(typeof rememberEditorSelection === 'function') rememberEditorSelection();
-    }, 0);
-    setTimeout(function(){
-      try{ editor.focus({ preventScroll:true }); }catch(_e){ editor.focus(); }
-      if(typeof restoreEditorSelection === 'function') restoreEditorSelection();
-    }, 60);
-  }
-
-  function bindCompactRailKeepFocus(){
-    const rails = document.querySelectorAll('#specialButtons.compact-selector-rail, #tagButtons.compact-selector-rail, #colorPalette.compact-selector-rail');
-    rails.forEach(function(rail){
-      if(rail.dataset.keepFocusBound === '1') return;
-      rail.dataset.keepFocusBound = '1';
-      let startX = 0;
-      let startY = 0;
-      let moved = false;
-      rail.addEventListener('touchstart', function(e){
-        moved = false;
-        const t = e.touches && e.touches[0];
-        if(t){ startX = t.clientX; startY = t.clientY; }
-        if(typeof rememberEditorSelection === 'function') rememberEditorSelection();
-      }, { passive:true });
-      rail.addEventListener('touchmove', function(e){
-        const t = e.touches && e.touches[0];
-        if(!t) return;
-        if(Math.abs(t.clientX - startX) > 8 || Math.abs(t.clientY - startY) > 8){
-          moved = true;
-        }
-      }, { passive:true });
-      rail.addEventListener('scroll', function(){
-        if(typeof rememberEditorSelection === 'function') rememberEditorSelection();
-        restoreEditorAfterRailInteraction();
-      }, { passive:true });
-      rail.addEventListener('touchend', function(){
-        if(moved) restoreEditorAfterRailInteraction();
-      }, { passive:true });
-    });
-  }
-
-  function refreshExpandButtonHighlight(){
-    document.querySelectorAll('.query-card').forEach(function(card){
-      const preview = card.querySelector('.record-preview');
-      const btn = Array.from(card.querySelectorAll('.record-pill-btn')).find(function(node){
-        const txt = String(node.textContent || '').trim();
-        return txt.indexOf('펼치기') !== -1 || txt.indexOf('접기') !== -1;
-      });
-      if(!btn) return;
-      btn.classList.add('expand-toggle-btn');
-      const hidden = !!preview && (preview.classList.contains('collapsed') || String(btn.textContent || '').indexOf('접기') !== -1 || String(btn.textContent || '').indexOf('펼치기') !== -1);
-      btn.classList.toggle('has-hidden-content', hidden);
-    });
-  }
-
-  function wrapAfter(name, after){
-    const fn = window[name];
-    if(typeof fn !== 'function' || fn.__oaiAfterWrapped) return;
-    const wrapped = function(){
-      const result = fn.apply(this, arguments);
-      if(result && typeof result.then === 'function'){
-        return result.finally(function(){ setTimeout(after, 0); });
-      }
-      setTimeout(after, 0);
-      return result;
-    };
-    wrapped.__oaiAfterWrapped = true;
-    window[name] = wrapped;
-  }
-
-  function bootFix(){
-    if(typeof window.renderSpecialButtons === 'function') window.renderSpecialButtons();
-    bindCompactRailKeepFocus();
-    refreshExpandButtonHighlight();
-  }
-
-  ['renderRecords','showLatestRecordView','showDayRecords','renderSpeechRangeView','toggleExpand','renderSpecialButtons','renderTagButtons'].forEach(function(name){
-    wrapAfter(name, function(){ bindCompactRailKeepFocus(); refreshExpandButtonHighlight(); });
-  });
-
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', bootFix, { once:true });
-  }else{
-    bootFix();
-  }
-  window.addEventListener('load', bootFix);
-  window.addEventListener('resize', refreshExpandButtonHighlight);
 })();
 </script>
