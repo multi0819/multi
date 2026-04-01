@@ -3624,6 +3624,8 @@ body.reader-bar-folded #bottomPlayerBar{
       <button onclick="emptyTrash()" class="press backup-btn danger-soft">휴지통 비우기</button>
       <button onclick="exportJson()" class="press backup-btn bg-slate-900 text-white">JSON 백업</button>
       <button onclick="exportCsv()" class="press backup-btn border font-bold text-slate-700">CSV 내보내기</button>
+      <button onclick="exportNoteText()" class="press backup-btn border font-bold text-slate-700">노트용 TXT 백업</button>
+      <button onclick="exportNotePdf()" class="press backup-btn border font-bold text-slate-700">노트용 PDF 백업</button>
       <button onclick="showRemainingStorage()" class="press backup-btn border font-bold text-slate-700">
         남은 저장용량 확인
       </button>
@@ -5925,6 +5927,292 @@ ${renderTagRailHtml(item)}
     showToast('CSV를 저장했습니다.');
   }
 
+  function exportNoteText(){
+    if(!records.length){
+      showToast('백업할 기록이 없습니다.');
+      return;
+    }
+
+    const sorted = [...records].sort((a,b)=> new Date(b.studiedAt||0) - new Date(a.studiedAt||0));
+    const sections = [];
+
+    sections.push('학습기록 노트용 백업');
+    sections.push(`백업일시: ${formatDateTime(new Date().toISOString())}`);
+    sections.push(`전체 기록 수: ${sorted.length}건`);
+    sections.push('');
+    sections.push('========================================');
+    sections.push('');
+
+    sorted.forEach((r, idx) => {
+      const content = String(r.contentText || stripHtml(r.contentHtml || '') || '').trim();
+      const tagText = Array.isArray(r.tags) && r.tags.length ? r.tags.join(', ') : '-';
+      const minuteText = Number(r.minutes || 0) > 0 ? `${Number(r.minutes)}분` : '-';
+      const favoriteText = r.favorite ? '중요기록' : '-';
+      const imageCount = Array.isArray(r.imageIds) ? r.imageIds.length : 0;
+
+      sections.push(`[기록 ${idx + 1}]`);
+      sections.push(`학습일시: ${formatDateTime(r.studiedAt || r.createdAt || new Date().toISOString())}`);
+      sections.push(`공부시간: ${minuteText}`);
+      sections.push(`태그: ${tagText}`);
+      sections.push(`중요표시: ${favoriteText}`);
+      sections.push(`사진수: ${imageCount}장`);
+      sections.push('내용:');
+      sections.push(content || '(내용 없음)');
+      sections.push('');
+      sections.push('----------------------------------------');
+      sections.push('');
+    });
+
+    const txt = '﻿' + sections.join('\n');
+    const blob = new Blob([txt], { type:'text/plain;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `study-log-note-${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('노트용 TXT 백업을 저장했습니다.');
+  }
+
+
+
+  async function exportNotePdf(){
+    if(!records.length){
+      showToast('백업할 기록이 없습니다.');
+      return;
+    }
+
+    try{
+      showToast('PDF용 화면을 준비하는 중입니다...');
+
+      const sorted = [...records].sort((a,b)=> new Date(b.studiedAt||0) - new Date(a.studiedAt||0));
+      const allImageIds = [...new Set(sorted.flatMap(r => Array.isArray(r.imageIds) ? r.imageIds : []))];
+      const imageMap = await getImagesByIds(allImageIds);
+
+      const sections = sorted.map((r, idx) => {
+        const content = String(r.contentText || stripHtml(r.contentHtml || '') || '').trim();
+        const tagText = Array.isArray(r.tags) && r.tags.length ? r.tags.join(', ') : '-';
+        const minuteText = Number(r.minutes || 0) > 0 ? `${Number(r.minutes)}분` : '-';
+        const favoriteText = r.favorite ? '중요기록' : '-';
+        const studiedText = formatDateTime(r.studiedAt || r.createdAt || new Date().toISOString());
+        const images = (r.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+        const imageHtml = images.length
+          ? `<div class="pdf-images">${images.map(src => `<img src="${src}" alt="기록 이미지" />`).join('')}</div>`
+          : '<div class="pdf-no-image">사진 없음</div>';
+
+        return `
+          <section class="pdf-record">
+            <div class="pdf-record-head">
+              <div class="pdf-record-title">기록 ${idx + 1}</div>
+              <div class="pdf-record-date">${escapeHtml(studiedText)}</div>
+            </div>
+            <div class="pdf-meta-grid">
+              <div><span>공부시간</span><strong>${escapeHtml(minuteText)}</strong></div>
+              <div><span>태그</span><strong>${escapeHtml(tagText)}</strong></div>
+              <div><span>중요표시</span><strong>${escapeHtml(favoriteText)}</strong></div>
+              <div><span>사진수</span><strong>${images.length}장</strong></div>
+            </div>
+            <div class="pdf-content-block">
+              <div class="pdf-label">내용</div>
+              <div class="pdf-content">${escapeHtml(content || '(내용 없음)').replace(/\n/g, '<br>')}</div>
+            </div>
+            <div class="pdf-content-block">
+              <div class="pdf-label">사진</div>
+              ${imageHtml}
+            </div>
+          </section>
+        `;
+      }).join('');
+
+      const html = `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>학습기록 PDF 백업</title>
+<style>
+  :root{ color-scheme: light; }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0;
+    padding:24px;
+    font-family:"Pretendard","Noto Sans KR",sans-serif;
+    background:#f3f6fb;
+    color:#111827;
+  }
+  .pdf-wrap{
+    max-width:980px;
+    margin:0 auto;
+  }
+  .pdf-cover{
+    background:#ffffff;
+    border:1px solid #dbe4f0;
+    border-radius:20px;
+    padding:24px;
+    margin-bottom:18px;
+  }
+  .pdf-cover h1{
+    margin:0 0 8px;
+    font-size:28px;
+    line-height:1.2;
+  }
+  .pdf-cover p{
+    margin:4px 0;
+    color:#475569;
+    font-size:14px;
+  }
+  .pdf-record{
+    background:#ffffff;
+    border:1px solid #dbe4f0;
+    border-radius:18px;
+    padding:20px;
+    margin-bottom:16px;
+    page-break-inside:avoid;
+    break-inside:avoid;
+  }
+  .pdf-record-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:12px;
+    margin-bottom:14px;
+    border-bottom:2px solid #eff4fb;
+    padding-bottom:10px;
+  }
+  .pdf-record-title{
+    font-size:22px;
+    font-weight:800;
+  }
+  .pdf-record-date{
+    font-size:13px;
+    color:#475569;
+    text-align:right;
+  }
+  .pdf-meta-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:10px;
+    margin-bottom:16px;
+  }
+  .pdf-meta-grid div{
+    border:1px solid #e5edf7;
+    border-radius:12px;
+    padding:10px 12px;
+    background:#f8fbff;
+  }
+  .pdf-meta-grid span{
+    display:block;
+    font-size:12px;
+    color:#64748b;
+    margin-bottom:6px;
+  }
+  .pdf-meta-grid strong{
+    font-size:15px;
+    color:#0f172a;
+  }
+  .pdf-content-block{
+    margin-top:14px;
+  }
+  .pdf-label{
+    font-size:13px;
+    font-weight:700;
+    color:#334155;
+    margin-bottom:8px;
+  }
+  .pdf-content{
+    border:1px solid #e5edf7;
+    border-radius:14px;
+    padding:14px;
+    background:#ffffff;
+    font-size:16px;
+    line-height:1.7;
+    white-space:normal;
+    word-break:keep-all;
+    overflow-wrap:anywhere;
+  }
+  .pdf-images{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:12px;
+  }
+  .pdf-images img{
+    width:100%;
+    height:auto;
+    display:block;
+    border:1px solid #dbe4f0;
+    border-radius:14px;
+    background:#fff;
+  }
+  .pdf-no-image{
+    border:1px dashed #cbd5e1;
+    border-radius:14px;
+    padding:18px;
+    text-align:center;
+    color:#64748b;
+    background:#f8fafc;
+  }
+  .pdf-guide{
+    position:sticky;
+    top:0;
+    z-index:5;
+    margin-bottom:12px;
+    padding:12px 14px;
+    border-radius:14px;
+    background:#0f172a;
+    color:#f8fafc;
+    font-size:13px;
+    line-height:1.5;
+  }
+  @media print{
+    body{ background:#fff; padding:0; }
+    .pdf-wrap{ max-width:none; }
+    .pdf-guide{ display:none; }
+    .pdf-cover, .pdf-record{
+      border:none;
+      border-radius:0;
+      box-shadow:none;
+      margin-bottom:12px;
+    }
+    .pdf-record{ page-break-inside:avoid; break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+  <div class="pdf-wrap">
+    <div class="pdf-guide">브라우저 인쇄 화면이 열리면 <strong>PDF로 저장</strong>을 선택하시면 됩니다. 사진 포함 백업용 화면입니다.</div>
+    <section class="pdf-cover">
+      <h1>학습기록 PDF 백업</h1>
+      <p>백업일시: ${escapeHtml(formatDateTime(new Date().toISOString()))}</p>
+      <p>전체 기록 수: ${sorted.length}건</p>
+      <p>사진은 각 기록 아래 함께 배치됩니다.</p>
+    </section>
+    ${sections}
+  </div>
+  <script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        try{ window.print(); }catch(_err){}
+      }, 600);
+    });
+  <\/script>
+</body>
+</html>`;
+
+      const printWindow = window.open('', '_blank');
+      if(!printWindow){
+        showToast('팝업이 차단되어 PDF 화면을 열지 못했습니다.');
+        return;
+      }
+
+      printWindow.document.open();
+      printWindow.document.write(html);
+      printWindow.document.close();
+      showToast('PDF용 화면을 열었습니다. 인쇄에서 PDF 저장을 선택하세요.');
+    }catch(err){
+      console.error(err);
+      showToast('PDF 백업 생성 중 오류가 발생했습니다.');
+    }
+  }
   async function importJson(event){
   const file = event.target.files?.[0];
   if(!file) return;
