@@ -3043,7 +3043,39 @@ body.player-reading .bottom-player-btn.play{
 
 @media print{
   #pdfPreviewPage button{ display:none !important; }
-  #pdfPreviewPage{ padding:0 !important; }
+  #pdfPreviewPage{
+    padding:0 !important;
+    background:#ffffff !important;
+  }
+  #pdfContent{
+    max-width:700px !important;
+    margin:0 auto !important;
+    font-size:18px !important;
+    line-height:1.8 !important;
+  }
+  #pdfContent section{
+    page-break-inside:avoid !important;
+    break-inside:avoid !important;
+    margin:0 0 20px 0 !important;
+    padding:18px 18px 16px !important;
+    border:0 !important;
+    border-bottom:1px solid #d1d5db !important;
+    border-radius:0 !important;
+    box-shadow:none !important;
+  }
+  #pdfContent img{
+    max-width:100% !important;
+    height:auto !important;
+    page-break-inside:avoid !important;
+  }
+  body{
+    -webkit-print-color-adjust:exact !important;
+    print-color-adjust:exact !important;
+  }
+  @page{
+    size:A4;
+    margin:14mm 12mm;
+  }
 }
 </style>
 
@@ -4094,6 +4126,22 @@ function getRecordStudyDateValue(record){
     const v = Number(record?.minutes ?? record?.studyMinutes ?? record?.minute ?? record?.durationMinutes ?? 0);
     return Number.isFinite(v) ? v : 0;
   }
+
+function syncCalendarToLatestRecordMonth(){
+  if(!Array.isArray(records) || !records.length) return false;
+  const sorted = records
+    .map(r => ({ raw: getRecordStudyDateValue(r), mins: getRecordMinutesValue(r) }))
+    .filter(x => x.raw)
+    .sort((a,b) => +new Date(b.raw) - +new Date(a.raw));
+  if(!sorted.length) return false;
+
+  const latest = new Date(sorted[0].raw);
+  if(Number.isNaN(+latest)) return false;
+
+  currentCalendarDate = new Date(latest.getFullYear(), latest.getMonth(), 1);
+  return true;
+}
+
 
 
   
@@ -5512,7 +5560,17 @@ function addCustomTag(){
     renderCalendarHeatmap();
   }
 
-  function renderCalendarHeatmap(){
+  
+function moveCalendarMonth(step){
+  currentCalendarDate = new Date(currentCalendarDate.getFullYear(), currentCalendarDate.getMonth() + step, 1);
+  selectedCalendarDateKey = '';
+  renderCalendarHeatmap();
+}
+
+window.goPrevMonth = function(){ moveCalendarMonth(-1); };
+window.goNextMonth = function(){ moveCalendarMonth(1); };
+
+function renderCalendarHeatmap(){
     const box = document.getElementById('calendarHeatmap');
     const title = document.getElementById('calendarTitle');
     if(!box || !title) return;
@@ -5520,6 +5578,18 @@ function addCustomTag(){
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
     title.textContent = `${year}년 ${month + 1}월`;
+    const monthCount = records.filter(r => {
+      const raw = getRecordStudyDateValue(r);
+      if(!raw) return false;
+      const d = new Date(raw);
+      return !Number.isNaN(+d) && d.getFullYear() === year && d.getMonth() === month;
+    }).length;
+    const detail = document.getElementById('calendarDetail');
+    if(detail && !selectedCalendarDateKey){
+      detail.textContent = monthCount > 0
+        ? `${year}년 ${month + 1}월 · 기록 ${monthCount}건`
+        : `${year}년 ${month + 1}월에는 기록이 없습니다. 이전/다음 달로 이동해 보세요.`;
+    }
 
     const firstDay = new Date(year, month, 1);
     const lastDate = new Date(year, month + 1, 0).getDate();
@@ -5625,194 +5695,28 @@ function addCustomTag(){
   }
 
 
-  function openCalendarSection(){
-    const section = document.getElementById('calendarSection');
-    const btn = document.getElementById('toggleCalendarBtn');
-    if(!section) return;
-    section.style.display = 'block';
-    section.classList.add('is-open');
-    if(btn) btn.classList.add('is-active');
-    scrollToSection('calendarSection');
-  }
-
-  function closeCalendarSection(){
-    const section = document.getElementById('calendarSection');
-    const btn = document.getElementById('toggleCalendarBtn');
-    if(!section) return;
-    section.style.display = 'none';
-    section.classList.remove('is-open');
-    if(btn){ btn.classList.remove('is-active'); btn.setAttribute('aria-pressed', 'false'); }
-  }
-
-  function toggleCalendarSection(){
-    const section = document.getElementById('calendarSection');
-    if(!section) return;
-    const isOpen = section.classList.contains('is-open') || section.style.display === 'block';
-    if(isOpen) closeCalendarSection();
-    else openCalendarSection();
-  }
-
-  function openQuerySection(shouldScroll = true){
-    const section = document.getElementById('querySection');
-    if(!section) return;
-    section.style.display = 'block';
-    section.classList.add('is-open');
-    if(shouldScroll) scrollToSection('querySection');
-  }
-
-  function closeQuerySection(){
-    const section = document.getElementById('querySection');
-    if(!section) return;
-    section.style.display = 'none';
-    section.classList.remove('is-open');
-  }
-
-  function openAllRecordsPanel(){
-    showAllRecordsView();
-    openQuerySection(true);
-  }
-
-  async function openSelectedDayView(){
-    if(!selectedCalendarDateKey){
-      openCalendarSection();
-      showToast('먼저 달력에서 날짜를 선택해 주세요.');
-      return;
+  
+function openCalendarSection(){
+  const section = document.getElementById('calendarSection');
+  if(!section) return;
+  section.classList.add('is-open');
+  if(typeof syncCalendarToLatestRecordMonth === 'function'){
+    const year = currentCalendarDate.getFullYear();
+    const month = currentCalendarDate.getMonth();
+    const hasMonthData = records.some(r => {
+      const raw = getRecordStudyDateValue(r);
+      if(!raw) return false;
+      const d = new Date(raw);
+      return !Number.isNaN(+d) && d.getFullYear() === year && d.getMonth() === month;
+    });
+    if(!hasMonthData){
+      syncCalendarToLatestRecordMonth();
     }
-
-    await showDayRecords(selectedCalendarDateKey);
-    openQuerySection(true);
-    closeCalendarSection();
   }
-
-  function showAllRecordsView(){
-  repeatRangeTouched = false;
-  repeatCountTouched = false;
-  closeCalendarSection();
-  document.getElementById('queryTitle').textContent = '전체 조회';
-  document.getElementById('selectedDayRecords').classList.add('hidden');
-  document.getElementById('selectedDayRecords').innerHTML = '';
-  document.getElementById('recentSection').classList.remove('hidden');
-
-  const searchInput = document.getElementById('searchInput');
-  const tagFilter = document.getElementById('tagFilter');
-  const dateFilter = document.getElementById('dateFilter');
-  const favoriteOnly = document.getElementById('favoriteOnly');
-  const reviewOnly = document.getElementById('reviewOnly');
-
-  if(searchInput) searchInput.value = '';
-  if(tagFilter) tagFilter.value = 'all';
-  if(dateFilter) dateFilter.value = 'all';
-  if(favoriteOnly) favoriteOnly.checked = false;
-  if(reviewOnly) reviewOnly.checked = false;
-
-  selectedCalendarDateKey = '';
-  setQueryViewMode('all');
-  renderRecords();
-
-  const area = document.getElementById('queryScrollArea');
-  if(area) area.scrollTop = 0;
-  }
-
-  async function showDayRecords(dateKey, options = {}){
-  selectedCalendarDateKey = dateKey;
-  updateSelectedDayButton();
-
-  const items = records
-    .filter(r => getDateKey(getRecordStudyDateValue(r)) === dateKey)
-    .sort((a,b)=>+new Date(getRecordStudyDateValue(b)) - +new Date(getRecordStudyDateValue(a)));
-
-  currentDaySpeechItems = items.slice();
-  autoSyncRepeatRange(true);
-  setTimeout(() => autoSyncRepeatRange(true), 0);
-
-  const total = items.reduce((s,r)=>s + getRecordMinutesValue(r),0);
-  document.getElementById('calendarDetail').textContent = `${dateKey} · 총 ${total}분`;
-
-  const panel = document.getElementById('selectedDayRecords');
-  const recent = document.getElementById('recentSection');
-  const title = document.getElementById('queryTitle');
-  const area = document.getElementById('queryScrollArea');
-
-  title.textContent = `${dateKey} 학습 기록`;
-  recent.classList.add('hidden');
-  panel.classList.remove('hidden');
-  setQueryViewMode('day');
-
-  if(!items.length){
-    panel.innerHTML = '<div class="text-sm text-slate-400">해당 날짜 기록이 없습니다.</div>';
-    autoSyncRepeatRange(true);
-    if(area) area.scrollTop = 0;
-    return;
-  }
-
-  const allImageIds = items.flatMap(item => Array.isArray(item.imageIds) ? item.imageIds : []);
-  let imageMap = {};
-  try{
-    imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(allImageIds) : {};
-  }catch(e){
-    console.log('image load fail', e);
-    imageMap = {};
-  }
-
-  panel.innerHTML = `
-    <div class="space-y-3">
-      ${items.map(item => {
-        const isExpanded = !!expanded[item.id];
-        const text = item.contentText || stripHtml(item.contentHtml || '') || '[내용 없음]';
-        const isLong = text.length > PREVIEW_LENGTH;
-        const bodyHtml = item.contentHtml || escapeHtml(text);
-        const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
-
-        const images = (item.imageIds || []).map(id => {
-          const found = imageMap[id];
-          return typeof found === 'string' ? found : (found && found.dataUrl ? found.dataUrl : '');
-        }).filter(Boolean);
-
-        return `
-          <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
-            <div class="query-card-body">
-              <div class="text-sm text-slate-400">${formatDateTime(getRecordStudyDateValue(item))} | ${getRecordMinutesValue(item)}분</div>
-
-              <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">
-                ${bodyHtml}
-              </div>
-
-              ${images.length ? `
-                <div class="grid grid-cols-2 gap-2">
-                  ${images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')}
-                </div>
-              ` : ''}
-
-              <div class="flex flex-wrap gap-2">
-${renderTagRailHtml(item)}
-              </div>
-
-              <div class="record-actions">
-                <div class="record-actions-left">
-                  ${isLong
-                    ? `<button type="button" class="press record-pill-btn" onclick="toggleExpand('${item.id}'); showDayRecords('${dateKey}')">${isExpanded ? '접기 ▲' : '펼치기 ▼'}</button>`
-                    : `<span class="text-xs text-slate-400 whitespace-nowrap">전체 표시</span>`
-                  }
-
-                  <button type="button" class="press record-icon-btn" onclick="toggleFavorite('${item.id}'); showDayRecords('${dateKey}')" aria-label="중요 표시">${item.favorite ? '⭐' : '☆'}</button>
-                  <button type="button" class="press record-icon-btn" onclick="toggleReview('${item.id}'); showDayRecords('${dateKey}')" aria-label="복습 표시">${(item.tags || []).includes('복습필요') ? '⚠️' : '✓'}</button>
-                </div>
-
-                <div class="record-actions-right">
-                  <button type="button" class="press record-pill-btn primary" onclick="openRecordDetail('${item.id}')">상세보기</button>
-                  <button type="button" class="press record-pill-btn" onclick="editRecord('${item.id}')">수정</button>
-                  <button type="button" class="press record-pill-btn danger" onclick="deleteRecord('${item.id}'); showDayRecords('${dateKey}')">삭제</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-
-  if(area) area.scrollTop = 0;
+  renderCalendarHeatmap();
+  syncInlineCalendarButton();
 }
+
   function renderCharts(topTags){
     const map={};
     records.forEach(r=>{
@@ -6056,12 +5960,12 @@ ${renderTagRailHtml(item)}
     const originalScrollY = window.scrollY || 0;
 
     document.body.innerHTML = `
-      <div id="pdfPreviewPage" style="min-height:100vh;background:#ffffff;color:#000000;font-family:'Noto Sans KR',sans-serif;padding:16px 14px 80px;box-sizing:border-box;">
-        <div style="position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;gap:8px;padding:10px 0 14px;background:#ffffff;">
+      <div id="pdfPreviewPage" style="min-height:100vh;background:#f3f4f6;color:#111827;font-family:'Noto Sans KR',sans-serif;padding:14px 12px 80px;box-sizing:border-box;">
+        <div style="position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;gap:8px;padding:10px 0 14px;background:#f3f4f6;">
           <button id="pdfBackBtn" type="button" style="height:42px;padding:0 14px;border:none;border-radius:10px;background:#475569;color:#ffffff;font-weight:800;">돌아가기</button>
           <button id="pdfPrintBtn" type="button" style="height:42px;padding:0 14px;border:none;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:800;">PDF 저장</button>
         </div>
-        <div id="pdfContent" style="max-width:960px;margin:0 auto;">불러오는 중...<div style="margin-top:8px;font-size:13px;color:#64748b;">사진이 많으면 잠시 시간이 걸릴 수 있습니다.</div></div>
+        <div id="pdfContent" style="max-width:760px;margin:0 auto;">불러오는 중...<div style="margin-top:8px;font-size:13px;color:#64748b;">사진이 많으면 잠시 시간이 걸릴 수 있습니다.</div><div style="margin-top:6px;font-size:13px;color:#64748b;">PDF 저장 시 배율은 기본 또는 100%를 권장합니다.</div></div>
       </div>
     `;
 
@@ -6146,24 +6050,24 @@ ${renderTagRailHtml(item)}
         const img = imageMap ? imageMap[id] : null;
         const src = typeof img === 'string' ? img : (img && img.dataUrl ? img.dataUrl : '');
         if(src){
-          return `<img src="${src}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">`;
+          return `<img src="${src}" style="display:block;max-width:100%;height:auto;margin-top:14px;border-radius:14px;border:1px solid #dbe2ea;page-break-inside:avoid;">`;
         }
         return '';
       }).join('')
       || (Array.isArray(record?.images) ? record.images.map(src => {
           const safeSrc = typeof src === 'string' ? src : (src && src.dataUrl ? src.dataUrl : '');
-          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">` : '';
+          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:14px;border-radius:14px;border:1px solid #dbe2ea;page-break-inside:avoid;">` : '';
         }).join('') : '')
       || (Array.isArray(record?.imageDataUrls) ? record.imageDataUrls.map(src => {
           const safeSrc = typeof src === 'string' ? src : (src && src.dataUrl ? src.dataUrl : '');
-          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">` : '';
+          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:14px;border-radius:14px;border:1px solid #dbe2ea;page-break-inside:avoid;">` : '';
         }).join('') : '');
 
       return `
-        <section style="margin:0 0 18px 0;padding:0 0 18px 0;border-bottom:1px solid #dbe2ea;page-break-inside:avoid;">
-          <div style="font-size:17px;font-weight:800;color:#0f172a;">${safeHtml(toDateText(record) || `기록 ${idx + 1}`)}${minutes}${important}</div>
+        <section style="margin:0 0 22px 0;padding:22px 22px 20px;background:#ffffff;border:1px solid #dbe2ea;border-radius:18px;box-shadow:0 6px 20px rgba(15,23,42,.06);page-break-inside:avoid;break-inside:avoid;">
+          <div style="font-size:22px;font-weight:900;line-height:1.35;color:#0f172a;word-break:keep-all;">${safeHtml(toDateText(record) || `기록 ${idx + 1}`)}${minutes}${important}</div>
           ${tags}
-          <div style="margin-top:10px;white-space:pre-wrap;line-height:1.6;font-size:15px;color:#111827;">${text || '(내용 없음)'}</div>
+          <div style="margin-top:14px;white-space:pre-wrap;line-height:1.82;font-size:18px;color:#111827;word-break:keep-all;overflow-wrap:anywhere;">${text || '(내용 없음)'}</div>
           ${imgs}
         </section>
       `;
@@ -7449,6 +7353,7 @@ async function readRepeatSection(){
   window.addEventListener('load', async ()=>{
   await openImageDb();
   await hydrateAppState();
+  syncCalendarToLatestRecordMonth();
   initDefaultMasters();
   await migrateLegacyBase64Images();
 
