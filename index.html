@@ -3040,6 +3040,11 @@ body.player-reading .bottom-player-btn.play{
   text-decoration:none !important;
   filter:none !important;
 }
+
+@media print{
+  #pdfPreviewPage button{ display:none !important; }
+  #pdfPreviewPage{ padding:0 !important; }
+}
 </style>
 
 <style id="tag-rail-real-visible">
@@ -4081,6 +4086,15 @@ function normalizeStringList(list){
   function formatMinutes(total){
     return `${Math.floor(total/60)}시간 ${total%60}분`;
   }
+function getRecordStudyDateValue(record){
+    return record?.studiedAt || record?.studyAt || record?.date || record?.createdAt || '';
+  }
+
+  function getRecordMinutesValue(record){
+    const v = Number(record?.minutes ?? record?.studyMinutes ?? record?.minute ?? record?.durationMinutes ?? 0);
+    return Number.isFinite(v) ? v : 0;
+  }
+
 
   
 function createDefaultDraft(){
@@ -4098,21 +4112,29 @@ function createDefaultDraft(){
 }
 
 function normalizeRecordItem(item, type='record'){
-  const text = item?.contentText || stripHtml(item?.contentHtml || item?.content || '');
+  const text = item?.contentText || stripHtml(item?.contentHtml || item?.content || item?.text || '');
   const html = item?.contentHtml || escapeHtml(text);
+  const studiedAt = item?.studiedAt || item?.studyAt || item?.date || item?.createdAt || getLocalDateTimeValue();
+  const minutesValue = Number(
+    item?.minutes ??
+    item?.studyMinutes ??
+    item?.minute ??
+    item?.durationMinutes ??
+    0
+  );
 
   return {
     ...item,
     id: item?.id || uid(),
-    createdAt: item?.createdAt || new Date().toISOString(),
+    createdAt: item?.createdAt || studiedAt || new Date().toISOString(),
     updatedAt: item?.updatedAt || new Date().toISOString(),
     deletedAt: type === 'trash' ? (item?.deletedAt || new Date().toISOString()) : item?.deletedAt,
-    studiedAt: item?.studiedAt || getLocalDateTimeValue(),
-    minutes: Number(item?.minutes || 0),
+    studiedAt,
+    minutes: Number.isFinite(minutesValue) ? minutesValue : 0,
     contentText: text,
     contentHtml: html,
     tags: Array.isArray(item?.tags) ? item.tags : [],
-    favorite: !!item?.favorite,
+    favorite: !!(item?.favorite || item?.important),
     imageIds: Array.isArray(item?.imageIds) ? item.imageIds.filter(Boolean) : [],
     images: Array.isArray(item?.images) ? item.images.filter(Boolean) : []
   };
@@ -4832,7 +4854,13 @@ function addCustomTag(){
     return;
   }
 
-  const imageMap = await getImagesByIds(pastedImages);
+  let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(imageIds) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
 
   box.innerHTML = pastedImages.map((id, idx)=>`
     <div class="rounded-2xl overflow-hidden border border-slate-600 bg-white/5">
@@ -5200,7 +5228,7 @@ function addCustomTag(){
       const matchReview = !reviewOnly || (record.tags || []).includes('복습필요');
 
       let matchDate = true;
-      const d = new Date(record.studiedAt);
+      const d = new Date(getRecordStudyDateValue(record));
       if(dateFilter==='today') matchDate = sameDay(d,now);
       if(dateFilter==='week') matchDate = diffDays(now,d) >= 0 && diffDays(now,d) < 7;
       if(dateFilter==='month') matchDate = d.getFullYear()===now.getFullYear() && d.getMonth()===now.getMonth();
@@ -5208,9 +5236,9 @@ function addCustomTag(){
       return matchQuery && matchTag && matchFavorite && matchReview && matchDate;
     });
 
-    if(sortMode==='latest') result.sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
-    if(sortMode==='oldest') result.sort((a,b)=>+new Date(a.studiedAt)-+new Date(b.studiedAt));
-    if(sortMode==='minutes') result.sort((a,b)=>b.minutes-a.minutes);
+    if(sortMode==='latest') result.sort((a,b)=>+new Date(getRecordStudyDateValue(b)) - +new Date(getRecordStudyDateValue(a)));
+    if(sortMode==='oldest') result.sort((a,b)=>+new Date(getRecordStudyDateValue(a)) - +new Date(getRecordStudyDateValue(b)));
+    if(sortMode==='minutes') result.sort((a,b)=>getRecordMinutesValue(b) - getRecordMinutesValue(a));
 
     return result;
   }
@@ -5236,8 +5264,17 @@ function addCustomTag(){
     metaEl.textContent = `${formatDateTime(record.studiedAt)} | ${record.minutes}분`;
     contentEl.innerHTML = record.contentHtml || escapeHtml(record.contentText || '');
 
-    const imageMap = await getImagesByIds(record.imageIds || []);
-    const images = (record.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+    let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(Array.isArray(record.imageIds) ? record.imageIds : []) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
+    const images = (record.imageIds || []).map(id => {
+      const found = imageMap[id];
+      return typeof found === 'string' ? found : (found && found.dataUrl ? found.dataUrl : '');
+    }).filter(Boolean);
     imageEl.innerHTML = images.length
       ? images.map(src => `<img src="${src}" class="record-image zoomable-image" onclick="openImagePreview('${src}')" />`).join('')
       : '';
@@ -5308,7 +5345,10 @@ function addCustomTag(){
     const bodyHtml = record.contentHtml || escapeHtml(text);
     const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
 
-    const images = (record.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+    const images = (record.imageIds || []).map(id => {
+      const found = imageMap[id];
+      return typeof found === 'string' ? found : (found && found.dataUrl ? found.dataUrl : '');
+    }).filter(Boolean);
 
     return `
       <div class="card p-4 query-card" data-record-id="${record.id}" id="queryCard_${record.id}">
@@ -5371,7 +5411,14 @@ function addCustomTag(){
       return;
     }
 
-    const imageMap = await getImagesByIds(Array.isArray(latest.imageIds) ? latest.imageIds : []);
+    const allImageIds = Array.isArray(latest.imageIds) ? latest.imageIds : [];
+    let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(allImageIds) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
     panel.innerHTML = buildRecordCardHtml(latest, imageMap, '');
     currentDaySpeechItems = [latest];
     autoSyncRepeatRange(true);
@@ -5391,7 +5438,13 @@ function addCustomTag(){
   }
 
   const allImageIds = items.flatMap(record => Array.isArray(record.imageIds) ? record.imageIds : []);
-  const imageMap = await getImagesByIds(allImageIds);
+  let imageMap = {};
+  try{
+    imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(allImageIds) : {};
+  }catch(e){
+    console.log('image load fail', e);
+    imageMap = {};
+  }
 
   container.innerHTML = items.map(record => buildRecordCardHtml(record, imageMap, q)).join('');
   autoSyncRepeatRange(true);
@@ -5462,6 +5515,7 @@ function addCustomTag(){
   function renderCalendarHeatmap(){
     const box = document.getElementById('calendarHeatmap');
     const title = document.getElementById('calendarTitle');
+    if(!box || !title) return;
 
     const year = currentCalendarDate.getFullYear();
     const month = currentCalendarDate.getMonth();
@@ -5473,12 +5527,14 @@ function addCustomTag(){
     const labels = ['일','월','화','수','목','금','토'];
 
     const map = {};
-    records.forEach(r=>{
-      const key = getDateKey(r.studiedAt);
-      map[key] = (map[key] || 0) + Number(r.minutes || 0);
+    records.forEach(r => {
+      const raw = getRecordStudyDateValue(r);
+      if(!raw) return;
+      const key = getDateKey(raw);
+      map[key] = (map[key] || 0) + getRecordMinutesValue(r);
     });
 
-    let html = labels.map(day => `<div class="text-xs font-bold text-slate-400 py-1">${day}</div>`).join('');
+    let html = labels.map(day => `<div class="text-xs font-bold text-slate-400 py-1 text-center">${day}</div>`).join('');
     for(let i = 0; i < startDay; i++) html += `<div></div>`;
 
     for(let d = 1; d <= lastDate; d++){
@@ -5492,7 +5548,11 @@ function addCustomTag(){
       else if(mins > 0) cls = 'bg-blue-200 border-blue-200 text-blue-900';
 
       const selectedCls = selectedCalendarDateKey === key ? ' is-selected selected-day' : '';
-      html += `<button type="button" data-date-key="${key}" onclick="selectCalendarDate('${key}')" class="press h-11 rounded-xl border ${cls} font-bold${selectedCls}">${d}</button>`;
+      const minuteText = mins > 0
+        ? `<span style="display:block;font-size:10px;line-height:1.05;margin-top:3px;font-weight:900;">${mins}분</span>`
+        : `<span style="display:block;font-size:10px;line-height:1.05;margin-top:3px;opacity:.35;">-</span>`;
+
+      html += `<button type="button" data-date-key="${key}" onclick="selectCalendarDate('${key}')" class="press h-11 rounded-xl border ${cls} font-bold${selectedCls}" style="display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05;padding:2px 0;"><span>${d}</span>${minuteText}</button>`;
     }
 
     box.innerHTML = html;
@@ -5504,8 +5564,8 @@ function addCustomTag(){
     if(!detail) return;
 
     if(selectedCalendarDateKey){
-      const items = records.filter(r => getDateKey(r.studiedAt) === selectedCalendarDateKey);
-      const total = items.reduce((s, r) => s + Number(r.minutes || 0), 0);
+      const items = records.filter(r => getDateKey(getRecordStudyDateValue(r)) === selectedCalendarDateKey);
+      const total = items.reduce((sum, r) => sum + getRecordMinutesValue(r), 0);
       detail.textContent = `${selectedCalendarDateKey} · 총 ${total}분`;
     }else{
       detail.textContent = '날짜를 누르면 바로 해당 날짜 기록이 열립니다.';
@@ -5517,14 +5577,13 @@ function addCustomTag(){
     renderCalendarHeatmap();
     updateSelectedDayButton();
 
-    const items = records.filter(r => getDateKey(r.studiedAt) === dateKey);
-    const total = items.reduce((s, r) => s + Number(r.minutes || 0), 0);
+    const items = records.filter(r => getDateKey(getRecordStudyDateValue(r)) === dateKey);
+    const total = items.reduce((sum, r) => sum + getRecordMinutesValue(r), 0);
     const detail = document.getElementById('calendarDetail');
     if(detail) detail.textContent = `${dateKey} 선택됨 · 총 ${total}분`;
-    showToast(`${dateKey} 선택됨`);
 
-    await showDayRecords(dateKey);
     openQuerySection(false);
+    await showDayRecords(dateKey);
     closeCalendarSection();
 
     const area = document.getElementById('queryScrollArea');
@@ -5659,14 +5718,14 @@ function addCustomTag(){
   updateSelectedDayButton();
 
   const items = records
-    .filter(r => getDateKey(r.studiedAt) === dateKey)
-    .sort((a,b)=>+new Date(b.studiedAt)-+new Date(a.studiedAt));
+    .filter(r => getDateKey(getRecordStudyDateValue(r)) === dateKey)
+    .sort((a,b)=>+new Date(getRecordStudyDateValue(b)) - +new Date(getRecordStudyDateValue(a)));
 
   currentDaySpeechItems = items.slice();
   autoSyncRepeatRange(true);
   setTimeout(() => autoSyncRepeatRange(true), 0);
 
-  const total = items.reduce((s,r)=>s+Number(r.minutes||0),0);
+  const total = items.reduce((s,r)=>s + getRecordMinutesValue(r),0);
   document.getElementById('calendarDetail').textContent = `${dateKey} · 총 ${total}분`;
 
   const panel = document.getElementById('selectedDayRecords');
@@ -5687,7 +5746,13 @@ function addCustomTag(){
   }
 
   const allImageIds = items.flatMap(item => Array.isArray(item.imageIds) ? item.imageIds : []);
-  const imageMap = await getImagesByIds(allImageIds);
+  let imageMap = {};
+  try{
+    imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(allImageIds) : {};
+  }catch(e){
+    console.log('image load fail', e);
+    imageMap = {};
+  }
 
   panel.innerHTML = `
     <div class="space-y-3">
@@ -5698,12 +5763,15 @@ function addCustomTag(){
         const bodyHtml = item.contentHtml || escapeHtml(text);
         const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
 
-        const images = (item.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+        const images = (item.imageIds || []).map(id => {
+          const found = imageMap[id];
+          return typeof found === 'string' ? found : (found && found.dataUrl ? found.dataUrl : '');
+        }).filter(Boolean);
 
         return `
           <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
             <div class="query-card-body">
-              <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
+              <div class="text-sm text-slate-400">${formatDateTime(getRecordStudyDateValue(item))} | ${getRecordMinutesValue(item)}분</div>
 
               <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">
                 ${bodyHtml}
@@ -5876,7 +5944,13 @@ ${renderTagRailHtml(item)}
     ...(draft.imageIds || [])
   ])];
 
-  const imageMap = await getImagesByIds(imageIds);
+  let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(imageIds) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
 
   const payload = {
     version: 2,
@@ -5977,468 +6051,131 @@ ${renderTagRailHtml(item)}
 
 
   async function exportNotePdf(){
-    if(!records.length){
-      showToast('백업할 기록이 없습니다.');
-      return;
+  try{
+    const originalHtml = document.body.innerHTML;
+    const originalScrollY = window.scrollY || 0;
+
+    document.body.innerHTML = `
+      <div id="pdfPreviewPage" style="min-height:100vh;background:#ffffff;color:#000000;font-family:'Noto Sans KR',sans-serif;padding:16px 14px 80px;box-sizing:border-box;">
+        <div style="position:sticky;top:0;z-index:9999;display:flex;justify-content:flex-end;gap:8px;padding:10px 0 14px;background:#ffffff;">
+          <button id="pdfBackBtn" type="button" style="height:42px;padding:0 14px;border:none;border-radius:10px;background:#475569;color:#ffffff;font-weight:800;">돌아가기</button>
+          <button id="pdfPrintBtn" type="button" style="height:42px;padding:0 14px;border:none;border-radius:10px;background:#2563eb;color:#ffffff;font-weight:800;">PDF 저장</button>
+        </div>
+        <div id="pdfContent" style="max-width:960px;margin:0 auto;">불러오는 중...<div style="margin-top:8px;font-size:13px;color:#64748b;">사진이 많으면 잠시 시간이 걸릴 수 있습니다.</div></div>
+      </div>
+    `;
+
+    const printBtn = document.getElementById('pdfPrintBtn');
+    const backBtn = document.getElementById('pdfBackBtn');
+
+    if(printBtn){
+      printBtn.addEventListener('click', function(){
+        window.print();
+      });
     }
 
-    const printWindow = window.open('', '_blank');
-    if(!printWindow){
-      showToast('팝업이 차단되어 PDF 화면을 열지 못했습니다.');
-      return;
+    if(backBtn){
+      backBtn.addEventListener('click', function(){
+        document.body.innerHTML = originalHtml;
+        try{
+          if(typeof initLeftEditorDrawer === 'function') initLeftEditorDrawer();
+        }catch(_err){}
+        try{
+          if(typeof syncTopRateToBottom === 'function') syncTopRateToBottom();
+        }catch(_err){}
+        try{
+          if(typeof syncInlineCalendarButton === 'function') syncInlineCalendarButton();
+        }catch(_err){}
+        window.scrollTo(0, originalScrollY);
+      });
     }
 
+    const sorted = Array.isArray(records)
+      ? records.slice().sort((a, b) => new Date(b.createdAt || b.updatedAt || b.date || 0) - new Date(a.createdAt || a.updatedAt || a.date || 0))
+      : [];
+
+    const imageIds = [...new Set(
+      sorted.flatMap(r => Array.isArray(r.imageIds) ? r.imageIds : [])
+    )];
+
+    let imageMap = {};
     try{
-      showToast('PDF용 화면을 준비하는 중입니다...');
-
-      const loadingHtml = `<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>학습기록 PDF 백업</title>
-<style>
-  body{
-    margin:0;
-    padding:24px;
-    font-family:"Pretendard","Noto Sans KR",sans-serif;
-    background:#f8fafc;
-    color:#0f172a;
-  }
-  .pdf-loading-wrap{
-    max-width:780px;
-    margin:48px auto;
-    padding:24px;
-    border:1px solid #dbe4f0;
-    border-radius:18px;
-    background:#ffffff;
-  }
-  h1{
-    margin:0 0 10px;
-    font-size:26px;
-    line-height:1.25;
-  }
-  p{
-    margin:0;
-    font-size:15px;
-    color:#475569;
-    line-height:1.7;
-  }
-</style>
-</head>
-<body>
-  <div class="pdf-loading-wrap">
-    <h1>PDF 백업 화면 준비 중</h1>
-    <p>잠시만 기다려 주세요. 준비가 끝나면 상단의 <strong>PDF 저장</strong> 버튼으로 인쇄 화면을 열 수 있습니다.</p>
-  </div>
-</body>
-</html>`;
-
-      printWindow.document.open();
-      printWindow.document.write(loadingHtml);
-      printWindow.document.close();
-
-      const sorted = [...records].sort((a,b)=> new Date(b.studiedAt||0) - new Date(a.studiedAt||0));
-      const allImageIds = [...new Set(sorted.flatMap(r => Array.isArray(r.imageIds) ? r.imageIds : []))];
-      const imageMap = await getImagesByIds(allImageIds);
-
-      const sections = sorted.map((r, idx) => {
-        const content = String(r.contentText || stripHtml(r.contentHtml || '') || '').trim();
-        const tagText = Array.isArray(r.tags) && r.tags.length ? r.tags.join(', ') : '-';
-        const minuteText = Number(r.minutes || 0) > 0 ? `${Number(r.minutes)}분` : '-';
-        const favoriteText = r.favorite ? '중요기록' : '-';
-        const studiedText = formatDateTime(r.studiedAt || r.createdAt || new Date().toISOString());
-        const images = (r.imageIds || []).map(id => imageMap[id]).filter(Boolean);
-        const imageHtml = images.length
-          ? `<div class="pdf-images">${images.map(src => `<img src="${src}" alt="기록 이미지" />`).join('')}</div>`
-          : '<div class="pdf-no-image">사진 없음</div>';
-
-        return `
-          <section class="pdf-record">
-            <div class="pdf-record-head">
-              <div class="pdf-record-title">기록 ${idx + 1}</div>
-              <div class="pdf-record-date">${escapeHtml(studiedText)}</div>
-            </div>
-            <div class="pdf-meta-grid">
-              <div><span>공부시간</span><strong>${escapeHtml(minuteText)}</strong></div>
-              <div><span>태그</span><strong>${escapeHtml(tagText)}</strong></div>
-              <div><span>중요표시</span><strong>${escapeHtml(favoriteText)}</strong></div>
-              <div><span>사진수</span><strong>${images.length}장</strong></div>
-            </div>
-            <div class="pdf-content-block">
-              <div class="pdf-label">내용</div>
-              <div class="pdf-content">${escapeHtml(content || '(내용 없음)').replace(/\n/g, '<br>')}</div>
-            </div>
-            <div class="pdf-content-block">
-              <div class="pdf-label">사진</div>
-              ${imageHtml}
-            </div>
-          </section>
-        `;
-      }).join('');
-
-      const html = `<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>학습기록 PDF 백업</title>
-<style>
-  :root{ color-scheme: light; }
-  *{ box-sizing:border-box; }
-  body{
-    margin:0;
-    padding:24px;
-    font-family:"Pretendard","Noto Sans KR",sans-serif;
-    background:#f3f6fb;
-    color:#111827;
-  }
-  .pdf-wrap{
-    max-width:980px;
-    margin:0 auto;
-  }
-  .pdf-toolbar{
-    position:sticky;
-    top:0;
-    z-index:10;
-    display:flex;
-    justify-content:flex-end;
-    gap:10px;
-    margin-bottom:12px;
-  }
-  .pdf-print-btn{
-    border:0;
-    border-radius:12px;
-    padding:12px 16px;
-    background:#2563eb;
-    color:#ffffff;
-    font-size:14px;
-    font-weight:800;
-    box-shadow:0 10px 22px rgba(37,99,235,.18);
-  }
-  .pdf-cover{
-    background:#ffffff;
-    border:1px solid #dbe4f0;
-    border-radius:20px;
-    padding:24px;
-    margin-bottom:18px;
-  }
-  .pdf-cover h1{
-    margin:0 0 8px;
-    font-size:28px;
-    line-height:1.2;
-  }
-  .pdf-cover p{
-    margin:4px 0;
-    color:#475569;
-    font-size:14px;
-  }
-  .pdf-record{
-    background:#ffffff;
-    border:1px solid #dbe4f0;
-    border-radius:18px;
-    padding:20px;
-    margin-bottom:16px;
-    page-break-inside:avoid;
-    break-inside:avoid;
-  }
-  .pdf-record-head{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    gap:12px;
-    margin-bottom:14px;
-    border-bottom:2px solid #eff4fb;
-    padding-bottom:10px;
-  }
-  .pdf-record-title{
-    font-size:22px;
-    font-weight:800;
-  }
-  .pdf-record-date{
-    font-size:13px;
-    color:#475569;
-    text-align:right;
-  }
-  .pdf-meta-grid{
-    display:grid;
-    grid-template-columns:repeat(2, minmax(0, 1fr));
-    gap:10px;
-    margin-bottom:16px;
-  }
-  .pdf-meta-grid div{
-    border:1px solid #e5edf7;
-    border-radius:12px;
-    padding:10px 12px;
-    background:#f8fbff;
-  }
-  .pdf-meta-grid span{
-    display:block;
-    font-size:12px;
-    color:#64748b;
-    margin-bottom:6px;
-  }
-  .pdf-meta-grid strong{
-    font-size:15px;
-    color:#0f172a;
-  }
-  .pdf-content-block{
-    margin-top:14px;
-  }
-  .pdf-label{
-    font-size:13px;
-    font-weight:700;
-    color:#334155;
-    margin-bottom:8px;
-  }
-  .pdf-content{
-    border:1px solid #e5edf7;
-    border-radius:14px;
-    padding:14px;
-    background:#ffffff;
-    font-size:16px;
-    line-height:1.7;
-    white-space:normal;
-    word-break:keep-all;
-    overflow-wrap:anywhere;
-  }
-  .pdf-images{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-  }
-  .pdf-images img{
-    width:100%;
-    height:auto;
-    display:block;
-    border:1px solid #dbe4f0;
-    border-radius:14px;
-    background:#fff;
-  }
-  .pdf-no-image{
-    border:1px dashed #cbd5e1;
-    border-radius:14px;
-    padding:18px;
-    text-align:center;
-    color:#64748b;
-    background:#f8fafc;
-  }
-  .pdf-guide{
-    margin-bottom:12px;
-    padding:12px 14px;
-    border-radius:14px;
-    background:#0f172a;
-    color:#f8fafc;
-    font-size:13px;
-    line-height:1.5;
-  }
-  @media print{
-    body{ background:#fff; padding:0; }
-    .pdf-wrap{ max-width:none; }
-    .pdf-toolbar, .pdf-guide{ display:none !important; }
-    .pdf-cover, .pdf-record{
-      border:none;
-      border-radius:0;
-      box-shadow:none;
-      margin-bottom:12px;
-    }
-    .pdf-record{ page-break-inside:avoid; break-inside:avoid; }
-  }
-</style>
-</head>
-<body>
-  <div class="pdf-wrap">
-    <div class="pdf-toolbar">
-      <button type="button" class="pdf-print-btn" onclick="window.print()">PDF 저장</button>
-    </div>
-    <div class="pdf-guide">상단의 <strong>PDF 저장</strong> 버튼을 누른 뒤 브라우저 인쇄 화면에서 <strong>PDF로 저장</strong>을 선택하시면 됩니다. 사진 포함 백업용 화면입니다.</div>
-    <section class="pdf-cover">
-      <h1>학습기록 PDF 백업</h1>
-      <p>백업일시: ${escapeHtml(formatDateTime(new Date().toISOString()))}</p>
-      <p>전체 기록 수: ${sorted.length}건</p>
-      <p>사진은 각 기록 아래 함께 배치됩니다.</p>
-    </section>
-    ${sections}
-  </div>
-</body>
-</html>`;
-
-      printWindow.document.open();
-      printWindow.document.write(html);
-      printWindow.document.close();
-      showToast('PDF용 화면을 열었습니다. 새 창 상단의 PDF 저장 버튼을 눌러 주세요.');
-    }catch(err){
-      console.error(err);
-      try{ printWindow.close(); }catch(_err){}
-      showToast('PDF 백업 생성 중 오류가 발생했습니다.');
-    }
-  }
-  async function importJson(event){
-  const file = event.target.files?.[0];
-  if(!file) return;
-
-  const reader = new FileReader();
-
-  reader.onload = async ()=>{
-    try{
-      const parsed = JSON.parse(String(reader.result));
-
-      if(Array.isArray(parsed)){
-        const imported = [];
-
-        for(const item of parsed){
-          const next = {
-            ...item,
-            contentText: item.contentText || stripHtml(item.contentHtml || item.content || ''),
-            contentHtml: item.contentHtml || escapeHtml(item.contentText || item.content || ''),
-            imageIds: normalizeStringList(item.imageIds || []),
-            images: Array.isArray(item.images) ? item.images.filter(Boolean) : [],
-            tags: Array.isArray(item.tags) ? item.tags : [],
-            favorite: !!item.favorite
-          };
-
-          if(!next.imageIds.length && next.images.length){
-            const newIds = [];
-
-            for(const src of next.images){
-              if(typeof src === 'string' && src.startsWith('data:image/')){
-                const id = imageUid();
-                await putImageRecord(id, src);
-                newIds.push(id);
-              }
-            }
-
-            next.imageIds = newIds;
-          }
-
-          next.images = [];
-          imported.push(next);
-        }
-
-        records = imported;
-        trash = [];
-      }else{
-        records = [];
-        trash = [];
-
-        if(Array.isArray(parsed.records)){
-          for(const item of parsed.records){
-            const next = {
-              ...item,
-              contentText: item.contentText || stripHtml(item.contentHtml || item.content || ''),
-              contentHtml: item.contentHtml || escapeHtml(item.contentText || item.content || ''),
-              imageIds: normalizeStringList(item.imageIds || []),
-              images: Array.isArray(item.images) ? item.images.filter(Boolean) : [],
-              tags: Array.isArray(item.tags) ? item.tags : [],
-              favorite: !!item.favorite
-            };
-
-            if(!next.imageIds.length && next.images.length){
-              const newIds = [];
-
-              for(const src of next.images){
-                if(typeof src === 'string' && src.startsWith('data:image/')){
-                  const id = imageUid();
-                  await putImageRecord(id, src);
-                  newIds.push(id);
-                }
-              }
-
-              next.imageIds = newIds;
-            }
-
-            next.images = [];
-            records.push(next);
-          }
-        }
-
-        if(Array.isArray(parsed.trash)){
-          for(const item of parsed.trash){
-            const next = {
-              ...item,
-              contentText: item.contentText || stripHtml(item.contentHtml || item.content || ''),
-              contentHtml: item.contentHtml || escapeHtml(item.contentText || item.content || ''),
-              imageIds: normalizeStringList(item.imageIds || []),
-              images: Array.isArray(item.images) ? item.images.filter(Boolean) : [],
-              tags: Array.isArray(item.tags) ? item.tags : [],
-              favorite: !!item.favorite
-            };
-
-            if(!next.imageIds.length && next.images.length){
-              const newIds = [];
-
-              for(const src of next.images){
-                if(typeof src === 'string' && src.startsWith('data:image/')){
-                  const id = imageUid();
-                  await putImageRecord(id, src);
-                  newIds.push(id);
-                }
-              }
-
-              next.imageIds = newIds;
-            }
-
-            next.images = [];
-            trash.push(next);
-          }
-        }
-
-        if(Number.isFinite(Number(parsed.goalMinutes))){
-          saveGoal(Number(parsed.goalMinutes));
-        }
-
-        if(Array.isArray(parsed.tags)){
-          saveTagMaster(parsed.tags);
-        }
-
-        if(Array.isArray(parsed.symbols)){
-          saveSymbolMaster(parsed.symbols);
-        }
-
-        if(parsed.draft && typeof parsed.draft === 'object'){
-          draft = {
-            minutes: parsed.draft.minutes || '10',
-            contentHtml: parsed.draft.contentHtml || '',
-            contentText: parsed.draft.contentText || '',
-            tags: Array.isArray(parsed.draft.tags) ? parsed.draft.tags : [],
-            studiedAt: parsed.draft.studiedAt || getLocalDateTimeValue(),
-            customTag: parsed.draft.customTag || '',
-            customSymbol: parsed.draft.customSymbol || '',
-            textColor: parsed.draft.textColor || '#edf3fb',
-            imageIds: normalizeStringList(parsed.draft.imageIds || [])
-          };
-          saveDraft();
-          pastedImages = [...draft.imageIds];
-        }
-
-        if(Array.isArray(parsed.images)){
-          for(const img of parsed.images){
-            if(img && img.id && img.dataUrl){
-              try{
-                await putImageRecord(img.id, img.dataUrl);
-              }catch(e){}
-            }
-          }
-        }
-      }
-
-      saveRecords();
-      saveTrash();
-      renderTagButtons();
-      await syncFormFromDraft();
-      await renderRecords();
-      renderStats();
-      renderQuickInsights();
-      showToast('백업 파일을 불러왔습니다.');
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(imageIds) : {};
     }catch(e){
-      console.error(e);
-      showToast('불러오기 형식이 올바르지 않습니다.');
-    }finally{
-      document.getElementById('importFile').value = '';
+      console.log('image load fail', e);
+      imageMap = {};
     }
-  };
 
-  reader.readAsText(file,'utf-8');
+    const safeHtml = (value) => {
+      const div = document.createElement('div');
+      div.textContent = value == null ? '' : String(value);
+      return div.innerHTML;
+    };
+
+    const toTextContent = (record) => {
+      if(record && typeof record.contentText === 'string' && record.contentText.trim()){
+        return record.contentText;
+      }
+      if(record && typeof record.content === 'string' && record.content.trim()){
+        return record.content;
+      }
+      if(record && typeof record.contentHtml === 'string' && record.contentHtml.trim()){
+        const div = document.createElement('div');
+        div.innerHTML = record.contentHtml;
+        return div.textContent || div.innerText || '';
+      }
+      return '';
+    };
+
+    const toDateText = (record) => {
+      const raw = record?.createdAt || record?.updatedAt || record?.date || '';
+      try{
+        if(typeof formatDateTime === 'function') return formatDateTime(raw);
+      }catch(_err){}
+      return raw || '';
+    };
+
+    const sections = sorted.map((record, idx) => {
+      const text = safeHtml(toTextContent(record));
+      const tags = Array.isArray(record?.tags) && record.tags.length
+        ? `<div style="margin-top:8px;font-size:12px;color:#475569;">태그: ${safeHtml(record.tags.join(', '))}</div>`
+        : '';
+      const minutes = record?.studyMinutes ? `<span style="margin-left:8px;color:#334155;">공부시간 ${safeHtml(record.studyMinutes)}분</span>` : '';
+      const important = record?.important ? `<span style="margin-left:8px;color:#b45309;font-weight:700;">중요</span>` : '';
+      const imgs = (Array.isArray(record?.imageIds) ? record.imageIds : []).map(id => {
+        const img = imageMap ? imageMap[id] : null;
+        const src = typeof img === 'string' ? img : (img && img.dataUrl ? img.dataUrl : '');
+        if(src){
+          return `<img src="${src}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">`;
+        }
+        return '';
+      }).join('')
+      || (Array.isArray(record?.images) ? record.images.map(src => {
+          const safeSrc = typeof src === 'string' ? src : (src && src.dataUrl ? src.dataUrl : '');
+          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">` : '';
+        }).join('') : '')
+      || (Array.isArray(record?.imageDataUrls) ? record.imageDataUrls.map(src => {
+          const safeSrc = typeof src === 'string' ? src : (src && src.dataUrl ? src.dataUrl : '');
+          return safeSrc ? `<img src="${safeSrc}" style="display:block;max-width:100%;height:auto;margin-top:10px;border-radius:10px;border:1px solid #dbe2ea;">` : '';
+        }).join('') : '');
+
+      return `
+        <section style="margin:0 0 18px 0;padding:0 0 18px 0;border-bottom:1px solid #dbe2ea;page-break-inside:avoid;">
+          <div style="font-size:17px;font-weight:800;color:#0f172a;">${safeHtml(toDateText(record) || `기록 ${idx + 1}`)}${minutes}${important}</div>
+          ${tags}
+          <div style="margin-top:10px;white-space:pre-wrap;line-height:1.6;font-size:15px;color:#111827;">${text || '(내용 없음)'}</div>
+          ${imgs}
+        </section>
+      `;
+    }).join('');
+
+    const pdfContent = document.getElementById('pdfContent');
+    if(pdfContent){
+      pdfContent.innerHTML = sections || '<div style="padding:24px 0;color:#475569;">저장된 기록이 없습니다.</div>';
+    }
+  }catch(err){
+    alert('PDF 화면 생성 중 오류가 발생했습니다: ' + (err && err.message ? err.message : err));
+  }
 }
 
   
@@ -6800,7 +6537,13 @@ async function renderSpeechRangeView(items){
     const title = document.getElementById('queryTitle');
     const list = Array.isArray(items) ? items : [];
     const allImageIds = list.flatMap(item => Array.isArray(item.imageIds) ? item.imageIds : []);
-    const imageMap = await getImagesByIds(allImageIds);
+    let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(imageIds) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
     title.textContent = list.length ? `${list.length}건 선택 읽기` : '선택 읽기';
     recent.classList.add('hidden');
     panel.classList.remove('hidden');
@@ -6811,11 +6554,14 @@ async function renderSpeechRangeView(items){
           const isLong = text.length > PREVIEW_LENGTH;
           const bodyHtml = item.contentHtml || escapeHtml(text);
           const bodyClass = !isExpanded && isLong ? 'record-preview collapsed' : 'record-preview';
-          const images = (item.imageIds || []).map(id => imageMap[id]).filter(Boolean);
+          const images = (item.imageIds || []).map(id => {
+          const found = imageMap[id];
+          return typeof found === 'string' ? found : (found && found.dataUrl ? found.dataUrl : '');
+        }).filter(Boolean);
           return `
             <div class="card p-4 query-card" data-record-id="${item.id}" id="queryCard_${item.id}">
               <div class="query-card-body">
-                <div class="text-sm text-slate-400">${formatDateTime(item.studiedAt)} | ${item.minutes}분</div>
+                <div class="text-sm text-slate-400">${formatDateTime(getRecordStudyDateValue(item))} | ${getRecordMinutesValue(item)}분</div>
 
                 <div class="text-xl font-black leading-[1.6] break-words ${bodyClass}" id="recordPreview_${item.id}">
                   ${bodyHtml}
@@ -6879,7 +6625,13 @@ async function renderSpeechRangeView(items){
   }
 
   const allImageIds = list.flatMap(record => Array.isArray(record.imageIds) ? record.imageIds : []);
-  const imageMap = await getImagesByIds(allImageIds);
+  let imageMap = {};
+    try{
+      imageMap = typeof getImagesByIds === 'function' ? await getImagesByIds(imageIds) : {};
+    }catch(e){
+      console.log('image load fail', e);
+      imageMap = {};
+    }
   const q = document.getElementById('searchInput')?.value?.trim?.() || '';
   container.innerHTML = list.map(record => buildRecordCardHtml(record, imageMap, q)).join('');
   autoSyncRepeatRange(true);
@@ -10564,6 +10316,91 @@ body.reader-bar-folded #queryScrollArea{
     max-height:88vh !important;
     min-height:70vh !important;
   }
+}
+</style>
+
+
+<style id="oai-reader-fold-strong-fix">
+body.reader-bar-folded{
+  padding-bottom: 18px !important;
+}
+body.reader-bar-folded #bottomPlayerBar{
+  transform: translateY(calc(100% - 18px - env(safe-area-inset-bottom, 0px))) !important;
+  opacity: 1 !important;
+  max-height: 18px !important;
+  overflow: visible !important;
+}
+body.reader-bar-folded #bottomPlayerBar > *:not(#readerTopFoldBar){
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+body.reader-bar-folded #readerTopFoldBar{
+  top: -18px !important;
+  right: 12px !important;
+}
+body.reader-bar-folded #queryScrollArea{
+  max-height: 90vh !important;
+  min-height: 72vh !important;
+}
+@media (orientation: portrait){
+  body.reader-bar-folded #queryScrollArea{
+    max-height: 91vh !important;
+    min-height: 74vh !important;
+  }
+}
+</style>
+
+
+<script id="oai-reader-fold-label-fix">
+(function(){
+  function syncReaderFoldLabel(){
+    var bar = document.getElementById('readerTopFoldBar');
+    if(!bar) return;
+    var folded = document.body.classList.contains('reader-bar-folded');
+    bar.innerHTML = folded ? '펼치기 <span class="caret">⌃</span>' : '읽기창 <span class="caret">⌄</span>';
+    bar.setAttribute('aria-label', folded ? '읽기창 펼치기' : '읽기창 접기');
+  }
+
+  document.addEventListener('click', function(e){
+    var bar = document.getElementById('readerTopFoldBar');
+    if(bar && (e.target === bar || bar.contains(e.target))){
+      setTimeout(syncReaderFoldLabel, 0);
+    }
+  });
+
+  window.addEventListener('load', function(){
+    setTimeout(syncReaderFoldLabel, 60);
+  });
+})();
+</script>
+
+
+<style id="oai-calendar-fix">
+#calendarHeatmap{
+  align-items:stretch !important;
+}
+#calendarHeatmap button{
+  min-height:58px !important;
+  height:58px !important;
+}
+#calendarHeatmap button.is-selected{
+  outline:2px solid rgba(255,255,255,.95) !important;
+  outline-offset:-2px !important;
+}
+</style>
+
+
+<style id="oai-calendar-second-fix">
+#calendarHeatmap{
+  align-items:stretch !important;
+}
+#calendarHeatmap button{
+  min-height:58px !important;
+  height:58px !important;
+}
+#calendarHeatmap button.is-selected{
+  outline:2px solid rgba(255,255,255,.95) !important;
+  outline-offset:-2px !important;
 }
 </style>
 
