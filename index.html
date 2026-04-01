@@ -10067,6 +10067,158 @@ window.addEventListener('load', function(){
   window.addEventListener('load', bindManageControls);
 })();
 </script>
+
+<style id="oai-landscape-bottom-gap-fix">
+@media (orientation: landscape) {
+  body {
+    padding-bottom: 76px !important;
+  }
+
+  .bottom-player-bar {
+    padding: 6px 10px calc(env(safe-area-inset-bottom, 0px) + 6px) !important;
+    border-radius: 16px 16px 0 0 !important;
+  }
+
+  .bottom-player-top {
+    gap: 6px !important;
+  }
+
+  .bottom-player-btn {
+    min-width: 72px !important;
+    height: 36px !important;
+    padding: 0 10px !important;
+    border-radius: 10px !important;
+    font-size: 12px !important;
+  }
+
+  .bottom-player-btn .btn-icon {
+    font-size: 14px !important;
+    margin-right: 5px !important;
+  }
+
+  #readerTopFoldBar {
+    top: -18px !important;
+    width: 66px !important;
+    height: 18px !important;
+    font-size: 10px !important;
+    border-radius: 9px 9px 0 0 !important;
+  }
+
+  body.reader-bar-folded #bottomPlayerBar {
+    transform: translateY(calc(100% - 18px - env(safe-area-inset-bottom, 0px))) !important;
+  }
+
+  #queryScrollArea {
+    max-height: 62vh !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    padding-bottom: 64px !important;
+  }
+
+  .bottom-player-bar {
+    padding: 4px 8px calc(env(safe-area-inset-bottom, 0px) + 4px) !important;
+  }
+
+  .bottom-player-btn {
+    min-width: 66px !important;
+    height: 34px !important;
+    font-size: 11px !important;
+  }
+
+  #queryScrollArea {
+    max-height: 66vh !important;
+  }
+}
+</style>
+
+
+<style id="oai-query-display-90pct">
+/* 조회 내용 표시 영역 확대 */
+#querySection{
+  padding-top:12px !important;
+  padding-bottom:12px !important;
+}
+
+#queryScrollArea{
+  max-height:82vh !important;
+  min-height:62vh !important;
+  padding-bottom:6px !important;
+}
+
+.query-card{
+  margin-bottom:8px !important;
+}
+
+.query-card .card,
+#recordList .query-card .card,
+#selectedDayRecords .query-card .card{
+  padding:12px !important;
+}
+
+.record-preview,
+.content-preview,
+.detail-content-preview,
+.detail-content{
+  line-height:1.5 !important;
+}
+
+body.reader-bar-folded #queryScrollArea{
+  max-height:88vh !important;
+  min-height:68vh !important;
+}
+
+@media (orientation: portrait){
+  #querySection{
+    padding:10px !important;
+  }
+
+  #queryScrollArea{
+    max-height:84vh !important;
+    min-height:66vh !important;
+  }
+
+  body.reader-bar-folded #queryScrollArea{
+    max-height:90vh !important;
+    min-height:72vh !important;
+  }
+}
+
+@media (orientation: landscape){
+  body{
+    padding-bottom:calc(env(safe-area-inset-bottom, 0px) + 10px) !important;
+  }
+
+  #querySection{
+    padding:10px !important;
+  }
+
+  #queryScrollArea{
+    max-height:78vh !important;
+    min-height:60vh !important;
+  }
+
+  body.reader-bar-folded #queryScrollArea{
+    max-height:86vh !important;
+    min-height:68vh !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px){
+  #queryScrollArea{
+    max-height:80vh !important;
+    min-height:62vh !important;
+  }
+
+  body.reader-bar-folded #queryScrollArea{
+    max-height:88vh !important;
+    min-height:70vh !important;
+  }
+}
+</style>
+
 </body>
   </html>
   
@@ -11112,3 +11264,207 @@ window.addEventListener('load', function(){
   window.addEventListener('resize', refreshExpandButtonHighlight);
 })();
 </script>
+
+
+<style id="oai-landscape-patch">
+@media (orientation: landscape) {
+  html, body {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden !important;
+  }
+
+  body {
+    padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 20px) !important;
+  }
+
+  .sticky-nav {
+    top: 6px !important;
+  }
+
+  .sticky-nav.card,
+  #querySection,
+  #calendarSection,
+  #filterSection,
+  #goalSection,
+  #chartSection,
+  #tagChartSection,
+  #backupSection,
+  .paste-box,
+  .editor-box,
+  .card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .query-card,
+  #recordList .query-card,
+  #selectedDayRecords .query-card,
+  #recordList .query-card > div,
+  #selectedDayRecords .query-card > div,
+  #recordList .query-card .card,
+  #selectedDayRecords .query-card .card {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .query-card-body,
+  .record-preview,
+  .detail-content-preview,
+  .content-preview,
+  .detail-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    word-break: keep-all !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .detail-content,
+  .record-content,
+  .record-preview,
+  .content-preview {
+    font-size: clamp(16px, 2.2vw, 22px) !important;
+    line-height: 1.58 !important;
+  }
+
+  .detail-sheet {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-height: 100vh !important;
+  }
+
+  img,
+  .record-image,
+  .query-card img,
+  .paste-thumb {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .query-actions,
+  .top-input-row,
+  .minute-toggle-bar,
+  .stat-strip,
+  .color-palette,
+  #quickMinuteButtons,
+  #specialButtons,
+  #tagButtons {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .query-actions::-webkit-scrollbar,
+  .top-input-row::-webkit-scrollbar,
+  .minute-toggle-bar::-webkit-scrollbar,
+  .stat-strip::-webkit-scrollbar,
+  .color-palette::-webkit-scrollbar,
+  #quickMinuteButtons::-webkit-scrollbar,
+  #specialButtons::-webkit-scrollbar,
+  #tagButtons::-webkit-scrollbar {
+    display: none;
+  }
+
+  .query-view-switch {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+
+  .speech-repeat-bar,
+  .record-actions,
+  .calendar-action-row,
+  .calendar-action-bar,
+  .query-topbar,
+  .query-header-row {
+    flex-wrap: wrap !important;
+  }
+
+  .editor-tools-drawer {
+    top: 64px !important;
+    height: calc(100vh - 128px) !important;
+    max-height: calc(100vh - 128px) !important;
+  }
+
+  #queryScrollArea {
+    max-height: 54vh !important;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  body {
+    padding-top: 8px !important;
+  }
+
+  .action-chip,
+  .minute-toggle-btn,
+  .nav-minute-btn,
+  .record-pill-btn,
+  .calendar-action-btn,
+  .backup-btn,
+  .speak-btn,
+  .repeat-mini-trigger,
+  .speech-rate-step,
+  .record-icon-btn,
+  .query-close-btn,
+  .photo-half-btn,
+  .inline-add-row button,
+  #saveBtn,
+  #goalSection button {
+    min-height: 38px !important;
+    height: 38px !important;
+    font-size: 12px !important;
+  }
+
+  .top-minute-input,
+  input,
+  select,
+  .speech-rate-select,
+  .speech-repeat-input {
+    min-height: 38px !important;
+    height: 38px !important;
+  }
+
+  .detail-head,
+  .detail-body,
+  #querySection,
+  #calendarSection,
+  #filterSection,
+  #goalSection,
+  #chartSection,
+  #tagChartSection,
+  #backupSection,
+  .paste-box,
+  .editor-box {
+    padding-top: 12px !important;
+    padding-bottom: 12px !important;
+  }
+
+  .editor-tools-drawer {
+    top: 56px !important;
+    height: calc(100vh - 112px) !important;
+    max-height: calc(100vh - 112px) !important;
+  }
+
+  #queryScrollArea {
+    max-height: 50vh !important;
+  }
+}
+</style>
+<script id="oai-landscape-flag">
+(function(){
+  function applyLandscapeFlag(){
+    var isLandscape = window.innerWidth > window.innerHeight;
+    document.documentElement.classList.toggle('oai-landscape', isLandscape);
+    document.body && document.body.classList.toggle('oai-landscape', isLandscape);
+  }
+  window.addEventListener('resize', applyLandscapeFlag);
+  window.addEventListener('orientationchange', applyLandscapeFlag);
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', applyLandscapeFlag, { once:true });
+  }else{
+    applyLandscapeFlag();
+  }
+  window.addEventListener('load', applyLandscapeFlag);
+})();
+</script>
+
