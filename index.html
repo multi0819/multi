@@ -7898,7 +7898,7 @@ body.reader-bar-folded #queryScrollArea{
       .replace(/(\d)\.(\d)/g, '$1∯$2');
 
     return protectedText
-      .split(/(?<=[.!?。,]|다\.|요\.|니다\.|입니다\.|했다\.|됨\.|함\.)/)
+      .split(/(?<=[.!?。,]|다\.|요\.|니다\.|입니다\.|인데\.|했다\.|됨\.|함\.)/)
       .map(v => v.replace(/∯/g, '.').trim())
       .filter(Boolean);
   }
@@ -7935,13 +7935,12 @@ body.reader-bar-folded #queryScrollArea{
          .replace(/bar/gi, ' 바 ')
          .replace(/rpm/gi, ' 알피엠 ')
          .replace(/Hz/gi, ' 헤르츠 ')
-         .replace(/V\b/g, ' 볼트 ')
-         .replace(/A\b/g, ' 암페어 ')
+         
          .replace(/Ω/g, ' 오메가 ')
          .replace(/ohm/gi, ' 옴 ')
          .replace(/℃/g, ' 도씨 ')
          .replace(/°C/g, ' 도씨 ')
-         .replace(/K\b/g, ' 켈빈 ')
+         
          .replace(/=/g, ' 는 ')
          .replace(/%/g, ' 퍼센트 ');
 
