@@ -8149,6 +8149,13 @@ body.reader-bar-folded #queryScrollArea{
   }
   window.setCurrentSpeechDisplay = setCurrentSpeechDisplay;
 
+  function getOffsetTopWithinAncestor(element, ancestor){
+    if(!element || !ancestor) return 0;
+    const elementRect = element.getBoundingClientRect();
+    const ancestorRect = ancestor.getBoundingClientRect();
+    return (elementRect.top - ancestorRect.top) + ancestor.scrollTop;
+  }
+
   function setReadingCardState(activeId){
     const scroller = $('queryScrollArea');
     const cards = document.querySelectorAll('#recordList .query-card, #selectedDayRecords .query-card');
@@ -8162,16 +8169,42 @@ body.reader-bar-folded #queryScrollArea{
 
     if(!scroller || !activeCard) return;
 
-    const scrollerRect = scroller.getBoundingClientRect();
-    const cardRect = activeCard.getBoundingClientRect();
     const topMargin = 10;
-    const desiredTop = scrollerRect.top + topMargin;
-    const delta = cardRect.top - desiredTop;
-
-    if(Math.abs(delta) < 4) return;
-
+    const cardTop = getOffsetTopWithinAncestor(activeCard, scroller);
     const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
-    const nextTop = Math.max(0, Math.min(maxScroll, scroller.scrollTop + delta));
+    const nextTop = Math.max(0, Math.min(maxScroll, cardTop - topMargin));
+
+    if(Math.abs(scroller.scrollTop - nextTop) < 4) return;
+    scroller.scrollTop = nextTop;
+  }
+
+  function autoScrollReadingCard(activeId, partIndex, partCount, options = {}){
+    const scroller = $('queryScrollArea');
+    const activeCard = document.getElementById(`queryCard_${activeId}`);
+    if(!scroller || !activeCard) return;
+
+    const topMargin = 10;
+    const forceStart = !!options.forceStart;
+    const behavior = options.behavior || 'smooth';
+    const cardTop = getOffsetTopWithinAncestor(activeCard, scroller);
+    const visibleHeight = Math.max(0, scroller.clientHeight - 20);
+    const overflow = Math.max(0, activeCard.offsetHeight - visibleHeight);
+    const safeCount = Math.max(1, Number(partCount || 1));
+    const safeIndex = Math.max(0, Number(partIndex || 0));
+    const progress = safeCount <= 1 ? 0 : Math.min(1, safeIndex / (safeCount - 1));
+    const desiredTop = forceStart || overflow <= 0
+      ? cardTop - topMargin
+      : (cardTop - topMargin) + (overflow * progress);
+    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    const nextTop = Math.max(0, Math.min(maxScroll, desiredTop));
+
+    if(Math.abs(scroller.scrollTop - nextTop) < 6) return;
+
+    if(behavior === 'smooth' && typeof scroller.scrollTo === 'function'){
+      scroller.scrollTo({ top: nextTop, behavior: 'smooth' });
+      return;
+    }
+
     scroller.scrollTop = nextTop;
   }
 
@@ -8223,7 +8256,8 @@ body.reader-bar-folded #queryScrollArea{
       return;
     }
 
-    const cardChanged = currentSpeechRecordId !== item.id;
+    const previousCardId = currentSpeechRecordId;
+    const cardChanged = previousCardId !== item.id;
     currentSpeechRecordId = item.id;
 
     if(cardChanged){
@@ -8241,14 +8275,18 @@ body.reader-bar-folded #queryScrollArea{
             previewEl.innerHTML = sourceRecord.contentHtml || escapeHtml(sourceRecord.contentText || '');
             metaLine.insertAdjacentElement('afterend', previewEl);
           }
-          const toggleBtn = [...currentCard.querySelectorAll('.record-actions-left .record-pill-btn')]
-            .find(btn => /표시|숨기기/.test((btn.textContent || '').trim()));
-          if(toggleBtn) toggleBtn.textContent = '숨기기';
         }
+        const toggleBtn = [...currentCard.querySelectorAll('.record-actions-left .record-pill-btn')]
+          .find(btn => /표시|숨기기/.test((btn.textContent || '').trim()));
+        if(toggleBtn) toggleBtn.textContent = '숨기기';
       }
       setReadingCardState(item.id);
+      autoScrollReadingCard(item.id, 0, item.parts.length, { forceStart:true, behavior:'smooth' });
       lastReaderScrollCardId = item.id;
       lastReaderPartIndex = 0;
+    }else if(lastReaderScrollCardId === item.id && lastReaderPartIndex !== speechPartIndex){
+      autoScrollReadingCard(item.id, speechPartIndex, item.parts.length, { behavior:'smooth' });
+      lastReaderPartIndex = speechPartIndex;
     }
 
     const currentPartText = item.parts[speechPartIndex] || item.text || '';
@@ -8256,7 +8294,10 @@ body.reader-bar-folded #queryScrollArea{
     updateBottomPlayerState(true);
     updateBottomPlayerProgress(speechIndex + 1, speechQueueItems.length);
 
-    const spokenText = normalizeSpeechText(currentPartText);
+    let spokenText = normalizeSpeechText(currentPartText);
+    if(cardChanged && previousCardId){
+      spokenText = `다음카드. ${spokenText}`;
+    }
 
     speakWithPause(
       spokenText,
