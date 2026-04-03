@@ -7942,6 +7942,7 @@ body.reader-bar-folded #queryScrollArea{
          .replace(/℃/g, ' 도씨 ')
          .replace(/°C/g, ' 도씨 ')
          .replace(/K\b/g, ' 켈빈 ')
+         .replace(/=/g, ' 는 ')
          .replace(/%/g, ' 퍼센트 ');
 
     t = t.replace(/①/g, ' 일번. ')
@@ -8277,7 +8278,7 @@ body.reader-bar-folded #queryScrollArea{
           }
         }
         const toggleBtn = [...currentCard.querySelectorAll('.record-actions-left .record-pill-btn')]
-          .find(btn => /표시|숨기기/.test((btn.textContent || '').trim()));
+          .find(btn => /togglePreview\(/.test(btn.getAttribute('onclick') || ''));
         if(toggleBtn) toggleBtn.textContent = '숨기기';
       }
       setReadingCardState(item.id);
