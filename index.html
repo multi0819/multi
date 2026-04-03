@@ -2491,6 +2491,109 @@ body.player-reading .bottom-player-btn.play{
   .bg-clip-text{-webkit-background-clip:text !important;background-clip:text !important;}
   .bg-gradient-to-b{background-image:linear-gradient(to bottom,var(--tw-gradient-stops)) !important;}
 
+
+/* repeat wheel */
+.repeat-wheel-box{ position:relative; align-items:center; }
+.repeat-wheel-trigger{
+  position:relative;
+  width:66px;
+  min-width:66px;
+  height:40px;
+  padding:0 18px 0 10px !important;
+  text-align:center;
+  font-weight:900 !important;
+  border-radius:14px !important;
+}
+.repeat-wheel-trigger::after{
+  content:'▾';
+  position:absolute;
+  right:7px;
+  top:50%;
+  transform:translateY(-48%);
+  font-size:10px;
+  color:#b7c8e8;
+}
+.repeat-wheel-panel{
+  position:absolute;
+  left:0;
+  top:calc(100% + 4px);
+  transform:none;
+  width:86px;
+  padding:4px;
+  border-radius:14px;
+  background:linear-gradient(180deg, rgba(13,20,34,.99), rgba(8,14,25,.995));
+  border:1px solid rgba(255,255,255,.12);
+  box-shadow:0 10px 22px rgba(0,0,0,.26);
+  z-index:180;
+}
+.repeat-wheel-head{ display:none; }
+.repeat-wheel-close{ display:none; }
+.repeat-wheel-wrap{
+  position:relative;
+  height:98px;
+  border-radius:11px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.07);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02)),
+    linear-gradient(180deg, rgba(7,13,24,.90), rgba(11,17,29,.96));
+}
+.repeat-wheel-wrap::before,
+.repeat-wheel-wrap::after{
+  content:'';
+  position:absolute;
+  left:0;
+  right:0;
+  height:18px;
+  z-index:2;
+  pointer-events:none;
+}
+.repeat-wheel-wrap::before{
+  top:0;
+  background:linear-gradient(180deg, rgba(11,17,29,.95), rgba(11,17,29,0));
+}
+.repeat-wheel-wrap::after{
+  bottom:0;
+  background:linear-gradient(0deg, rgba(11,17,29,.95), rgba(11,17,29,0));
+}
+.repeat-wheel-highlight{ display:none; }
+.repeat-wheel-list{
+  position:absolute;
+  inset:0;
+  overflow-y:auto;
+  scroll-snap-type:y mandatory;
+  -webkit-overflow-scrolling:touch;
+  padding:32px 0;
+  scrollbar-width:none;
+}
+.repeat-wheel-list::-webkit-scrollbar{ display:none; }
+.repeat-wheel-item{
+  width:54px;
+  margin:0 auto;
+  height:34px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  scroll-snap-align:center;
+  color:#b7c8e8;
+  opacity:.95;
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:-0.02em;
+  border-radius:10px;
+  transition:transform .12s ease, opacity .12s ease, color .12s ease, background .12s ease;
+}
+.repeat-wheel-item.is-active{
+  color:#ffffff;
+  opacity:1;
+  font-size:23px;
+  font-weight:900;
+  text-shadow:0 0 10px rgba(255,255,255,.18);
+  background:linear-gradient(180deg, rgba(58,111,214,.32), rgba(41,88,175,.24));
+  border:1px solid rgba(120,170,255,.42);
+  transform:scale(1.01);
+}
+
 </style>
 <style id="tag-rail-real-visible">
 .tag-rail{
@@ -4499,9 +4602,12 @@ body.reader-bar-folded #queryScrollArea{
   min-width:0;
 }
 .compact-selector-mode-select{
-  flex:0 0 56px;
-  width:56px;
-  min-width:56px;
+  display:none !important;
+}
+.compact-selector-mode-cycle{
+  flex:0 0 64px;
+  width:64px;
+  min-width:64px;
   height:32px;
   border-radius:10px;
   padding:0 8px;
@@ -4510,6 +4616,14 @@ body.reader-bar-folded #queryScrollArea{
   background:#315ea8 !important;
   color:#fff !important;
   border:1px solid rgba(130,170,255,.34) !important;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  white-space:nowrap;
+  letter-spacing:-0.03em;
+}
+.compact-selector-mode-cycle:active{
+  transform:scale(.98);
 }
 .compact-selector-body--singleline{
   flex:1 1 auto;
@@ -4962,7 +5076,7 @@ body.reader-bar-folded #queryScrollArea{
 
   <div class="card p-2 sticky-nav overflow-x-auto">
     <div class="flex gap-1 min-w-max text-sm font-bold items-center">
-      <button id="toggleCalendarBtn" class="press action-chip calendar-nav-btn" onclick="toggleCalendarSection()">달력</button>
+      <button id="toggleCalendarBtn" class="press action-chip calendar-nav-btn" onclick="openCalendarFocus()">달력</button>
       <button id="toggleFilterBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('filterSection', 'toggleFilterBtn')">검색</button>
       <button id="toggleChartBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('chartSection', 'toggleChartBtn')">추이</button>
       <button id="toggleTagBtn" class="press action-chip nav-toggle-btn" onclick="togglePanelSection('tagChartSection', 'toggleTagBtn')">통계</button>
@@ -4986,6 +5100,7 @@ body.reader-bar-folded #queryScrollArea{
     
     <div class="compact-selector-card compact-selector-card--singleline">
       <div class="compact-selector-row">
+        <button type="button" id="compactSelectorModeBtn" class="compact-selector-mode-cycle" onclick="cycleCompactSelectorMode()" aria-label="선택 종류 순환">기호</button>
         <select id="compactSelectorMode" class="compact-selector-mode-select" aria-label="선택 종류">
           <option value="specialButtons">기호</option>
           <option value="tagButtons">태그</option>
@@ -5003,9 +5118,14 @@ body.reader-bar-folded #queryScrollArea{
             <div class="compact-selector-rail compact-color-rail color-palette" id="colorPalette">
               <button type="button" class="color-dot active" data-color="#edf3fb" style="background:#edf3fb" onclick="applyEditorColor('#edf3fb')"></button>
               <button type="button" class="color-dot" data-color="#93c5fd" style="background:#93c5fd" onclick="applyEditorColor('#93c5fd')"></button>
+              <button type="button" class="color-dot" data-color="#67e8f9" style="background:#67e8f9" onclick="applyEditorColor('#67e8f9')"></button>
               <button type="button" class="color-dot" data-color="#86efac" style="background:#86efac" onclick="applyEditorColor('#86efac')"></button>
+              <button type="button" class="color-dot" data-color="#bef264" style="background:#bef264" onclick="applyEditorColor('#bef264')"></button>
               <button type="button" class="color-dot" data-color="#fde68a" style="background:#fde68a" onclick="applyEditorColor('#fde68a')"></button>
+              <button type="button" class="color-dot" data-color="#fb923c" style="background:#fb923c" onclick="applyEditorColor('#fb923c')"></button>
+              <button type="button" class="color-dot" data-color="#f87171" style="background:#f87171" onclick="applyEditorColor('#f87171')"></button>
               <button type="button" class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4" onclick="applyEditorColor('#f9a8d4')"></button>
+              <button type="button" class="color-dot" data-color="#c084fc" style="background:#c084fc" onclick="applyEditorColor('#c084fc')"></button>
             </div>
           </div>
         </div>
@@ -5171,7 +5291,7 @@ body.reader-bar-folded #queryScrollArea{
       <div class="query-view-switch">
         <button type="button" id="latestViewBtn" onclick="showLatestRecordView()" class="press speak-btn compact-query-btn">최근 1건</button>
         <button type="button" id="allViewBtn" onclick="showAllRecordsView()" class="press speak-btn compact-query-btn">전체</button>
-        <button type="button" id="inlineCalendarBtn" onclick="toggleCalendarSection(); syncInlineCalendarButton();" class="press speak-btn compact-query-btn">달력</button>
+        <button type="button" id="inlineCalendarBtn" onclick="openCalendarFocus()" class="press speak-btn compact-query-btn">달력</button>
       </div>
 
       <div class="query-actions" id="queryActionsScroller">
@@ -5195,19 +5315,23 @@ body.reader-bar-folded #queryScrollArea{
       <div class="scroll-dot-bar" id="queryActionsDots" aria-hidden="true"></div>
 
       <div class="speech-repeat-bar">
-        <div class="speech-repeat-box compact-repeat-box">
+        <div class="speech-repeat-box compact-repeat-box repeat-wheel-box">
           <span>시작</span>
-          <select id="repeatStartInput" class="speech-repeat-input" onchange="autoSyncRepeatRange()"></select>
+          <button type="button" id="repeatStartInput" class="speech-repeat-input repeat-wheel-trigger" data-value="1" onclick="toggleRepeatWheel('start', event)">1</button>
           <span>끝</span>
-          <select id="repeatEndInput" class="speech-repeat-input" onchange="autoSyncRepeatRange()"></select>
+          <button type="button" id="repeatEndInput" class="speech-repeat-input repeat-wheel-trigger" data-value="1" onclick="toggleRepeatWheel('end', event)">1</button>
           <span>횟수</span>
-          <select id="repeatCountInput" class="speech-repeat-input">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="5">5</option>
-            <option value="10">10</option>
-          </select>
+          <button type="button" id="repeatCountInput" class="speech-repeat-input repeat-wheel-trigger" data-value="1" onclick="toggleRepeatWheel('count', event)">1</button>
+          <div id="repeatWheelPanel" class="repeat-wheel-panel hidden" onclick="event.stopPropagation()">
+            <div class="repeat-wheel-head">
+              <strong id="repeatWheelTitle">시작</strong>
+              <button type="button" class="repeat-wheel-close" onclick="closeRepeatWheel()">×</button>
+            </div>
+            <div class="repeat-wheel-wrap">
+              <div class="repeat-wheel-highlight" aria-hidden="true"></div>
+              <div id="repeatWheelList" class="repeat-wheel-list"></div>
+            </div>
+          </div>
         </div>
         <div id="repeatRangeSummary" class="speech-repeat-help">현재 조회 1건 · 페이지 1 ~ 1</div>
       </div>
@@ -7175,6 +7299,77 @@ body.reader-bar-folded #queryScrollArea{
     await saveTagMaster([...allTags]);
   }
 
+  function bindLongPressDelete(button, label, onDelete, delay = 650){
+    if(!button) return;
+    let timer = null;
+    let fired = false;
+    let startX = 0;
+    let startY = 0;
+    const MOVE_LIMIT = 12;
+    const clear = () => {
+      if(timer){
+        clearTimeout(timer);
+        timer = null;
+      }
+    };
+    const resetFlag = () => {
+      setTimeout(() => {
+        button.dataset.longPressTriggered = '0';
+      }, 180);
+    };
+    const getPoint = (event) => {
+      const touch = event?.touches?.[0] || event?.changedTouches?.[0];
+      if(touch) return { x: touch.clientX, y: touch.clientY };
+      return { x: event?.clientX ?? 0, y: event?.clientY ?? 0 };
+    };
+    const start = (event) => {
+      if(event && typeof event.button === 'number' && event.button !== 0) return;
+      const point = getPoint(event);
+      startX = point.x;
+      startY = point.y;
+      fired = false;
+      clear();
+      timer = setTimeout(async () => {
+        fired = true;
+        button.dataset.longPressTriggered = '1';
+        if(event?.cancelable) event.preventDefault();
+        const ok = confirm(`${label}를 삭제할까요?`);
+        if(ok){
+          await onDelete();
+        }
+        resetFlag();
+      }, delay);
+    };
+    const maybeCancelByMove = (event) => {
+      if(!timer || fired) return;
+      const point = getPoint(event);
+      if(Math.abs(point.x - startX) > MOVE_LIMIT || Math.abs(point.y - startY) > MOVE_LIMIT){
+        clear();
+      }
+    };
+    const end = () => {
+      clear();
+      if(fired){
+        resetFlag();
+      }
+    };
+    button.addEventListener('touchstart', start, { passive: true });
+    button.addEventListener('touchmove', maybeCancelByMove, { passive: true });
+    button.addEventListener('touchend', end);
+    button.addEventListener('touchcancel', end);
+    button.addEventListener('mousedown', start);
+    button.addEventListener('mousemove', maybeCancelByMove);
+    button.addEventListener('mouseup', end);
+    button.addEventListener('mouseleave', end);
+    button.addEventListener('contextmenu', (event) => event.preventDefault());
+    button.addEventListener('click', (event) => {
+      if(button.dataset.longPressTriggered === '1'){
+        event.preventDefault();
+        event.stopPropagation();
+      }
+    }, true);
+  }
+
   async function renderSpecialButtons(){
     const symbols = await loadSymbolMaster();
     const renderInto = (targetId, allowDelete=false) => {
@@ -7186,27 +7381,25 @@ body.reader-bar-folded #queryScrollArea{
         btn.type = 'button';
         btn.className = targetId === 'drawerSpecialButtons' ? 'editor-tool-chip' : 'press chip';
         btn.innerHTML = escapeHtml(sym).replace(/₁/g,'<sub>1</sub>').replace(/₂/g,'<sub>2</sub>').replace(/₃/g,'<sub>3</sub>');
-        btn.onclick = () => insertAtCursor(sym);
+        btn.onclick = () => {
+          if(btn.dataset.longPressTriggered === '1'){
+            btn.dataset.longPressTriggered = '0';
+            return;
+          }
+          insertAtCursor(sym);
+        };
         if(allowDelete){
-          let timer = null;
-          const startDelete = () => {
-            timer = setTimeout(async () => {
-              if(confirm(`기호 "${sym}" 를 삭제할까요?`)){
-                const current = await loadSymbolMaster();
-                await saveSymbolMaster(current.filter(v => v !== sym));
-                renderSpecialButtons();
-              }
-            }, 700);
-          };
-          const clearDelete = () => { if(timer) clearTimeout(timer); };
-          btn.addEventListener('pointerdown', startDelete);
-          btn.addEventListener('pointerup', clearDelete);
-          btn.addEventListener('pointerleave', clearDelete);
+          bindLongPressDelete(btn, `기호 "${sym}"`, async () => {
+            const current = await loadSymbolMaster();
+            await saveSymbolMaster(current.filter(v => v !== sym));
+            renderSpecialButtons();
+            showToast('기호를 삭제했습니다.');
+          });
         }
         target.appendChild(btn);
       });
     };
-    renderInto('specialButtons');
+    renderInto('specialButtons', true);
     renderInto('drawerSpecialButtons', true);
   }
 
@@ -7221,6 +7414,10 @@ body.reader-bar-folded #queryScrollArea{
       btn.className = 'chip' + (draft.tags.includes(tag) ? ' active' : '');
       btn.textContent = tag;
       btn.onclick = async () => {
+        if(btn.dataset.longPressTriggered === '1'){
+          btn.dataset.longPressTriggered = '0';
+          return;
+        }
         if(draft.tags.includes(tag)){
           draft.tags = draft.tags.filter(v => v !== tag);
         }else{
@@ -7229,6 +7426,14 @@ body.reader-bar-folded #queryScrollArea{
         await saveDraft();
         renderTagButtons();
       };
+      bindLongPressDelete(btn, `태그 "${tag}"`, async () => {
+        const current = await loadTagMaster();
+        await saveTagMaster(current.filter(v => v !== tag));
+        draft.tags = (draft.tags || []).filter(v => v !== tag);
+        await saveDraft();
+        renderTagButtons();
+        showToast('태그를 삭제했습니다.');
+      });
       target.appendChild(btn);
     });
 
@@ -7769,9 +7974,13 @@ body.reader-bar-folded #queryScrollArea{
     selectedDayKey = key;
     currentView = 'day';
     $('querySection')?.classList.add('is-open');
+    $('calendarSection')?.classList.remove('is-open');
     renderCalendar();
     renderRecords();
     syncInlineCalendarButton();
+    setTimeout(() => {
+      scrollToSection('querySection');
+    }, 80);
   };
 
   window.changeMonth = function(offset){
@@ -7779,12 +7988,20 @@ body.reader-bar-folded #queryScrollArea{
     renderCalendar();
   };
 
-  window.toggleCalendarSection = function(){
+  window.toggleCalendarSection = function(forceOpen){
     const sec = $('calendarSection');
     if(!sec) return;
-    sec.classList.toggle('is-open');
+    const shouldOpen = typeof forceOpen === 'boolean' ? forceOpen : !sec.classList.contains('is-open');
+    sec.classList.toggle('is-open', shouldOpen);
     syncInlineCalendarButton();
     $('toggleCalendarBtn')?.classList.toggle('is-active', sec.classList.contains('is-open'));
+  };
+
+  window.openCalendarFocus = function(){
+    toggleCalendarSection(true);
+    setTimeout(() => {
+      scrollToSection('calendarSection');
+    }, 60);
   };
 
   function syncInlineCalendarButton(){
@@ -7836,8 +8053,36 @@ body.reader-bar-folded #queryScrollArea{
     $('toggleMinuteBtn')?.classList.add('is-active');
   };
 
+  function getCompactSelectorModeLabel(mode){
+    if(mode === 'tagButtons') return '태그';
+    if(mode === 'colorPalette') return '색상';
+    return '기호';
+  }
+
+  function syncCompactSelectorModeButton(){
+    const mode = $('compactSelectorMode')?.value || 'specialButtons';
+    const btn = $('compactSelectorModeBtn');
+    if(!btn) return;
+    const label = getCompactSelectorModeLabel(mode);
+    btn.textContent = label;
+    btn.setAttribute('data-mode', mode);
+    btn.setAttribute('aria-label', `선택 종류 순환 현재 ${label}`);
+    btn.title = `${label} · 누르면 다음으로 변경`;
+  }
+
+  window.cycleCompactSelectorMode = function(){
+    const select = $('compactSelectorMode');
+    if(!select) return;
+    const order = ['specialButtons','tagButtons','colorPalette'];
+    const currentIndex = order.indexOf(select.value);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % order.length : 0;
+    select.value = order[nextIndex];
+    updateCompactManageVisibility();
+  };
+
   function updateCompactManageVisibility(){
     const mode = $('compactSelectorMode')?.value || 'specialButtons';
+    syncCompactSelectorModeButton();
     document.querySelectorAll('[data-compact-panel]').forEach(panel => {
       const active = panel.dataset.compactPanel === mode;
       panel.classList.toggle('is-active', active);
@@ -7852,6 +8097,7 @@ body.reader-bar-folded #queryScrollArea{
 
   function initEditorControls(){
     $('compactSelectorMode')?.addEventListener('change', updateCompactManageVisibility);
+    syncCompactSelectorModeButton();
     $('compactSelectorManageBtn')?.addEventListener('click', () => {
       compactManageOpen = !compactManageOpen;
       updateCompactManageVisibility();
@@ -7898,7 +8144,7 @@ body.reader-bar-folded #queryScrollArea{
       .replace(/(\d)\.(\d)/g, '$1∯$2');
 
     return protectedText
-      .split(/(?<=[.!?。,]|다\.|요\.|니다\.|입니다\.|인데\.|했다\.|됨\.|함\.)/)
+      .split(/(?<=[.!?。,]|다\.|요\.|니다\.|입니다\.|했다\.|됨\.|함\.)/)
       .map(v => v.replace(/∯/g, '.').trim())
       .filter(Boolean);
   }
@@ -7935,12 +8181,13 @@ body.reader-bar-folded #queryScrollArea{
          .replace(/bar/gi, ' 바 ')
          .replace(/rpm/gi, ' 알피엠 ')
          .replace(/Hz/gi, ' 헤르츠 ')
-         
+         .replace(/V\b/g, ' 볼트 ')
+         .replace(/A\b/g, ' 암페어 ')
          .replace(/Ω/g, ' 오메가 ')
          .replace(/ohm/gi, ' 옴 ')
          .replace(/℃/g, ' 도씨 ')
          .replace(/°C/g, ' 도씨 ')
-         
+         .replace(/K\b/g, ' 켈빈 ')
          .replace(/=/g, ' 는 ')
          .replace(/%/g, ' 퍼센트 ');
 
@@ -8089,7 +8336,7 @@ body.reader-bar-folded #queryScrollArea{
     const items = getVisibleSpeechItems();
     const start = Math.max(1, Number($('repeatStartInput')?.value || 1));
     const end = Math.max(start, Number($('repeatEndInput')?.value || items.length || 1));
-    const repeatCount = Math.max(1, Number($('repeatCountInput')?.value || 1));
+    const repeatCount = Math.max(1, getRepeatButtonValue('repeatCountInput', 1));
     speechRepeatTarget = repeatCount;
     speechRepeatDone = 0;
     const sliced = items.slice(start - 1, end);
@@ -8433,49 +8680,215 @@ body.reader-bar-folded #queryScrollArea{
     $('bottomRatePicker')?.classList.remove('is-open');
   };
 
+  
+  function setRepeatButtonValue(id, value){
+    const el = $(id);
+    if(!el) return;
+    const safe = String(value);
+    el.dataset.value = safe;
+    el.textContent = safe;
+  }
+
+  function getRepeatButtonValue(id, fallback){
+    const el = $(id);
+    const raw = el?.dataset?.value || el?.textContent || fallback;
+    const num = Number(raw);
+    return Number.isFinite(num) && num > 0 ? num : fallback;
+  }
+
+  let lastRepeatMenuTotal = 0;
+
   function updateRepeatPickerMenus(total){
     total = Math.max(1, Number(total || 1));
 
-    const startSel = $('repeatStartInput');
-    const endSel = $('repeatEndInput');
-    const countSel = $('repeatCountInput');
-    const prevCount = Math.max(1, Number(countSel?.value || 1));
+    const prevStart = getRepeatButtonValue('repeatStartInput', 1);
+    const prevEnd = getRepeatButtonValue('repeatEndInput', total);
+    const prevCount = getRepeatButtonValue('repeatCountInput', 1);
+    const totalChanged = total !== lastRepeatMenuTotal;
 
-    if(startSel){
-      startSel.innerHTML = Array.from({length: total}, (_, i) =>
-        `<option value="${i + 1}">${i + 1}</option>`
-      ).join('');
-      startSel.value = '1';
-    }
+    const nextStart = Math.max(1, Math.min(total, prevStart));
+    const nextEnd = totalChanged ? total : Math.max(nextStart, Math.min(total, prevEnd));
 
-    if(endSel){
-      endSel.innerHTML = Array.from({length: total}, (_, i) =>
-        `<option value="${i + 1}">${i + 1}</option>`
-      ).join('');
-      endSel.value = String(total);
-    }
+    setRepeatButtonValue('repeatStartInput', nextStart);
+    setRepeatButtonValue('repeatEndInput', nextEnd);
+    setRepeatButtonValue('repeatCountInput', Math.max(1, Math.min(20, prevCount)));
 
-    if(countSel){
-      const allowed = ['1','2','3','5','10'];
-      countSel.value = allowed.includes(String(prevCount)) ? String(prevCount) : '1';
-    }
-
+    lastRepeatMenuTotal = total;
     autoSyncRepeatRange();
   }
 
+  
   function autoSyncRepeatRange(){
     const total = Math.max(1, getVisibleSpeechItemCount() || 1);
 
-    let start = Math.max(1, Math.min(total, Number($('repeatStartInput')?.value || 1)));
-    let end = Math.max(start, Math.min(total, Number($('repeatEndInput')?.value || total)));
+    let start = Math.max(1, Math.min(total, getRepeatButtonValue('repeatStartInput', 1)));
+    let end = Math.max(start, Math.min(total, getRepeatButtonValue('repeatEndInput', total)));
 
-    if($('repeatStartInput')) $('repeatStartInput').value = String(start);
-    if($('repeatEndInput')) $('repeatEndInput').value = String(end);
+    setRepeatButtonValue('repeatStartInput', start);
+    setRepeatButtonValue('repeatEndInput', end);
 
     if($('repeatRangeSummary')) $('repeatRangeSummary').textContent = `현재 조회 ${total}건 · 페이지 ${start} ~ ${end}`;
     refreshBottomPlayerFromView();
   }
   window.autoSyncRepeatRange = autoSyncRepeatRange;
+
+  let activeRepeatWheelType = '';
+  let repeatWheelScrollTimer = null;
+  let repeatWheelCloseTimer = null;
+  let repeatWheelJustOpened = false;
+
+  function getRepeatWheelValues(type){
+    const total = Math.max(1, getVisibleSpeechItemCount() || 1);
+    if(type === 'count') return Array.from({length: 20}, (_, i) => i + 1);
+    return Array.from({length: total}, (_, i) => i + 1);
+  }
+
+  function getRepeatWheelCurrentValue(type){
+    if(type === 'start') return getRepeatButtonValue('repeatStartInput', 1);
+    if(type === 'end') return getRepeatButtonValue('repeatEndInput', Math.max(1, getVisibleSpeechItemCount() || 1));
+    return getRepeatButtonValue('repeatCountInput', 1);
+  }
+
+  function updateRepeatWheelActive(){
+    const list = $('repeatWheelList');
+    if(!list) return;
+    const items = [...list.querySelectorAll('.repeat-wheel-item')];
+    if(!items.length) return;
+    const center = list.scrollTop + (list.clientHeight / 2);
+    let best = items[0];
+    let bestDist = Infinity;
+    items.forEach(item => {
+      const itemCenter = item.offsetTop + (item.offsetHeight / 2);
+      const dist = Math.abs(itemCenter - center);
+      const active = dist < bestDist;
+      if(active){
+        best = item;
+        bestDist = dist;
+      }
+      item.classList.toggle('is-active', false);
+    });
+    best.classList.add('is-active');
+  }
+
+  function applyRepeatWheelSelection(type, value){
+    value = Number(value) || 1;
+    if(type === 'start'){
+      const total = Math.max(1, getVisibleSpeechItemCount() || 1);
+      const end = getRepeatButtonValue('repeatEndInput', total);
+      setRepeatButtonValue('repeatStartInput', value);
+      if(value > end) setRepeatButtonValue('repeatEndInput', value);
+    }else if(type === 'end'){
+      const start = getRepeatButtonValue('repeatStartInput', 1);
+      setRepeatButtonValue('repeatEndInput', Math.max(start, value));
+    }else{
+      setRepeatButtonValue('repeatCountInput', value);
+    }
+    autoSyncRepeatRange();
+  }
+
+  function positionRepeatWheelPanel(trigger, panel){
+    const box = trigger?.closest('.repeat-wheel-box');
+    if(!trigger || !panel || !box) return;
+    const maxLeft = Math.max(0, box.clientWidth - panel.offsetWidth);
+    const centered = trigger.offsetLeft + (trigger.offsetWidth / 2) - (panel.offsetWidth / 2);
+    panel.style.left = `${Math.max(0, Math.min(maxLeft, centered))}px`;
+    panel.style.transform = 'none';
+  }
+
+  function finalizeRepeatWheelSelection(closeAfter = false){
+    const list = $('repeatWheelList');
+    if(!list || !activeRepeatWheelType) return;
+    updateRepeatWheelActive();
+    const active = list.querySelector('.repeat-wheel-item.is-active');
+    if(!active) return;
+    const target = active.offsetTop - (list.clientHeight / 2) + (active.offsetHeight / 2);
+    list.scrollTo({ top: Math.max(0, target), behavior:'smooth' });
+    applyRepeatWheelSelection(activeRepeatWheelType, Number(active.dataset.value || 1));
+    clearTimeout(repeatWheelCloseTimer);
+    if(closeAfter){
+      repeatWheelCloseTimer = setTimeout(() => closeRepeatWheel(), 140);
+    }
+  }
+
+  window.toggleRepeatWheel = function(type, event){
+    event?.stopPropagation();
+    const panel = $('repeatWheelPanel');
+    const title = $('repeatWheelTitle');
+    const list = $('repeatWheelList');
+    const trigger = type === 'start' ? $('repeatStartInput') : type === 'end' ? $('repeatEndInput') : $('repeatCountInput');
+    if(!panel || !title || !list || !trigger) return;
+
+    if(!panel.classList.contains('hidden') && activeRepeatWheelType === type){
+      closeRepeatWheel();
+      return;
+    }
+
+    activeRepeatWheelType = type;
+    title.textContent = type === 'start' ? '시작 페이지' : type === 'end' ? '끝 페이지' : '횟수';
+    panel.classList.remove('hidden');
+    clearTimeout(repeatWheelCloseTimer);
+    repeatWheelJustOpened = true;
+    positionRepeatWheelPanel(trigger, panel);
+
+    const values = getRepeatWheelValues(type);
+    const current = getRepeatWheelCurrentValue(type);
+    list.innerHTML = values.map(v => `<button type="button" class="repeat-wheel-item" data-value="${v}" onclick="pickRepeatWheelValue(${JSON.stringify(type)}, ${v}, event)">${v}</button>`).join('');
+
+    requestAnimationFrame(() => {
+      const item = list.querySelector(`.repeat-wheel-item[data-value="${current}"]`) || list.querySelector('.repeat-wheel-item');
+      if(item){
+        const target = item.offsetTop - (list.clientHeight / 2) + (item.offsetHeight / 2);
+        list.scrollTop = Math.max(0, target);
+      }
+      updateRepeatWheelActive();
+      setTimeout(() => { repeatWheelJustOpened = false; }, 220);
+    });
+  };
+
+  window.pickRepeatWheelValue = function(type, value, event){
+    event?.stopPropagation();
+    applyRepeatWheelSelection(type, value);
+    closeRepeatWheel();
+  };
+
+  window.closeRepeatWheel = function(){
+    clearTimeout(repeatWheelScrollTimer);
+    clearTimeout(repeatWheelCloseTimer);
+    $('repeatWheelPanel')?.classList.add('hidden');
+    activeRepeatWheelType = '';
+    repeatWheelJustOpened = false;
+  };
+
+  document.addEventListener('click', function(e){
+    const panel = $('repeatWheelPanel');
+    if(!panel || panel.classList.contains('hidden')) return;
+    if(panel.contains(e.target)) return;
+    if(e.target.closest('.repeat-wheel-trigger')) return;
+    closeRepeatWheel();
+  });
+
+  document.addEventListener('scroll', function(e){
+    const list = $('repeatWheelList');
+    if(!list || e.target !== list) return;
+    if(repeatWheelJustOpened) return;
+    updateRepeatWheelActive();
+    clearTimeout(repeatWheelScrollTimer);
+    clearTimeout(repeatWheelCloseTimer);
+    repeatWheelScrollTimer = setTimeout(() => {
+      finalizeRepeatWheelSelection(false);
+    }, 140);
+  }, true);
+
+  document.addEventListener('touchend', function(e){
+    const list = $('repeatWheelList');
+    if(!list || !activeRepeatWheelType) return;
+    if(repeatWheelJustOpened) return;
+    if(e.target !== list && !e.target.closest('#repeatWheelList')) return;
+    clearTimeout(repeatWheelScrollTimer);
+    repeatWheelScrollTimer = setTimeout(() => {
+      finalizeRepeatWheelSelection(false);
+    }, 120);
+  }, true);
 
   window.showLatestRecordView = function(){
     currentView = 'latest';
