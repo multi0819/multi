@@ -89,7 +89,6 @@
     box-shadow:0 8px 20px rgba(37,99,235,.18) !important;
   }
 
-
   #calendarSection{
     margin-bottom:0 !important;
   }
@@ -97,7 +96,6 @@
   .calendar-tight{
     margin-bottom:2px !important;
   }
-
 
   .action-chip{
     padding:8px 8px;
@@ -358,7 +356,6 @@
     width:100%;
   }
 
-
   .mark-hit{
     background:#fde68a;
     color:#111827;
@@ -415,7 +412,6 @@
     display:block;
   }
 
-
   .toggle-panel{
     display:none;
   }
@@ -470,7 +466,6 @@
     vertical-align:middle;
     box-shadow:0 0 10px rgba(255,255,255,.42);
   }
-
 
   #queryScrollArea{
     max-height:68vh;
@@ -530,7 +525,6 @@
     width:100%;
     max-width:none;
   }
-
 
   .record-preview.collapsed{
     display:none;
@@ -1213,8 +1207,6 @@
     flex:0 0 auto;
   }
 
-
-
   .inline-add-row,
   .inline-photo-row{
     display:grid;
@@ -1657,8 +1649,6 @@
     height:30px !important;
   }
 
-
-
   .editor-tools-drawer{
     --drawer-width: 236px;
     --drawer-peek: 34px;
@@ -1888,7 +1878,6 @@
     border-radius:999px;
   }
 
-
   @media (max-width: 640px){
     .editor-tools-drawer{
       --drawer-width: 224px;
@@ -1931,7 +1920,6 @@
       min-width:110px !important;
     }
   }
-
 
   
   /* v5: record card readability cleanup */
@@ -2019,7 +2007,6 @@
     width:100% !important;
   }
 
-
 /* v15 세련된 그라데이션 + 아이콘 */
 .speak-btn{
   background:
@@ -2091,7 +2078,6 @@ button[aria-label="닫기"],
   opacity:0.5 !important;
 }
 
-
 /* v16 완성 다듬기 */
 
 /* 탭 비활성 상태 더 어둡게 */
@@ -2135,7 +2121,6 @@ button[aria-label="닫기"],
   background:#0a1220 !important;
   border:1px solid rgba(255,255,255,.14) !important;
 }
-
 
 /* v17 bottom player bar */
 body{
@@ -2261,7 +2246,6 @@ body.player-reading .bottom-player-btn.play{
   .bottom-player-rate{ min-width:72px; }
 }
 
-
 /* v19 안정 재조정 */
 #queryActionsScroller,
 #queryActionsDots,
@@ -2338,7 +2322,6 @@ body.player-reading .bottom-player-btn.play{
   color:#ffffff;
 }
 
-
 /* v20 가독성 최적화 */
 .record-card{
   padding:18px 14px !important; /* 좌우 축소 */
@@ -2360,12 +2343,10 @@ body.player-reading .bottom-player-btn.play{
   padding-right:6px !important;
 }
 
-
 /* v21 fixes */
 #queryScrollArea{
   scroll-behavior:auto !important;
 }
-
 
 .current-speech-text{
   margin-top:8px;
@@ -2387,90 +2368,11 @@ body.player-reading .bottom-player-btn.play{
   color:#aab8cd;
   font-weight:700;
 }
-.query-card.reading-active{
-  border-color:rgba(96,165,250,.28) !important;
-  box-shadow:0 0 0 1px rgba(59,130,246,.10) !important;
-}
-.record-preview.reading-active{
-  background:none !important;
-}
-
-
-/* 최소 수정 3가지 */
-.current-speech-text{
-  display:none !important;
-}
-
-#bottomRestartBtn{
-  min-height:42px !important;
-  padding:0 18px !important;
-  border-radius:14px !important;
-  border:1px solid rgba(115,155,255,.24) !important;
-  background:
-    radial-gradient(circle at center, rgba(95,145,255,.28) 0%, rgba(95,145,255,.14) 28%, rgba(95,145,255,0) 60%),
-    linear-gradient(180deg, rgba(28,39,61,.96), rgba(18,27,43,.96)) !important;
-  color:#f8fbff !important;
-  font-weight:900 !important;
-  display:inline-flex !important;
-  align-items:center !important;
-  justify-content:center !important;
-}
-
-.record-preview.reading-active{
-  background:none !important;
-}
-
-
-
-.speech-inline-highlight{
-  background: transparent !important;
-  color: inherit !important;
-  box-shadow: none !important;
-}
-
-.record-preview.reading-active{
-  background: transparent !important;
-}
-
-#detailContentHtml.reading-active{
-  background: transparent !important;
-}
-
-  .record-preview.reading-active .speech-inline-highlight,
-  .detail-content.reading-active .speech-inline-highlight{
-    background:linear-gradient(180deg, transparent 0 58%, rgba(255,226,116,.38) 58% 100%) !important;
-    box-shadow:inset 0 -1px 0 rgba(255,244,196,.28) !important;
-    outline:none !important;
-  }
-
-
-
-/* reading highlight visible */
-.query-card.reading-active{
-  outline:none !important;
-}
-
-.record-preview.reading-active,
-.detail-content.reading-active{
-  outline:none !important;
-}
-
-.record-preview.reading-active .speech-inline-highlight,
-.detail-content.reading-active .speech-inline-highlight,
-.speech-inline-highlight,
-.speech-highlighted{
-  background:linear-gradient(180deg, transparent 0 58%, rgba(255,226,116,.40) 58% 100%) !important;
-  box-shadow:inset 0 -1px 0 rgba(255,244,196,.30) !important;
-  border:0 !important;
-  text-decoration:none !important;
-  filter:none !important;
-}
 
 @media print{
   #pdfPreviewPage button{ display:none !important; }
   #pdfPreviewPage{ padding:0 !important; }
 }
-
 
   /* ===== Tailwind fallback utilities (CDN removed) ===== */
   .hidden{display:none !important;}
@@ -4947,96 +4849,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-<style id="readerOverlayStyle">
-  #readerOverlay{
-    position:fixed;
-    inset:0;
-    z-index:22000;
-    background:rgba(8,14,24,.88);
-    display:none;
-    flex-direction:column;
-  }
-  #readerOverlay.show{
-    display:flex;
-  }
-  #readerOverlayTop{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:8px;
-    padding:8px 10px;
-    border-bottom:1px solid rgba(255,255,255,.08);
-    background:rgba(10,17,29,.96);
-  }
-  #readerOverlayTitle{
-    font-size:16px;
-    font-weight:900;
-    color:#eef4ff;
-    white-space:nowrap;
-    flex:0 0 auto;
-  }
-  #readerOverlayBody{
-    flex:1 1 auto;
-    overflow-y:auto;
-    padding:10px 12px 14px;
-    -webkit-overflow-scrolling:touch;
-  }
-  #readerOverlayTop .bottom-player-btn{
-    min-height:40px;
-    padding:0 12px;
-    font-size:14px;
-    border-radius:12px;
-  }
-  @media (max-width: 640px){
-    #readerOverlayTitle{
-      display:none;
-    }
-  }
-  .reader-card{
-    background:#111a2d;
-    border:1px solid rgba(255,255,255,.10);
-    border-radius:18px;
-    padding:14px;
-    margin:0 0 14px 0;
-  }
-  .reader-card.reading-active{
-    outline:2px solid #3b82f6;
-    box-shadow:0 0 0 3px rgba(59,130,246,.18);
-  }
-  .reader-card-meta{
-    font-size:14px;
-    font-weight:800;
-    color:#b8c6da;
-    margin-bottom:10px;
-  }
-  .reader-card-content{
-    font-size:21px;
-    line-height:1.9;
-    color:#f8fbff;
-    word-break:break-word;
-  }
-  .reader-card-tags{
-    display:flex;
-    gap:8px;
-    flex-wrap:wrap;
-    margin-top:12px;
-  }
-  .reader-card-images{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:12px;
-    margin-top:14px;
-  }
-  .reader-card-images img{
-    width:100%;
-    height:auto;
-    border-radius:14px;
-    border:1px solid rgba(255,255,255,.10);
-    display:block;
-  }
-</style>
-
-
 <style id="step22_fix_css">
 .paste-fallback-overlay{
   position:fixed;
@@ -5116,7 +4928,6 @@ body.reader-bar-folded #queryScrollArea{
 
 </head>
 <body class="space-y-2">
-
 
   <div class="card p-4">
     <div class="text-[11px] tracking-[0.12em] font-black text-slate-400 mb-2">PREMIUM STUDY BOARD</div>
@@ -5240,7 +5051,6 @@ body.reader-bar-folded #queryScrollArea{
       </div>
     </div>
 
-
     <div class="editor-tools-drawer" id="leftEditorDrawer">
       <div class="editor-tools-drawer-handle" id="leftEditorDrawerHandle">기호</div>
       <div class="editor-tools-drawer-body symbol-only-drawer-body">
@@ -5348,7 +5158,6 @@ body.reader-bar-folded #queryScrollArea{
     </div>
 
     <div id="calendarDetail" class="text-sm text-slate-600 calendar-tight">날짜를 누르면 바로 해당 날짜 기록이 열립니다.</div>
-
 
   </div>
 
@@ -5491,8 +5300,6 @@ body.reader-bar-folded #queryScrollArea{
     </div>
   </div>
 
-
-
   <div id="recordDetailModal" onclick="closeRecordDetail(event)">
     <div class="detail-sheet" onclick="event.stopPropagation()">
       <div class="detail-head">
@@ -5538,31 +5345,15 @@ body.reader-bar-folded #queryScrollArea{
     </div>
   </div>
 
-
   <div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:140px;padding:12px 20px;border-radius:16px;opacity:0;pointer-events:none;z-index:12000;max-width:calc(100vw - 24px);box-sizing:border-box;text-align:center;background:rgba(10,16,28,.96);color:#f8fbff;border:1px solid rgba(255,255,255,.08);"></div>
 
   
 
   
-<div id="readerOverlay">
-  <div id="readerOverlayTop">
-    <div id="readerOverlayTitle">읽기 전용 보기</div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button type="button" class="bottom-player-btn" onclick="togglePauseSpeech()">일시정지/재개</button>
-      <button type="button" class="bottom-player-btn stop" onclick="stopSpeech()">중단</button>
-      <button type="button" class="bottom-player-btn" onclick="closeReaderOverlay()">닫기</button>
-    </div>
-  </div>
-  <div id="readerOverlayBody"></div>
-</div>
-
 <div id="imagePreviewModal" onclick="closeImagePreview()">
     <button id="imagePreviewClose" type="button" onclick="closeImagePreview()">×</button>
     <img id="imagePreviewTarget" src="" alt="확대 이미지" onclick="event.stopPropagation()" />
   </div>
-
-
-
 
 <style id="leftDrawerV4Patch">
   .editor-tools-drawer{
@@ -5591,9 +5382,6 @@ body.reader-bar-folded #queryScrollArea{
     padding-right: 46px !important;
   }
 </style>
-
-
-
 
 <style id="leftDrawerV7Override">
   .editor-tools-drawer{
@@ -5723,9 +5511,6 @@ body.reader-bar-folded #queryScrollArea{
   }
 </style>
 
-
-
-
 <style id="leftDrawerV8Fix">
   /* v8: 사이드패널을 3구역으로 확실히 분리 */
   .editor-tools-drawer{
@@ -5847,8 +5632,6 @@ body.reader-bar-folded #queryScrollArea{
     }
   }
 </style>
-
-
 
 <style id="leftDrawerV9Override">
   .editor-drawer-head{
@@ -5987,8 +5770,6 @@ body.reader-bar-folded #queryScrollArea{
   }
 </style>
 
-
-
 <style id="leftDrawerV11Override">
   .editor-tools-drawer{
     top: 178px !important;
@@ -6058,8 +5839,6 @@ body.reader-bar-folded #queryScrollArea{
     display: none !important;
   }
 </style>
-
-
 
 <style id="leftDrawerV14Style">
 /* v14 hard reset: three visible vertical sections */
@@ -6134,8 +5913,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
 <style id="symbol-only-v15-overrides">
 #leftEditorDrawer .editor-tools-drawer-body{
   display:block !important;
@@ -6189,8 +5966,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
 <style id="final-symbol-sidebar-patch">
 /* 최종 우선 패치: 마지막 override들보다 뒤에서 강제 적용 */
 #leftEditorDrawer .symbol-only-section,
@@ -6237,9 +6012,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
-
 <style id="half-more-symbol-size">
 /* 기존보다 절반가량 더 축소 */
 #leftEditorDrawer #drawerSpecialButtons > *{
@@ -6259,7 +6031,6 @@ body.reader-bar-folded #queryScrollArea{
   padding:0 !important;
 }
 </style>
-
 
 <style id="drawer-tag-rail-visible-patch">
 /* 기호 옆 태그 세로줄 표시 */
@@ -6323,9 +6094,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
-
 <style id="v11_safe_tight_only_css">
 /* v10 문제 복구: 제목 중복/스크롤 문제 없이 간격만 조정 */
 #leftEditorDrawer .drawer-top-head{
@@ -6354,7 +6122,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
 <style id="v12_clean_align">
 /* 태그 텍스트 제거 + 완전 정렬 */
 #leftEditorDrawer .drawer-tag-title{
@@ -6382,7 +6149,6 @@ body.reader-bar-folded #queryScrollArea{
   opacity:0.95;
 }
 </style>
-
 
 <style id="v13_tag_scroll_button_match">
 /* 태그 라인 스크롤 + 기호와 동일한 박스 크기 */
@@ -6430,9 +6196,6 @@ body.reader-bar-folded #queryScrollArea{
   filter:brightness(1.08) !important;
 }
 </style>
-
-
-
 
 <style id="v14_split_scroll_fix">
 /* 기호/태그를 각각 독립 스크롤 */
@@ -6486,7 +6249,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
 <style id="v15_min_gap_scroll_tight">
 /* 기호/태그 컬럼 간격 최소화 */
 #leftEditorDrawer .drawer-dual-rail{
@@ -6534,7 +6296,6 @@ body.reader-bar-folded #queryScrollArea{
   padding:8px 22px 8px 8px !important;
 }
 </style>
-
 
 <style id="v16_color_rail_tight">
 /* 태그 옆에 색상 컬럼 추가, 바짝 붙임 */
@@ -6597,9 +6358,6 @@ body.reader-bar-folded #queryScrollArea{
 #leftEditorDrawer .drawer-color-btn[data-color="violet"]{ background:#c4b5fd !important; }
 </style>
 
-
-
-
 <style id="v17_align_labels_spacing">
 /* 줄맞춤 */
 #leftEditorDrawer .drawer-dual-rail{
@@ -6657,9 +6415,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
-
 <style id="v18-safe-multitag-style">
 #leftEditorDrawer .drawer-tag-btn.is-selected{
   box-shadow:0 0 0 2px rgba(255,255,255,.16) inset !important;
@@ -6667,16 +6422,8 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
-
-
-
-
 <style id="reader-top-bar-small-style">
 </style>
-
-
 
 <style id="v20_symbol_title_and_left_shift_fix">
 /* 상단 중복 "기호" 제목 숨김 */
@@ -6701,7 +6448,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
 <style id="handle-position-fix-v1">
 /* 세로 기호 탭을 화면 안쪽으로 더 들여서 색상 버튼 쪽에 가깝게 보이도록 조정 */
 #leftEditorDrawer{
@@ -6712,7 +6458,6 @@ body.reader-bar-folded #queryScrollArea{
   left:0 !important;
 }
 </style>
-
 
 <style id="drawer-verified-toprow-v5">
 #leftEditorDrawer,
@@ -6772,13 +6517,6 @@ body.reader-bar-folded #queryScrollArea{
   box-shadow:none !important;
 }
 </style>
-
-
-
-
-
-
-
 
 <style id="oai-landscape-bottom-gap-fix">
 @media (orientation: landscape) {
@@ -6845,7 +6583,6 @@ body.reader-bar-folded #queryScrollArea{
   }
 }
 </style>
-
 
 <style id="oai-query-display-90pct">
 /* 조회 내용 표시 영역 확대 */
@@ -6931,7 +6668,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
 <style id="oai-reader-fold-strong-fix">
 body.reader-bar-folded{
   padding-bottom: 18px !important;
@@ -6962,10 +6698,6 @@ body.reader-bar-folded #queryScrollArea{
 }
 </style>
 
-
-
-
-
 <style id="oai-calendar-fix">
 #calendarHeatmap{
   align-items:stretch !important;
@@ -6979,7 +6711,6 @@ body.reader-bar-folded #queryScrollArea{
   outline-offset:-2px !important;
 }
 </style>
-
 
 <style id="oai-calendar-second-fix">
 #calendarHeatmap{
@@ -7006,9 +6737,6 @@ body.reader-bar-folded #queryScrollArea{
     -webkit-text-fill-color:transparent !important;
   }
 </style>
-
-
-
 
 <script>
 (() => {
@@ -7653,7 +7381,6 @@ body.reader-bar-folded #queryScrollArea{
     await saveDraft();
     renderPastePreview();
   };
-
 
   window.resetForm = async function(){
     draft = createDefaultDraft();
@@ -8423,14 +8150,29 @@ body.reader-bar-folded #queryScrollArea{
   window.setCurrentSpeechDisplay = setCurrentSpeechDisplay;
 
   function setReadingCardState(activeId){
-    document.querySelectorAll('.query-card.reading-active').forEach(el => {
-      el.classList.remove('reading-active');
+    const scroller = $('queryScrollArea');
+    const cards = document.querySelectorAll('#recordList .query-card, #selectedDayRecords .query-card');
+    let activeCard = null;
+
+    cards.forEach(card => {
+      const isActive = !!activeId && card.id === `queryCard_${activeId}`;
+      card.classList.toggle('is-reading-card', isActive);
+      if(isActive) activeCard = card;
     });
-    if(!activeId) return;
-    const card = document.getElementById(`queryCard_${activeId}`);
-    if(card){
-      card.classList.add('reading-active');
-    }
+
+    if(!scroller || !activeCard) return;
+
+    const scrollerRect = scroller.getBoundingClientRect();
+    const cardRect = activeCard.getBoundingClientRect();
+    const topMargin = 10;
+    const desiredTop = scrollerRect.top + topMargin;
+    const delta = cardRect.top - desiredTop;
+
+    if(Math.abs(delta) < 4) return;
+
+    const maxScroll = Math.max(0, scroller.scrollHeight - scroller.clientHeight);
+    const nextTop = Math.max(0, Math.min(maxScroll, scroller.scrollTop + delta));
+    scroller.scrollTop = nextTop;
   }
 
   function refreshBottomPlayerFromView(){
@@ -8481,63 +8223,38 @@ body.reader-bar-folded #queryScrollArea{
       return;
     }
 
+    const cardChanged = currentSpeechRecordId !== item.id;
     currentSpeechRecordId = item.id;
-    previewCollapsed[item.id] = false;
-    await renderRecords();
+
+    if(cardChanged){
+      previewCollapsed[item.id] = false;
+      const currentCard = document.getElementById(`queryCard_${item.id}`);
+      if(currentCard){
+        const currentPreview = document.getElementById(`recordPreview_${item.id}`);
+        if(!currentPreview){
+          const sourceRecord = records.find(r => r.id === item.id);
+          const metaLine = currentCard.querySelector('.text-xs.text-slate-400.mt-3');
+          if(sourceRecord && metaLine){
+            const previewEl = document.createElement('div');
+            previewEl.id = `recordPreview_${item.id}`;
+            previewEl.className = 'record-preview mt-3 text-slate-100 text-[18px] leading-[1.7]';
+            previewEl.innerHTML = sourceRecord.contentHtml || escapeHtml(sourceRecord.contentText || '');
+            metaLine.insertAdjacentElement('afterend', previewEl);
+          }
+          const toggleBtn = [...currentCard.querySelectorAll('.record-actions-left .record-pill-btn')]
+            .find(btn => /표시|숨기기/.test((btn.textContent || '').trim()));
+          if(toggleBtn) toggleBtn.textContent = '숨기기';
+        }
+      }
+      setReadingCardState(item.id);
+      lastReaderScrollCardId = item.id;
+      lastReaderPartIndex = 0;
+    }
 
     const currentPartText = item.parts[speechPartIndex] || item.text || '';
     setCurrentSpeechDisplay(currentPartText);
     updateBottomPlayerState(true);
     updateBottomPlayerProgress(speechIndex + 1, speechQueueItems.length);
-
-    requestAnimationFrame(() => {
-      setReadingCardState(item.id);
-
-      document.querySelectorAll('.reader-card.reading-active').forEach(el => el.classList.remove('reading-active'));
-      const readerCard = document.getElementById(`readerCard_${item.id}`);
-      const body = $('readerOverlayBody');
-
-      if(readerCard && body){
-        readerCard.classList.add('reading-active');
-
-        const currentPart = Math.max(0, Number(speechPartIndex || 0));
-        const bodyHeight = body.clientHeight;
-        const cardTop = readerCard.offsetTop;
-        const cardHeight = readerCard.offsetHeight;
-
-        const maxBodyTop = Math.max(0, body.scrollHeight - bodyHeight);
-        const cardStartTop = Math.max(0, cardTop - 16);
-
-        if(lastReaderScrollCardId !== item.id){
-          lastReaderScrollCardId = item.id;
-          lastReaderScrollTop = cardStartTop;
-          lastReaderPartIndex = currentPart;
-          body.scrollTo({ top: lastReaderScrollTop, behavior:'smooth' });
-          return;
-        }
-
-        // 같은 카드에서는 문장 하나당 거의 한 줄 정도만 내려가게 고정
-        // 쉼표 분할은 읽기 자연화용이고 자동스크롤 증가 기준에서는 제외
-        const movedParts = Math.max(0, currentPart - lastReaderPartIndex);
-        if(movedParts <= 0) return;
-
-        const lineStep = 34;
-        const cardMaxTop = Math.max(cardStartTop, Math.min(maxBodyTop, cardTop + cardHeight - bodyHeight + 80));
-        const nextTop = Math.min(cardMaxTop, lastReaderScrollTop + (movedParts * lineStep));
-
-        if(nextTop > lastReaderScrollTop){
-          lastReaderScrollTop = nextTop;
-          lastReaderPartIndex = currentPart;
-          body.scrollTo({ top: nextTop, behavior:'smooth' });
-        }
-      }else{
-        const card = document.getElementById(`queryCard_${item.id}`);
-        if(card){
-          const targetTop = Math.max(0, window.scrollY + card.getBoundingClientRect().top - 120);
-          window.scrollTo({ top: targetTop, behavior:'smooth' });
-        }
-      }
-    });
 
     const spokenText = normalizeSpeechText(currentPartText);
 
@@ -8561,41 +8278,6 @@ body.reader-bar-folded #queryScrollArea{
     );
   }
 
-
-  async function renderReaderOverlay(){
-    const body = $('readerOverlayBody');
-    if(!body) return;
-    const items = getVisibleSpeechItems();
-    if(!items.length){
-      body.innerHTML = '<div class="reader-card"><div class="reader-card-content">표시할 기록이 없습니다.</div></div>';
-      return;
-    }
-    const imageIds = normalizeStringList(items.flatMap(r => r.imageIds || []));
-    const imageMap = await getImagesByIds(imageIds);
-
-    body.innerHTML = items.map((item, idx) => {
-      const tagsHtml = (item.tags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('');
-      const imgsHtml = (item.imageIds || []).map(id => imageMap[id] ? `<img src="${imageMap[id]}" onclick="openImagePreview('${id}')">` : '').join('');
-      return `
-        <section class="reader-card" id="readerCard_${item.id}">
-          <div class="reader-card-meta">${escapeHtml(formatDateTime(item.studiedAt || item.createdAt))} · ${Number(item.minutes || 0)}분${item.favorite ? ' · 중요' : ''}</div>
-          <div class="reader-card-content">${item.contentHtml || escapeHtml(item.contentText || '')}</div>
-          ${tagsHtml ? `<div class="reader-card-tags">${tagsHtml}</div>` : ''}
-          ${imgsHtml ? `<div class="reader-card-images">${imgsHtml}</div>` : ''}
-        </section>
-      `;
-    }).join('');
-  }
-
-  async function openReaderOverlay(){
-    await renderReaderOverlay();
-    $('readerOverlay')?.classList.add('show');
-  }
-
-  window.closeReaderOverlay = function(){
-    $('readerOverlay')?.classList.remove('show');
-  };
-
   window.readUnifiedAction = function(){
     buildSpeechQueue();
     if(!speechQueueItems.length){
@@ -8616,7 +8298,6 @@ body.reader-bar-folded #queryScrollArea{
       updatePauseButtonUI();
       return;
     }
-    await openReaderOverlay();
     readUnifiedAction();
   };
 
@@ -8631,7 +8312,6 @@ body.reader-bar-folded #queryScrollArea{
     lastReaderScrollTop = 0;
     lastReaderPartIndex = 0;
     setReadingCardState('');
-    document.querySelectorAll('.reader-card.reading-active').forEach(el => el.classList.remove('reading-active'));
     updateBottomPlayerState(false);
     refreshBottomPlayerFromView();
   };
@@ -9191,7 +8871,6 @@ ${browserMessage}`;
     });
   }
 
-
   window.syncBottomRateToTop = function(value){
     if($('speechRateSelect')) $('speechRateSelect').value = String(value);
     updateSpeechRateLabel();
@@ -9222,8 +8901,6 @@ ${browserMessage}`;
   init();
 })();
 </script>
-
-
 
 <div id="pasteFallbackOverlay" class="paste-fallback-overlay" style="display:none;" aria-hidden="true">
   <div class="paste-fallback-sheet">
