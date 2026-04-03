@@ -6871,6 +6871,8 @@ body.reader-bar-folded #queryScrollArea{
 
   const DEFAULT_SYMBOLS = ['°C','√','h₁','h₂','²','³','λ','ζ','η','Δ','Σ','μ','±','COP','P-h','T-s'];
   const DEFAULT_TAGS = ['냉동','압축기','응축기','증발기','팽창밸브','열펌프','공식','복습'];
+  const REMOVED_TAGS_KEY = 'removedTagMaster';
+  const REMOVED_SYMBOLS_KEY = 'removedSymbolMaster';
 
   let imageDb = null;
   let records = [];
@@ -7241,21 +7243,29 @@ body.reader-bar-folded #queryScrollArea{
     const loadedGoal = await getAppValue('goalMinutes', 120);
     const loadedTags = await getAppValue('tagMaster', null);
     const loadedSymbols = await getAppValue('symbolMaster', null);
+    const loadedRemovedTags = await getAppValue(REMOVED_TAGS_KEY, []);
+    const loadedRemovedSymbols = await getAppValue(REMOVED_SYMBOLS_KEY, []);
 
     records = (Array.isArray(loadedRecords) ? loadedRecords : []).map(v => normalizeRecordItem(v, 'record'));
     trash = (Array.isArray(loadedTrash) ? loadedTrash : []).map(v => normalizeRecordItem(v, 'trash'));
     draft = { ...createDefaultDraft(), ...(loadedDraft || {}) };
     goalMinutes = Number(loadedGoal || 120) || 120;
 
+    await putAppValue(REMOVED_TAGS_KEY, normalizeStringList(loadedRemovedTags));
+    await putAppValue(REMOVED_SYMBOLS_KEY, normalizeStringList(loadedRemovedSymbols));
+
+    const effectiveDefaultTags = await getEffectiveDefaultTags();
+    const effectiveDefaultSymbols = await getEffectiveDefaultSymbols();
+
     if(Array.isArray(loadedTags) && loadedTags.length){
-      await putAppValue('tagMaster', normalizeStringList(loadedTags));
+      await putAppValue('tagMaster', normalizeStringList(loadedTags).filter(v => !loadedRemovedTags.includes(v)));
     } else {
-      await putAppValue('tagMaster', DEFAULT_TAGS);
+      await putAppValue('tagMaster', effectiveDefaultTags);
     }
     if(Array.isArray(loadedSymbols) && loadedSymbols.length){
-      await putAppValue('symbolMaster', normalizeStringList(loadedSymbols));
+      await putAppValue('symbolMaster', normalizeStringList(loadedSymbols).filter(v => !loadedRemovedSymbols.includes(v)));
     } else {
-      await putAppValue('symbolMaster', DEFAULT_SYMBOLS);
+      await putAppValue('symbolMaster', effectiveDefaultSymbols);
     }
   }
   async function saveRecords(){ await putAppValue('records', records); }
@@ -7263,17 +7273,44 @@ body.reader-bar-folded #queryScrollArea{
   async function saveDraft(){ await putAppValue('draft', draft); }
   async function saveGoal(){ await putAppValue('goalMinutes', goalMinutes); }
 
+  async function loadRemovedTagMaster(){
+    return normalizeStringList(await getAppValue(REMOVED_TAGS_KEY, []));
+  }
+  async function saveRemovedTagMaster(list){
+    await putAppValue(REMOVED_TAGS_KEY, normalizeStringList(list));
+  }
+  async function loadRemovedSymbolMaster(){
+    return normalizeStringList(await getAppValue(REMOVED_SYMBOLS_KEY, []));
+  }
+  async function saveRemovedSymbolMaster(list){
+    await putAppValue(REMOVED_SYMBOLS_KEY, normalizeStringList(list));
+  }
+  async function getEffectiveDefaultTags(){
+    const removed = await loadRemovedTagMaster();
+    return DEFAULT_TAGS.filter(v => !removed.includes(v));
+  }
+  async function getEffectiveDefaultSymbols(){
+    const removed = await loadRemovedSymbolMaster();
+    return DEFAULT_SYMBOLS.filter(v => !removed.includes(v));
+  }
+
   async function loadTagMaster(){
-    return normalizeStringList(await getAppValue('tagMaster', DEFAULT_TAGS));
+    const removed = await loadRemovedTagMaster();
+    const fallback = await getEffectiveDefaultTags();
+    return normalizeStringList(await getAppValue('tagMaster', fallback)).filter(v => !removed.includes(v));
   }
   async function saveTagMaster(list){
-    await putAppValue('tagMaster', normalizeStringList(list));
+    const removed = await loadRemovedTagMaster();
+    await putAppValue('tagMaster', normalizeStringList(list).filter(v => !removed.includes(v)));
   }
   async function loadSymbolMaster(){
-    return normalizeStringList(await getAppValue('symbolMaster', DEFAULT_SYMBOLS));
+    const removed = await loadRemovedSymbolMaster();
+    const fallback = await getEffectiveDefaultSymbols();
+    return normalizeStringList(await getAppValue('symbolMaster', fallback)).filter(v => !removed.includes(v));
   }
   async function saveSymbolMaster(list){
-    await putAppValue('symbolMaster', normalizeStringList(list));
+    const removed = await loadRemovedSymbolMaster();
+    await putAppValue('symbolMaster', normalizeStringList(list).filter(v => !removed.includes(v)));
   }
 
   function syncDraftFromForm(){
@@ -7294,8 +7331,11 @@ body.reader-bar-folded #queryScrollArea{
 
   async function ensureMastersFromRecords(){
     const tagMaster = await loadTagMaster();
-    const allTags = new Set(tagMaster);
-    records.forEach(r => (r.tags || []).forEach(t => allTags.add(t)));
+    const removedTags = await loadRemovedTagMaster();
+    const allTags = new Set(tagMaster.filter(t => !removedTags.includes(t)));
+    records.forEach(r => (r.tags || []).forEach(t => {
+      if(!removedTags.includes(t)) allTags.add(t);
+    }));
     await saveTagMaster([...allTags]);
   }
 
@@ -7390,10 +7430,14 @@ body.reader-bar-folded #queryScrollArea{
         };
         if(allowDelete){
           bindLongPressDelete(btn, `기호 "${sym}"`, async () => {
+            const removed = await loadRemovedSymbolMaster();
+            if(DEFAULT_SYMBOLS.includes(sym) && !removed.includes(sym)){
+              await saveRemovedSymbolMaster([...removed, sym]);
+            }
             const current = await loadSymbolMaster();
             await saveSymbolMaster(current.filter(v => v !== sym));
             renderSpecialButtons();
-            showToast('기호를 삭제했습니다.');
+            showToast('기호를 전체 목록에서 삭제했습니다.');
           });
         }
         target.appendChild(btn);
@@ -7427,12 +7471,21 @@ body.reader-bar-folded #queryScrollArea{
         renderTagButtons();
       };
       bindLongPressDelete(btn, `태그 "${tag}"`, async () => {
+        const removed = await loadRemovedTagMaster();
+        if(DEFAULT_TAGS.includes(tag) && !removed.includes(tag)){
+          await saveRemovedTagMaster([...removed, tag]);
+        }
         const current = await loadTagMaster();
         await saveTagMaster(current.filter(v => v !== tag));
         draft.tags = (draft.tags || []).filter(v => v !== tag);
+        records = records.map(r => ({ ...r, tags: (r.tags || []).filter(v => v !== tag) }));
+        trash = trash.map(r => ({ ...r, tags: (r.tags || []).filter(v => v !== tag) }));
+        await saveRecords();
+        await saveTrash();
         await saveDraft();
         renderTagButtons();
-        showToast('태그를 삭제했습니다.');
+        if(typeof renderRecords === 'function') await renderRecords();
+        showToast('태그를 기본값과 모든 기록에서 삭제했습니다.');
       });
       target.appendChild(btn);
     });
@@ -8990,12 +9043,14 @@ body.reader-bar-folded #queryScrollArea{
       if(dataUrl) payloadImages.push({ id, dataUrl });
     }
     const payload = {
-      version: 4,
+      version: 5,
       records,
       trash,
       goalMinutes,
       tags: await loadTagMaster(),
       symbols: await loadSymbolMaster(),
+      removedTags: await loadRemovedTagMaster(),
+      removedSymbols: await loadRemovedSymbolMaster(),
       draft,
       images: payloadImages
     };
@@ -9012,8 +9067,13 @@ body.reader-bar-folded #queryScrollArea{
       trash = (raw.trash || []).map(v => normalizeRecordItem(v, 'trash'));
       goalMinutes = Number(raw.goalMinutes || 120) || 120;
       draft = { ...createDefaultDraft(), ...(raw.draft || {}) };
-      await saveTagMaster([...(raw.tags || []), ...DEFAULT_TAGS]);
-      await saveSymbolMaster([...(raw.symbols || []), ...DEFAULT_SYMBOLS]);
+      await saveRemovedTagMaster(raw.removedTags || []);
+      await saveRemovedSymbolMaster(raw.removedSymbols || []);
+      await saveTagMaster([...(raw.tags || []), ...(await getEffectiveDefaultTags())]);
+      await saveSymbolMaster([...(raw.symbols || []), ...(await getEffectiveDefaultSymbols())]);
+      records = records.map(r => ({ ...r, tags: (r.tags || []).filter(v => !(raw.removedTags || []).includes(v)) }));
+      trash = trash.map(r => ({ ...r, tags: (r.tags || []).filter(v => !(raw.removedTags || []).includes(v)) }));
+      draft.tags = (draft.tags || []).filter(v => !(raw.removedTags || []).includes(v));
       await saveRecords();
       await saveTrash();
       await saveDraft();
