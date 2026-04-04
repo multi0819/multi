@@ -2369,6 +2369,66 @@ body.player-reading .bottom-player-btn.play{
   font-weight:700;
 }
 
+
+
+  #resetBtn{
+    background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(233,239,248,.88)) !important;
+    border:1px solid rgba(255,255,255,.52) !important;
+    color:#6b7fa6 !important;
+    -webkit-text-fill-color:#6b7fa6 !important;
+    text-shadow:none !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 10px 22px rgba(0,0,0,.16) !important;
+  }
+
+  #resetBtn:disabled{
+    color:#aebad1 !important;
+    -webkit-text-fill-color:#aebad1 !important;
+    opacity:1 !important;
+  }
+
+  .record-icon-btn.edit-action{
+    border-color:rgba(96,165,250,.42) !important;
+    background:linear-gradient(180deg, rgba(37,99,235,.22), rgba(29,78,216,.12)) !important;
+    color:#dbeafe !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(37,99,235,.12) !important;
+  }
+
+  .record-icon-btn.delete-action{
+    border-color:rgba(248,113,113,.42) !important;
+    background:linear-gradient(180deg, rgba(153,27,27,.24), rgba(127,29,29,.12)) !important;
+    color:#fecdd3 !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(127,29,29,.14) !important;
+  }
+
+  #contentEditor[data-placeholder]:empty:before{
+    color:#8ea9d6;
+  }
+
+  #toast.toast-reset{
+    background:linear-gradient(180deg, rgba(70,85,110,.96), rgba(45,57,78,.98)) !important;
+    color:#eef4ff !important;
+    border-color:rgba(176,194,224,.24) !important;
+  }
+
+  #toast.toast-save,
+  #toast.toast-input{
+    background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(5,150,105,.14)), rgba(10,16,28,.98) !important;
+    color:#d1fae5 !important;
+    border-color:rgba(52,211,153,.30) !important;
+  }
+
+  #toast.toast-edit{
+    background:linear-gradient(180deg, rgba(59,130,246,.22), rgba(37,99,235,.14)), rgba(10,16,28,.98) !important;
+    color:#dbeafe !important;
+    border-color:rgba(96,165,250,.30) !important;
+  }
+
+  #toast.toast-delete{
+    background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(190,24,93,.14)), rgba(10,16,28,.98) !important;
+    color:#ffe4e6 !important;
+    border-color:rgba(251,113,133,.30) !important;
+  }
+
 @media print{
   #pdfPreviewPage button{ display:none !important; }
   #pdfPreviewPage{ padding:0 !important; }
@@ -2816,7 +2876,67 @@ body.reader-bar-folded #bottomPlayerBar{
 </style>
 <style>
         @page{ size:A4; margin:8mm; }
-        @media print{
+        
+
+  #resetBtn{
+    background:linear-gradient(180deg, rgba(255,255,255,.92), rgba(233,239,248,.88)) !important;
+    border:1px solid rgba(255,255,255,.52) !important;
+    color:#6b7fa6 !important;
+    -webkit-text-fill-color:#6b7fa6 !important;
+    text-shadow:none !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.65), 0 10px 22px rgba(0,0,0,.16) !important;
+  }
+
+  #resetBtn:disabled{
+    color:#aebad1 !important;
+    -webkit-text-fill-color:#aebad1 !important;
+    opacity:1 !important;
+  }
+
+  .record-icon-btn.edit-action{
+    border-color:rgba(96,165,250,.42) !important;
+    background:linear-gradient(180deg, rgba(37,99,235,.22), rgba(29,78,216,.12)) !important;
+    color:#dbeafe !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.08), 0 8px 18px rgba(37,99,235,.12) !important;
+  }
+
+  .record-icon-btn.delete-action{
+    border-color:rgba(248,113,113,.42) !important;
+    background:linear-gradient(180deg, rgba(153,27,27,.24), rgba(127,29,29,.12)) !important;
+    color:#fecdd3 !important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 8px 18px rgba(127,29,29,.14) !important;
+  }
+
+  #contentEditor[data-placeholder]:empty:before{
+    color:#8ea9d6;
+  }
+
+  #toast.toast-reset{
+    background:linear-gradient(180deg, rgba(70,85,110,.96), rgba(45,57,78,.98)) !important;
+    color:#eef4ff !important;
+    border-color:rgba(176,194,224,.24) !important;
+  }
+
+  #toast.toast-save,
+  #toast.toast-input{
+    background:linear-gradient(180deg, rgba(16,185,129,.22), rgba(5,150,105,.14)), rgba(10,16,28,.98) !important;
+    color:#d1fae5 !important;
+    border-color:rgba(52,211,153,.30) !important;
+  }
+
+  #toast.toast-edit{
+    background:linear-gradient(180deg, rgba(59,130,246,.22), rgba(37,99,235,.14)), rgba(10,16,28,.98) !important;
+    color:#dbeafe !important;
+    border-color:rgba(96,165,250,.30) !important;
+  }
+
+  #toast.toast-delete{
+    background:linear-gradient(180deg, rgba(239,68,68,.22), rgba(190,24,93,.14)), rgba(10,16,28,.98) !important;
+    color:#ffe4e6 !important;
+    border-color:rgba(251,113,133,.30) !important;
+  }
+
+@media print{
           html, body{
             width:auto !important;
             background:#ffffff !important;
@@ -5268,7 +5388,7 @@ body.reader-bar-folded #queryScrollArea{
     <input type="datetime-local" step="1" id="studiedAtInput" class="w-full h-10 rounded-xl px-3 text-sm" />
 
     <div class="grid grid-cols-2 gap-2">
-      <button onclick="resetForm()" class="press h-10 rounded-xl border text-slate-300 text-sm font-bold">초기화</button>
+      <button id="resetBtn" onclick="resetForm()" class="press h-10 rounded-xl border text-sm font-bold">초기화</button>
       <button id="saveBtn" onclick="saveRecord()" class="press h-10 rounded-xl bg-blue-600 text-white text-base font-black">기록 저장</button>
     </div>
   </div>
@@ -6967,13 +7087,23 @@ body.reader-bar-folded #queryScrollArea{
   function showToast(message){
     const el = $('toast');
     if(!el) return;
-    el.textContent = message;
+    const msg = String(message || '');
+    el.textContent = msg;
+    el.className = '';
+    let kind = '';
+    if(/삭제|휴지통/.test(msg)) kind = 'toast-delete';
+    else if(/수정/.test(msg)) kind = 'toast-edit';
+    else if(/초기화/.test(msg)) kind = 'toast-reset';
+    else if(/저장|추가|불러왔습니다|복구|목표/.test(msg)) kind = 'toast-save';
+    else if(/입력/.test(msg)) kind = 'toast-input';
+    if(kind) el.classList.add(kind);
     el.style.opacity = '1';
     el.style.pointerEvents = 'auto';
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => {
       el.style.opacity = '0';
       el.style.pointerEvents = 'none';
+      el.className = '';
     }, 1800);
   }
   function escapeHtml(value){
@@ -7793,8 +7923,8 @@ body.reader-bar-folded #queryScrollArea{
                 <button type="button" class="record-pill-btn" onclick="openRecordDetail('${item.id}')">상세</button>
               </div>
               <div class="record-actions-right">
-                <button type="button" class="record-icon-btn" onclick="editRecord('${item.id}')">✎</button>
-                <button type="button" class="record-icon-btn" onclick="moveRecordToTrash('${item.id}')">🗑</button>
+                <button type="button" class="record-icon-btn edit-action" onclick="editRecord('${item.id}')">✎</button>
+                <button type="button" class="record-icon-btn delete-action" onclick="moveRecordToTrash('${item.id}')">🗑</button>
               </div>
             </div>
             <div class="text-xs text-slate-400 mt-3">${escapeHtml(formatDateTime(item.studiedAt || item.createdAt))} · ${Number(item.minutes || 0)}분</div>
@@ -8063,6 +8193,7 @@ body.reader-bar-folded #queryScrollArea{
   window.selectCalendarDay = function(key){
     selectedDayKey = key;
     currentView = 'day';
+    resetRepeatRangeOnNextRender();
     $('querySection')?.classList.add('is-open');
     $('calendarSection')?.classList.remove('is-open');
     renderCalendar();
@@ -8424,8 +8555,8 @@ body.reader-bar-folded #queryScrollArea{
 
   function buildSpeechQueue(){
     const items = getVisibleSpeechItems();
-    const start = Math.max(1, Number($('repeatStartInput')?.value || 1));
-    const end = Math.max(start, Number($('repeatEndInput')?.value || items.length || 1));
+    const start = Math.max(1, getRepeatButtonValue('repeatStartInput', 1));
+    const end = Math.max(start, getRepeatButtonValue('repeatEndInput', items.length || 1));
     const repeatCount = Math.max(1, getRepeatButtonValue('repeatCountInput', 1));
     speechRepeatTarget = repeatCount;
     speechRepeatDone = 0;
@@ -8548,8 +8679,8 @@ body.reader-bar-folded #queryScrollArea{
   function refreshBottomPlayerFromView(){
     syncTopRateToBottom();
     const total = Math.max(0, getVisibleSpeechItemCount());
-    const start = Number($('repeatStartInput')?.value || 1);
-    const end = Number($('repeatEndInput')?.value || total);
+    const start = getRepeatButtonValue('repeatStartInput', 1);
+    const end = getRepeatButtonValue('repeatEndInput', total);
     const usingRange = total > 0 ? !(start === 1 && end === total) : false;
     if($('bottomPlayerStatus')){
       $('bottomPlayerStatus').textContent = usingRange ? `구간 ${start}~${end}` : '전체 준비';
@@ -8787,6 +8918,11 @@ body.reader-bar-folded #queryScrollArea{
   }
 
   let lastRepeatMenuTotal = 0;
+  let forceRepeatRangeReset = false;
+
+  function resetRepeatRangeOnNextRender(){
+    forceRepeatRangeReset = true;
+  }
 
   function updateRepeatPickerMenus(total){
     total = Math.max(1, Number(total || 1));
@@ -8796,14 +8932,23 @@ body.reader-bar-folded #queryScrollArea{
     const prevCount = getRepeatButtonValue('repeatCountInput', 1);
     const totalChanged = total !== lastRepeatMenuTotal;
 
-    const nextStart = Math.max(1, Math.min(total, prevStart));
-    const nextEnd = totalChanged ? total : Math.max(nextStart, Math.min(total, prevEnd));
+    let nextStart;
+    let nextEnd;
+
+    if(forceRepeatRangeReset){
+      nextStart = 1;
+      nextEnd = total;
+    }else{
+      nextStart = Math.max(1, Math.min(total, prevStart));
+      nextEnd = totalChanged ? total : Math.max(nextStart, Math.min(total, prevEnd));
+    }
 
     setRepeatButtonValue('repeatStartInput', nextStart);
     setRepeatButtonValue('repeatEndInput', nextEnd);
     setRepeatButtonValue('repeatCountInput', Math.max(1, Math.min(20, prevCount)));
 
     lastRepeatMenuTotal = total;
+    forceRepeatRangeReset = false;
     autoSyncRepeatRange();
   }
 
@@ -8983,12 +9128,14 @@ body.reader-bar-folded #queryScrollArea{
   window.showLatestRecordView = function(){
     currentView = 'latest';
     selectedDayKey = '';
+    resetRepeatRangeOnNextRender();
     renderCalendar();
     renderRecords();
   };
   window.showAllRecordsView = function(){
     currentView = 'all';
     selectedDayKey = '';
+    resetRepeatRangeOnNextRender();
     renderCalendar();
     renderRecords();
   };
