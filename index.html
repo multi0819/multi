@@ -2594,6 +2594,43 @@ body.player-reading .bottom-player-btn.play{
   transform:scale(1.01);
 }
 
+
+
+/* v18 카드 구분선 강화 */
+.query-card,
+#recordList .query-card,
+#selectedDayRecords .query-card{
+  margin-bottom:16px !important;
+}
+
+.query-card .card,
+#recordList .query-card .card,
+#selectedDayRecords .query-card .card,
+#recordList .query-card > div > .card,
+#selectedDayRecords .query-card > div > .card{
+  border:1.5px solid rgba(138,170,255,.28) !important;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.05),
+    0 0 0 1px rgba(62,102,196,.16) !important;
+}
+
+.query-card .card:hover,
+#recordList .query-card .card:hover,
+#selectedDayRecords .query-card .card:hover{
+  border-color:rgba(156,188,255,.34) !important;
+}
+
+.query-card .card::before,
+#recordList .query-card .card::before,
+#selectedDayRecords .query-card .card::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.04);
+}
+
 </style>
 <style id="tag-rail-real-visible">
 .tag-rail{
