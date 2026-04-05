@@ -7908,9 +7908,10 @@ body.reader-bar-folded #queryScrollArea{
     }
     const imageIds = normalizeStringList(list.flatMap(r => r.imageIds || []));
     const imageMap = await getImagesByIds(imageIds);
-    target.innerHTML = list.map(item => {
+    target.innerHTML = list.map((item, index) => {
       const collapsed = previewCollapsed[item.id] === true;
       const previewClass = collapsed ? 'record-preview collapsed' : 'record-preview';
+      const pageNo = index + 1;
       const tagHtml = (item.tags || []).map(tag => `<span class="chip">${escapeHtml(tag)}</span>`).join('');
       const images = (item.imageIds || []).map(id => imageMap[id] ? `<img src="${imageMap[id]}" class="record-image zoomable-image" onclick="openImagePreview('${id}')">` : '').join('');
       return `
@@ -7927,7 +7928,7 @@ body.reader-bar-folded #queryScrollArea{
                 <button type="button" class="record-icon-btn delete-action" onclick="moveRecordToTrash('${item.id}')">🗑</button>
               </div>
             </div>
-            <div class="text-xs text-slate-400 mt-3">${escapeHtml(formatDateTime(item.studiedAt || item.createdAt))} · ${Number(item.minutes || 0)}분</div>
+            <div class="text-xs text-slate-400 mt-3">${escapeHtml(formatDateTime(item.studiedAt || item.createdAt))} · ${Number(item.minutes || 0)}분 · 페이지 ${pageNo}</div>
             ${collapsed ? '' : `<div id="recordPreview_${item.id}" class="${previewClass} mt-3 text-slate-100 text-[18px] leading-[1.7]">${item.contentHtml || escapeHtml(item.contentText || '')}</div>`}
             ${(!collapsed && tagHtml) ? `<div class="detail-tags mt-3">${tagHtml}</div>` : ''}
             ${(!collapsed && images) ? `<div class="record-images mt-3">${images}</div>` : ''}
