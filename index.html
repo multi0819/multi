@@ -4847,43 +4847,6 @@ body.reader-bar-folded #queryScrollArea{
   height:24px !important;
   border-radius:999px !important;
 }
-.compact-fontsize-rail{
-  gap:8px;
-}
-.compact-fontsize-rail > *{
-  flex:0 0 auto;
-}
-.font-size-step-btn,
-.font-size-value-btn{
-  min-height:32px !important;
-  height:32px !important;
-  border-radius:10px !important;
-  border:1px solid rgba(255,255,255,.12) !important;
-  box-shadow:none !important;
-  font-weight:900 !important;
-}
-.font-size-step-btn{
-  min-width:42px !important;
-  width:42px;
-  background:#f1f3f7 !important;
-  color:#111827 !important;
-  font-size:18px !important;
-  line-height:1 !important;
-}
-.font-size-value-btn{
-  min-width:72px !important;
-  padding:0 14px !important;
-  background:linear-gradient(135deg,#3b82f6,#60a5fa) !important;
-  color:#ffffff !important;
-  border-color:rgba(255,255,255,.28) !important;
-  font-size:14px !important;
-}
-.font-size-value-btn::after{
-  content:'px';
-  margin-left:2px;
-  font-size:11px;
-  opacity:.9;
-}
 .compact-selector-manage-icon{
   flex:0 0 32px;
   width:32px;
@@ -5299,7 +5262,6 @@ body.reader-bar-folded #queryScrollArea{
           <option value="specialButtons">기호</option>
           <option value="tagButtons">태그</option>
           <option value="colorPalette">색상</option>
-          <option value="fontSizeControls">크기</option>
         </select>
 
         <div class="compact-selector-body compact-selector-body--singleline">
@@ -5321,13 +5283,6 @@ body.reader-bar-folded #queryScrollArea{
               <button type="button" class="color-dot" data-color="#f87171" style="background:#f87171" onclick="applyEditorColor('#f87171')"></button>
               <button type="button" class="color-dot" data-color="#f9a8d4" style="background:#f9a8d4" onclick="applyEditorColor('#f9a8d4')"></button>
               <button type="button" class="color-dot" data-color="#c084fc" style="background:#c084fc" onclick="applyEditorColor('#c084fc')"></button>
-            </div>
-          </div>
-          <div class="compact-selector-panel" data-compact-panel="fontSizeControls" hidden>
-            <div class="compact-selector-rail compact-fontsize-rail" id="fontSizeControls">
-              <button type="button" class="font-size-step-btn" id="fontSizeDownBtn" onclick="stepEditorFontSize(-1)" aria-label="글자크기 줄이기">－</button>
-              <button type="button" class="font-size-value-btn" id="fontSizeValueBtn" onclick="resetEditorFontSize()" aria-label="현재 글자크기">기본</button>
-              <button type="button" class="font-size-step-btn" id="fontSizeUpBtn" onclick="stepEditorFontSize(1)" aria-label="글자크기 키우기">＋</button>
             </div>
           </div>
         </div>
@@ -5369,9 +5324,6 @@ body.reader-bar-folded #queryScrollArea{
         </div>
         <div class="compact-manage-group compact-manage-guide" data-manage-group="colorPalette" hidden>
           색상은 오른쪽 목록에서 바로 선택됩니다.
-        </div>
-        <div class="compact-manage-group compact-manage-guide" data-manage-group="fontSizeControls" hidden>
-          좌우 버튼으로 숫자 크기를 바로 조절합니다.
         </div>
       </div>
     </div>
@@ -7200,7 +7152,6 @@ body.reader-bar-folded #queryScrollArea{
       customTag:'',
       customSymbol:'',
       textColor:'#edf3fb',
-      fontSize:17,
       imageIds:[],
       favorite:false
     };
@@ -7541,7 +7492,6 @@ body.reader-bar-folded #queryScrollArea{
     $('studiedAtInput').value = draft.studiedAt || getLocalDateTimeValue();
     $('contentEditor').innerHTML = draft.contentHtml || '';
     applyEditorColor(draft.textColor || '#edf3fb', true);
-    renderFontSizeControls();
     renderPastePreview();
     renderTagButtons();
   }
@@ -7738,91 +7688,6 @@ body.reader-bar-folded #queryScrollArea{
     syncDraftFromForm();
   }
 
-  function normalizeEditorFontTags(){
-    const editor = $('contentEditor');
-    if(!editor) return;
-    editor.querySelectorAll('font[size]').forEach(node => {
-      const sizeValue = Number(node.getAttribute('data-font-size') || draft.fontSize || DEFAULT_EDITOR_FONT_SIZE);
-      const span = document.createElement('span');
-      span.style.fontSize = `${sizeValue}px`;
-      span.innerHTML = node.innerHTML;
-      node.replaceWith(span);
-    });
-  }
-
-  const DEFAULT_EDITOR_FONT_SIZE = 17;
-  const MIN_EDITOR_FONT_SIZE = 12;
-  const MAX_EDITOR_FONT_SIZE = 24;
-
-  function getDraftFontSize(){
-    const value = Number(draft.fontSize || DEFAULT_EDITOR_FONT_SIZE);
-    if(Number.isNaN(value)) return DEFAULT_EDITOR_FONT_SIZE;
-    return Math.min(MAX_EDITOR_FONT_SIZE, Math.max(MIN_EDITOR_FONT_SIZE, value));
-  }
-
-  function applyFontSizeToSelection(size){
-    const editor = $('contentEditor');
-    if(!editor) return false;
-    const selection = window.getSelection();
-    if(!selection || !selection.rangeCount) return false;
-    const range = selection.getRangeAt(0);
-    if(range.collapsed) return false;
-    if(!editor.contains(range.commonAncestorContainer)) return false;
-
-    const span = document.createElement('span');
-    span.style.fontSize = `${size}px`;
-    try{
-      const contents = range.extractContents();
-      span.appendChild(contents);
-      range.insertNode(span);
-      selection.removeAllRanges();
-      const newRange = document.createRange();
-      newRange.selectNodeContents(span);
-      selection.addRange(newRange);
-      return true;
-    }catch(e){
-      return false;
-    }
-  }
-
-  function renderFontSizeControls(){
-    const value = getDraftFontSize();
-    draft.fontSize = value;
-    const valueBtn = $('fontSizeValueBtn');
-    const downBtn = $('fontSizeDownBtn');
-    const upBtn = $('fontSizeUpBtn');
-    if(valueBtn) valueBtn.textContent = value === DEFAULT_EDITOR_FONT_SIZE ? `기본 ${value}px` : `${value}px`;
-    if(downBtn) downBtn.disabled = value <= MIN_EDITOR_FONT_SIZE;
-    if(upBtn) upBtn.disabled = value >= MAX_EDITOR_FONT_SIZE;
-  }
-
-  window.applyEditorFontSize = function(size, silent){
-    const editor = $('contentEditor');
-    const next = Math.min(MAX_EDITOR_FONT_SIZE, Math.max(MIN_EDITOR_FONT_SIZE, Number(size || DEFAULT_EDITOR_FONT_SIZE)));
-    draft.fontSize = next;
-    renderFontSizeControls();
-    if(!editor){
-      if(!silent) saveDraft();
-      return;
-    }
-    if(!silent) editor.focus();
-    const applied = applyFontSizeToSelection(next);
-    normalizeEditorFontTags();
-    if(!applied && editor && !silent){
-      editor.style.fontSize = `${DEFAULT_EDITOR_FONT_SIZE}px`;
-    }
-    syncDraftFromForm();
-  };
-
-  window.stepEditorFontSize = function(delta){
-    const base = getDraftFontSize();
-    applyEditorFontSize(base + Number(delta || 0));
-  };
-
-  window.resetEditorFontSize = function(){
-    applyEditorFontSize(DEFAULT_EDITOR_FONT_SIZE);
-  };
-
   window.applyEditorColor = function(color, silent){
     draft.textColor = color;
     document.querySelectorAll('#colorPalette .color-dot').forEach(el => {
@@ -7836,7 +7701,6 @@ body.reader-bar-folded #queryScrollArea{
         document.execCommand('foreColor', false, color);
       }catch(e){}
     }
-    renderFontSizeControls();
     if(!silent) syncDraftFromForm();
   };
 
@@ -8414,7 +8278,6 @@ body.reader-bar-folded #queryScrollArea{
   function getCompactSelectorModeLabel(mode){
     if(mode === 'tagButtons') return '태그';
     if(mode === 'colorPalette') return '색상';
-    if(mode === 'fontSizeControls') return '크기';
     return '기호';
   }
 
@@ -8432,7 +8295,7 @@ body.reader-bar-folded #queryScrollArea{
   window.cycleCompactSelectorMode = function(){
     const select = $('compactSelectorMode');
     if(!select) return;
-    const order = ['specialButtons','tagButtons','colorPalette','fontSizeControls'];
+    const order = ['specialButtons','tagButtons','colorPalette'];
     const currentIndex = order.indexOf(select.value);
     const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % order.length : 0;
     select.value = order[nextIndex];
@@ -8456,7 +8319,6 @@ body.reader-bar-folded #queryScrollArea{
 
   function initEditorControls(){
     $('compactSelectorMode')?.addEventListener('change', updateCompactManageVisibility);
-    renderFontSizeControls();
     syncCompactSelectorModeButton();
     $('compactSelectorManageBtn')?.addEventListener('click', () => {
       compactManageOpen = !compactManageOpen;
