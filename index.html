@@ -4935,6 +4935,39 @@ body.reader-bar-folded #queryScrollArea{
   border-color:rgba(130,170,255,.38) !important;
 }
 </style>
+
+<style id="touch-scroll-direct-fix-v1">
+/* 검색/기호 가로 스크롤 직접 보정 */
+.sticky-nav{
+  overflow-x:auto !important;
+  overflow-y:hidden !important;
+  -webkit-overflow-scrolling:touch !important;
+  overscroll-behavior-x:contain !important;
+  overscroll-behavior-y:none !important;
+  touch-action:pan-x !important;
+}
+.sticky-nav > .flex,
+.compact-selector-row,
+.compact-selector-body--singleline,
+.compact-selector-body--singleline .compact-selector-panel,
+#specialButtons.compact-selector-rail,
+#tagButtons.compact-selector-rail,
+#colorPalette.compact-selector-rail{
+  overscroll-behavior-x:contain !important;
+  overscroll-behavior-y:none !important;
+  -webkit-overflow-scrolling:touch !important;
+  touch-action:pan-x !important;
+}
+.sticky-nav > .flex{
+  flex-wrap:nowrap !important;
+}
+#specialButtons.compact-selector-rail,
+#tagButtons.compact-selector-rail,
+#colorPalette.compact-selector-rail{
+  position:relative !important;
+  z-index:2 !important;
+}
+</style>
 <style id="oai-landscape-patch">
 @media (orientation: landscape) {
   html, body {
@@ -7026,7 +7059,7 @@ body.reader-bar-folded #queryScrollArea{
   const IMAGE_STORE_NAME = 'images';
   const APP_STORE_NAME = 'appkv';
 
-  const DEFAULT_SYMBOLS = [];
+  const DEFAULT_SYMBOLS = ['1. ', '① ', '- '];
   const DEFAULT_TAGS = [];
   const REMOVED_TAGS_KEY = 'removedTagMaster';
   const REMOVED_SYMBOLS_KEY = 'removedSymbolMaster';
@@ -7495,6 +7528,147 @@ body.reader-bar-folded #queryScrollArea{
     renderPastePreview();
     renderTagButtons();
   }
+
+  function escapeHtmlInline(text){
+    return String(text || '').replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+  }
+
+  const CIRCLED_NUMBER_CHARS = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩','⑪','⑫','⑬','⑭','⑮','⑯','⑰','⑱','⑲','⑳'];
+
+  function getNextListPrefix(lineText){
+    const text = String(lineText || '').replace(/​/g, '');
+    let match = text.match(/^(\d+)\.\s*/);
+    if(match){
+      return { type:'number', prefix: `${Number(match[1]) + 1}. `, markerLength: match[0].length, hasContent: text.slice(match[0].length).trim().length > 0 };
+    }
+    match = text.match(/^([①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳])\s*/);
+    if(match){
+      const idx = CIRCLED_NUMBER_CHARS.indexOf(match[1]);
+      const next = CIRCLED_NUMBER_CHARS[Math.min(idx + 1, CIRCLED_NUMBER_CHARS.length - 1)] || match[1];
+      return { type:'circled', prefix: `${next} `, markerLength: match[0].length, hasContent: text.slice(match[0].length).trim().length > 0 };
+    }
+    match = text.match(/^([-*•])\s*/);
+    if(match){
+      return { type:'bullet', prefix: `${match[1]} `, markerLength: match[0].length, hasContent: text.slice(match[0].length).trim().length > 0 };
+    }
+    return null;
+  }
+
+  function findEditorLineElement(node, editor){
+    let current = node;
+    while(current && current !== editor){
+      if(current.nodeType === 1 && current.parentNode === editor && /^(DIV|P)$/i.test(current.nodeName)) return current;
+      current = current.parentNode;
+    }
+    return null;
+  }
+
+  function setCaretToTextNode(target, offset){
+    const range = document.createRange();
+    const sel = window.getSelection();
+    const walker = document.createTreeWalker(target, NodeFilter.SHOW_TEXT, null);
+    let node = walker.nextNode();
+    if(!node){
+      node = document.createTextNode('');
+      target.appendChild(node);
+    }
+    range.setStart(node, Math.min(offset, node.textContent.length));
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }
+
+  function setCaretToLineStart(lineEl, offset = 0){
+    if(!lineEl) return;
+    setCaretToTextNode(lineEl, Math.max(0, offset));
+  }
+
+  function ensureEditorLineElement(editor){
+    const info = getEditorSelectionInfo(editor);
+    if(info?.lineEl) return info.lineEl;
+    const html = editor.innerHTML || '';
+    const lineEl = document.createElement('div');
+    lineEl.innerHTML = html || '<br>';
+    editor.innerHTML = '';
+    editor.appendChild(lineEl);
+    setCaretToLineStart(lineEl, (lineEl.textContent || '').length);
+    return lineEl;
+  }
+
+  function getEditorSelectionInfo(editor){
+    const sel = window.getSelection();
+    if(!sel || !sel.rangeCount) return null;
+    const range = sel.getRangeAt(0);
+    if(!editor.contains(range.startContainer)) return null;
+    return { sel, range, lineEl: findEditorLineElement(range.startContainer, editor) };
+  }
+
+  function getCaretOffsetInLine(lineEl, range){
+    const probe = range.cloneRange();
+    probe.selectNodeContents(lineEl);
+    probe.setEnd(range.startContainer, range.startOffset);
+    return probe.toString().length;
+  }
+
+  function insertEditorListLine(editor, lineEl, prefix){
+    const nextLine = document.createElement('div');
+    nextLine.innerHTML = escapeHtmlInline(prefix);
+    if(lineEl && lineEl.parentNode === editor){
+      lineEl.insertAdjacentElement('afterend', nextLine);
+    }else{
+      editor.appendChild(nextLine);
+    }
+    setCaretToLineStart(nextLine, prefix.length);
+    syncDraftFromForm();
+  }
+
+  function exitEditorList(lineEl){
+    if(!lineEl) return;
+    lineEl.innerHTML = '<br>';
+    setCaretToLineStart(lineEl, 0);
+    syncDraftFromForm();
+  }
+
+  function removeEditorListPrefix(lineEl, markerLength){
+    if(!lineEl) return;
+    const nextText = String(lineEl.textContent || '').slice(markerLength);
+    if(nextText){
+      lineEl.textContent = nextText;
+      setCaretToLineStart(lineEl, 0);
+    }else{
+      lineEl.innerHTML = '<br>';
+      setCaretToLineStart(lineEl, 0);
+    }
+    syncDraftFromForm();
+  }
+
+  function handleEditorAutoListKeydown(event){
+    const editor = event.currentTarget;
+    if(!editor) return;
+    const info = getEditorSelectionInfo(editor);
+    if(!info) return;
+    let lineEl = info.lineEl || ensureEditorLineElement(editor);
+    const lineText = String(lineEl?.textContent || '').replace(/​/g, '');
+    const listMeta = getNextListPrefix(lineText);
+    if(event.key === 'Enter'){
+      if(!listMeta) return;
+      event.preventDefault();
+      if(!listMeta.hasContent){
+        exitEditorList(lineEl);
+        return;
+      }
+      insertEditorListLine(editor, lineEl, listMeta.prefix);
+      return;
+    }
+    if(event.key === 'Backspace'){
+      if(!listMeta || !info.range.collapsed) return;
+      const caretOffset = getCaretOffsetInLine(lineEl, info.range);
+      if(caretOffset > listMeta.markerLength) return;
+      event.preventDefault();
+      removeEditorListPrefix(lineEl, listMeta.markerLength);
+    }
+  }
+
 
   async function ensureMastersFromRecords(){
     const tagMaster = await loadTagMaster();
@@ -8317,6 +8491,65 @@ body.reader-bar-folded #queryScrollArea{
     $('compactSelectorManageBtn')?.setAttribute('aria-expanded', compactManageOpen ? 'true' : 'false');
   }
 
+
+
+  function bindHorizontalTouchScroll(target){
+    if(!target || target.dataset.horizontalTouchBound === 'true') return;
+    target.dataset.horizontalTouchBound = 'true';
+    let startX = 0;
+    let startY = 0;
+    let startLeft = 0;
+    let locked = false;
+    let active = false;
+
+    const getTouch = (event) => event.touches?.[0] || event.changedTouches?.[0] || null;
+
+    target.addEventListener('touchstart', (event) => {
+      const touch = getTouch(event);
+      if(!touch) return;
+      startX = touch.clientX;
+      startY = touch.clientY;
+      startLeft = target.scrollLeft;
+      locked = false;
+      active = target.scrollWidth > target.clientWidth;
+    }, { passive:true });
+
+    target.addEventListener('touchmove', (event) => {
+      if(!active) return;
+      const touch = getTouch(event);
+      if(!touch) return;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+      if(!locked){
+        if(Math.abs(dx) < 6) return;
+        if(Math.abs(dx) <= Math.abs(dy)) return;
+        locked = true;
+      }
+      target.scrollLeft = startLeft - dx;
+      if(event.cancelable) event.preventDefault();
+      event.stopPropagation();
+    }, { passive:false });
+
+    target.addEventListener('touchend', () => {
+      locked = false;
+      active = false;
+    }, { passive:true });
+
+    target.addEventListener('touchcancel', () => {
+      locked = false;
+      active = false;
+    }, { passive:true });
+  }
+
+  function initHorizontalTouchScrollFix(){
+    [
+      document.querySelector('.sticky-nav'),
+      $('specialButtons'),
+      $('tagButtons'),
+      $('colorPalette')
+    ].forEach(bindHorizontalTouchScroll);
+  }
+
   function initEditorControls(){
     $('compactSelectorMode')?.addEventListener('change', updateCompactManageVisibility);
     syncCompactSelectorModeButton();
@@ -8325,6 +8558,7 @@ body.reader-bar-folded #queryScrollArea{
       updateCompactManageVisibility();
     });
     $('contentEditor')?.addEventListener('input', syncDraftFromForm);
+    $('contentEditor')?.addEventListener('keydown', handleEditorAutoListKeydown);
     $('studiedAtInput')?.addEventListener('input', syncDraftFromForm);
     $('minutesInput')?.addEventListener('input', syncDraftFromForm);
     $('customSymbolInput')?.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); addCustomSymbol(); }});
@@ -9584,6 +9818,7 @@ ${browserMessage}`;
     await renderTagButtons();
     syncFormFromDraft();
     initEditorControls();
+    initHorizontalTouchScrollFix();
     initDisplay();
     initPasteFallback();
     $('goalInput').value = String(goalMinutes);
