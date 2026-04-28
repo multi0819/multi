@@ -4625,28 +4625,11 @@ function speakWithPause(text, rate, onEnd) {
   const utter = new SpeechSynthesisUtterance(normalized);
   utter.lang  = 'ko-KR';
   utter.rate  = Number.isFinite(Number(rate)) ? Number(rate) : 1;
-  /* 한국어 음성 명시 선택 */
   const voices  = speechSynthesis.getVoices();
   const koVoice = voices.find(v => v.lang === 'ko-KR') || voices.find(v => v.lang.startsWith('ko'));
   if (koVoice) utter.voice = koVoice;
-
-  let started = false;
-  /* onstart가 오면 정상 동작 확인 */
-  utter.onstart = () => { started = true; };
-  /* onend가 왔는데 onstart가 없었으면 — 패드 차단 상태 */
-  utter.onend = () => {
-    if (!started) {
-      /* 실제로 재생이 안 된 것 → 멈춤 */
-      stopSpeech();
-      showToast('음성 재생이 차단됐습니다. 다시 읽기를 눌러주세요.');
-      return;
-    }
-    if (!speechPaused && onEnd) onEnd();
-  };
-  utter.onerror = (e) => {
-    if (e.error === 'canceled' || e.error === 'interrupted') return;
-    if (!speechPaused && onEnd) onEnd();
-  };
+  utter.onend   = () => { if (!speechPaused && onEnd) onEnd(); };
+  utter.onerror = (e) => { if (e.error === 'canceled' || e.error === 'interrupted') return; if (!speechPaused && onEnd) onEnd(); };
   speechSynthesis.speak(utter);
 }
 
@@ -4765,24 +4748,52 @@ function speakCurrentItem() {
 }
 
 window.readUnifiedAction = function() {
-  const voices = speechSynthesis.getVoices();
-  /* 음성 목록이 아직 로드 안 됐으면 대기 후 재시도 */
-  if (!voices.length) {
-    showToast('음성 엔진 로딩 중... 잠시 후 다시 눌러주세요.');
-    speechSynthesis.getVoices(); // 트리거
-    window.speechSynthesis.onvoiceschanged = function() {
-      window.speechSynthesis.onvoiceschanged = null;
-      showToast('음성 준비 완료. 읽기를 눌러주세요.');
-    };
-    return;
-  }
   buildSpeechQueue();
   if (!speechQueueItems.length) { showToast('읽을 기록이 없습니다.'); return; }
   speechPaused = false; speechIndex = 0; speechPartIndex = 0;
-  speakCurrentItem();
+
+  /* 음성 목록이 이미 있으면 바로 시작 */
+  if (speechSynthesis.getVoices().length) {
+    speakCurrentItem();
+    return;
+  }
+  /* 없으면: onvoiceschanged 대기하되 현재 제스처 컨텍스트에서 첫 speak 호출 */
+  const firstItem = speechQueueItems[0];
+  if (!firstItem) return;
+  const normalized = normalizeSpeechText(firstItem.text || '');
+  const utter = new SpeechSynthesisUtterance(normalized);
+  utter.lang = 'ko-KR';
+  utter.rate = currentSpeechRate || 1;
+  let started = false;
+  utter.onstart = () => {
+    started = true;
+    setCurrentSpeechDisplay(firstItem.text || '');
+    setReadingCardState(firstItem.id);
+    updateBottomPlayerState(true);
+  };
+  utter.onend = () => {
+    if (!started) { stopSpeech(); showToast('음성 재생 권한이 필요합니다. 브라우저 설정에서 소리를 허용해 주세요.'); return; }
+    if (speechPaused) return;
+    speechIndex = 1;
+    speakCurrentItem();
+  };
+  utter.onerror = (e) => {
+    if (e.error === 'canceled' || e.error === 'interrupted') return;
+    if (!speechPaused) { speechIndex = 1; speakCurrentItem(); }
+  };
+  /* 제스처 컨텍스트 안에서 즉시 speak */
+  speechSynthesis.speak(utter);
+  updateBottomPlayerState(true);
 };
+
 window.handlePlayButton = function() {
-  if (speechPaused) { speechPaused = false; speakCurrentItem(); updateBottomPlayerState(true); updatePauseButtonUI(); return; }
+  if (speechPaused) {
+    speechPaused = false;
+    speakCurrentItem();
+    updateBottomPlayerState(true);
+    updatePauseButtonUI();
+    return;
+  }
   readUnifiedAction();
 };
 window.stopSpeech = function() {
