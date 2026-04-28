@@ -4625,12 +4625,28 @@ function speakWithPause(text, rate, onEnd) {
   const utter = new SpeechSynthesisUtterance(normalized);
   utter.lang  = 'ko-KR';
   utter.rate  = Number.isFinite(Number(rate)) ? Number(rate) : 1;
-  /* 한국어 음성 명시 선택 — 패드/데스크탑 Chrome 호환성 */
+  /* 한국어 음성 명시 선택 */
   const voices  = speechSynthesis.getVoices();
   const koVoice = voices.find(v => v.lang === 'ko-KR') || voices.find(v => v.lang.startsWith('ko'));
   if (koVoice) utter.voice = koVoice;
-  utter.onend   = () => { if (!speechPaused && onEnd) onEnd(); };
-  utter.onerror = (e) => { if (e.error !== 'canceled' && !speechPaused && onEnd) onEnd(); };
+
+  let started = false;
+  /* onstart가 오면 정상 동작 확인 */
+  utter.onstart = () => { started = true; };
+  /* onend가 왔는데 onstart가 없었으면 — 패드 차단 상태 */
+  utter.onend = () => {
+    if (!started) {
+      /* 실제로 재생이 안 된 것 → 멈춤 */
+      stopSpeech();
+      showToast('음성 재생이 차단됐습니다. 다시 읽기를 눌러주세요.');
+      return;
+    }
+    if (!speechPaused && onEnd) onEnd();
+  };
+  utter.onerror = (e) => {
+    if (e.error === 'canceled' || e.error === 'interrupted') return;
+    if (!speechPaused && onEnd) onEnd();
+  };
   speechSynthesis.speak(utter);
 }
 
@@ -4749,13 +4765,16 @@ function speakCurrentItem() {
 }
 
 window.readUnifiedAction = function() {
-  /* 태블릿/데스크탑 Chrome: 첫 speak 전 음성엔진 활성화 */
-  if (!window._ttsUnlocked) {
-    window._ttsUnlocked = true;
-    const dummy = new SpeechSynthesisUtterance('');
-    dummy.volume = 0;
-    speechSynthesis.speak(dummy);
-    speechSynthesis.cancel();
+  const voices = speechSynthesis.getVoices();
+  /* 음성 목록이 아직 로드 안 됐으면 대기 후 재시도 */
+  if (!voices.length) {
+    showToast('음성 엔진 로딩 중... 잠시 후 다시 눌러주세요.');
+    speechSynthesis.getVoices(); // 트리거
+    window.speechSynthesis.onvoiceschanged = function() {
+      window.speechSynthesis.onvoiceschanged = null;
+      showToast('음성 준비 완료. 읽기를 눌러주세요.');
+    };
+    return;
   }
   buildSpeechQueue();
   if (!speechQueueItems.length) { showToast('읽을 기록이 없습니다.'); return; }
