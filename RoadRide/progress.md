@@ -17,3 +17,5 @@ Ruling: User requested GitHub delivery without specifying new repository. Add Ro
 CI: First GitHub run failed in setup-android before tests/build: removed SDK package tools. Explicit platforms;android-35/build-tools;35.0.0 packages added. Gradle manifest source now omits package attribute; direct build stages its own package-qualified manifest.
 
 CI: Second GitHub run 37419808471 SUCCESS including SDK setup, npm ci, 12 tests, Gradle assembleDebug/lintDebug and APK artifact upload. GitHub APK/ZIP bytes independently matched local SHA-256.
+
+1.0.1: Startup data: URI was blocked by own request filter. Switched startup to HTTPS asset URL. AssetRouter regression RED blocked startup → GREEN 5 checks. JavaScript suite 12/12; signed APK rebuilt with existing key.

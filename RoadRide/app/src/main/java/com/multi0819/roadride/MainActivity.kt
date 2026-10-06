@@ -20,8 +20,7 @@ class MainActivity : Activity() {
     private lateinit var root: FrameLayout
     private var custom: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
-    private val appHost = "com.multi0819.roadride"
-    private val assetsAllowed = setOf("index.html", "style.css", "app.js", "player.js", "ride-state.js", "routes.json")
+    private val appHost = AssetRouter.HOST
     private val remoteDomains = listOf("youtube.com", "youtube-nocookie.com", "ytimg.com", "googlevideo.com", "google.com", "gstatic.com", "googleusercontent.com", "doubleclick.net", "googleadservices.com", "googlesyndication.com")
     private fun trusted(host: String?): Boolean = host != null && remoteDomains.any { host == it || host.endsWith(".$it") }
 
@@ -52,7 +51,7 @@ class MainActivity : Activity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(false)
-            userAgentString = userAgentString + " RoadRideAndroid/1.0"
+            userAgentString = userAgentString + " RoadRideAndroid/1.0.1"
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
@@ -60,8 +59,7 @@ class MainActivity : Activity() {
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val uri = request.url
                 if (uri.host == appHost && uri.scheme == "https") {
-                    val name = uri.path?.removePrefix("/") ?: ""
-                    if (name !in assetsAllowed) return blocked()
+                    val name = AssetRouter.assetPath(uri.toString()) ?: return blocked()
                     return try {
                         val mime = when {
                             name.endsWith(".js") -> "application/javascript"
@@ -111,8 +109,7 @@ class MainActivity : Activity() {
                 return true
             }
         }
-        val html = assets.open("index.html").bufferedReader(Charsets.UTF_8).use { it.readText() }
-        web.loadDataWithBaseURL("https://$appHost/", html, "text/html", "UTF-8", "https://$appHost/")
+        web.loadUrl(AssetRouter.startUrl)
     }
     private fun blocked() = WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", emptyMap(), ByteArrayInputStream(ByteArray(0)))
     private fun openExternal(uri: Uri) {
