@@ -20,6 +20,8 @@ class MainActivity : Activity() {
     private lateinit var root: FrameLayout
     private var custom: View? = null
     private var customCallback: WebChromeClient.CustomViewCallback? = null
+    private val cadenceClient = CadenceClient()
+    private var connectionEpoch = 0L
     private val appHost = AssetRouter.HOST
     private val remoteDomains = listOf("youtube.com", "youtube-nocookie.com", "ytimg.com", "googlevideo.com", "google.com", "gstatic.com", "googleusercontent.com", "doubleclick.net", "googleadservices.com", "googlesyndication.com")
     private fun trusted(host: String?): Boolean = host != null && remoteDomains.any { host == it || host.endsWith(".$it") }
@@ -51,7 +53,7 @@ class MainActivity : Activity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(false)
-            userAgentString = userAgentString + " RoadRideAndroid/1.0.1"
+            userAgentString = userAgentString + " RoadRideAndroid/1.1.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
@@ -78,6 +80,9 @@ class MainActivity : Activity() {
                 if (!request.isForMainFrame) return uri.scheme != "https" || !trusted(uri.host)
                 if (uri.scheme == "roadride" && web.url?.startsWith("https://$appHost/") == true) {
                     when (uri.host) {
+                        "measure" -> startActivity(Intent(this@MainActivity, CadenceActivity::class.java))
+                        "connect" -> showConnectionDialog()
+                        "disconnect" -> { connectionEpoch++; cadenceClient.close(); cadenceStatus("disconnected") }
                         "landscape" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE; fullscreen(true) }
                         "portrait" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; fullscreen(false) }
                         "immersive", "controls" -> fullscreen(true)
@@ -110,6 +115,33 @@ class MainActivity : Activity() {
             }
         }
         web.loadUrl(AssetRouter.startUrl)
+    }
+    private fun cadenceStatus(status: String) {
+        web.evaluateJavascript("window.onCadenceStatus && window.onCadenceStatus(${org.json.JSONObject.quote(status)})", null)
+    }
+    private fun showConnectionDialog() {
+        val prefs=getSharedPreferences("cadence",MODE_PRIVATE)
+        val form=android.widget.LinearLayout(this).apply {orientation=android.widget.LinearLayout.VERTICAL;setPadding(32,16,32,16)}
+        val address=android.widget.EditText(this).apply {hint="휴대폰 주소:포트 · 예 192.168.1.4:40000";setSingleLine();setText(prefs.getString("address",""));inputType=android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS}
+        val code=android.widget.EditText(this).apply {hint="8자리 임시 코드";setSingleLine();inputType=android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD}
+        form.addView(android.widget.TextView(this).apply {text="두 기기를 같은 가정 Wi-Fi에 연결하세요. 휴대폰에서 측정을 시작한 뒤 표시되는 값을 입력하세요."})
+        form.addView(address);form.addView(code)
+        val dialog=android.app.AlertDialog.Builder(this).setTitle("휴대폰 RPM 연결").setView(form).setPositiveButton("연결",null).setNegativeButton("취소",null).setNeutralButton("연결 해제") {_,_-> connectionEpoch++;cadenceClient.close();cadenceStatus("disconnected") }.create()
+        dialog.setOnShowListener {dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+            val value=address.text.toString().trim();val parts=value.split(':');val host=parts.firstOrNull()?:"";val port=parts.getOrNull(1)?.toIntOrNull()?:0;val secret=code.text.toString().trim()
+            if(parts.size!=2 || !CadenceClient.validEndpoint(host,port,secret)) {address.error="올바른 Wi-Fi IPv4 주소·포트와 8자리 코드를 입력하세요";return@setOnClickListener}
+            prefs.edit().putString("address",value).apply()
+            val epoch=++connectionEpoch
+            cadenceStatus("connecting")
+            cadenceClient.connect(host,port,secret,{packet->runOnUiThread {
+                if(connectionEpoch==epoch && !isDestroyed) {
+                    val json=org.json.JSONObject().put("seq",packet.seq).put("rpm",packet.rpm).put("confidence",packet.confidence).put("state",packet.state)
+                    web.evaluateJavascript("window.onCadencePacket && window.onCadencePacket($json)",null)
+                }
+            }},{status->runOnUiThread {if(connectionEpoch==epoch && !isDestroyed)cadenceStatus(status)}})
+            dialog.dismiss()
+        }}
+        dialog.show()
     }
     private fun blocked() = WebResourceResponse("text/plain", "UTF-8", 403, "Forbidden", emptyMap(), ByteArrayInputStream(ByteArray(0)))
     private fun openExternal(uri: Uri) {
@@ -148,6 +180,6 @@ class MainActivity : Activity() {
         if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.foregroundRide && window.foregroundRide()", null) }
     }
     override fun onDestroy() {
-        hideCustom(); web.stopLoading(); web.destroy(); super.onDestroy()
+        connectionEpoch++; cadenceClient.close(); hideCustom(); web.stopLoading(); web.destroy(); super.onDestroy()
     }
 }

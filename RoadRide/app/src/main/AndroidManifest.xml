@@ -1,8 +1,16 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
  <uses-permission android:name="android.permission.INTERNET" />
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+ <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+ <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+ <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+ <uses-permission android:name="android.permission.WAKE_LOCK" />
+ <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
  <application android:label="로드라이드" android:icon="@drawable/ic_roadride" android:allowBackup="false" android:usesCleartextTraffic="false" android:theme="@android:style/Theme.Material.NoActionBar" android:supportsRtl="true">
   <activity android:name=".MainActivity" android:exported="true" android:configChanges="orientation|screenSize|keyboardHidden" android:screenOrientation="portrait">
    <intent-filter><action android:name="android.intent.action.MAIN" /><category android:name="android.intent.category.LAUNCHER" /></intent-filter>
   </activity>
+  <activity android:name=".CadenceActivity" android:exported="false" />
+  <service android:name=".CadenceService" android:exported="false" android:foregroundServiceType="connectedDevice" />
  </application>
 </manifest>

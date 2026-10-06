@@ -6,6 +6,9 @@ on:
       - 'app/**'
       - 'gradle/**'
       - '*.gradle'
+      - 'scripts/**'
+      - 'tests/**'
+      - 'package*.json'
       - '.github/workflows/android.yml'
 permissions:
   contents: read
@@ -29,6 +32,14 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: chmod +x gradlew && ./gradlew assembleDebug lintDebug
+      - name: Kotlin cadence and routing checks
+        run: |
+          compiler=$(find "$HOME/.gradle/wrapper/dists" -name kotlin-compiler-embeddable-2.0.20.jar -print -quit)
+          test -n "$compiler"
+          export ROADRIDE_KOTLIN_LIB="$(dirname "$compiler")"
+          scripts/test-cadence-core.sh
+          scripts/test-cadence-network.sh
+          scripts/test-asset-router.sh
       - uses: actions/upload-artifact@v4
         with:
           name: RoadRide-APK

@@ -14,3 +14,14 @@
 
 ## 1.0.1
 사용자 스크린샷의 data: ERR_HTTP_RESPONSE_CODE_FAILURE를 기존 시작 경로와 라우팅 제한에서 확인했습니다. HTTPS 내부 index.html로 시작하도록 수정했으며, 시작 주소·정상 자산·외부 호스트·경로 이탈·data: 차단 5개 검사 RED→GREEN을 확인했습니다. 전체 JavaScript 테스트 12개 통과, 수정 APK 직접 빌드와 서명 검사 통과. 실기기 재확인은 아직 하지 못했습니다.
+
+## 1.1.0 RPM update
+- Synthetic cadence: 30/60/90/120/150 RPM within 5 RPM, slowly rotating axes, stationary and random-noise rejection.
+- Real JVM loopback sockets: temporary-code authentication, bounded lines, increasing sequence, disconnect/reconnect and old callback generation suppression.
+- JS/DOM: supported rates, 3s hold, stale/low-confidence stop, auto-pause ownership, manual pause, reconnect, manual rate restoration; complete suite 20/20 passing after final review fixes.
+- Native service compiled with SDK 35; explicit foreground start, stop notification, 4h wake-lock timeout, no camera/microphone/location permissions.
+- Actual hardware, pocket accuracy, real Wi-Fi between devices and screen-off behavior remain unverified.
+
+Final review regressions: sensor gaps invalidate the old reading immediately; stopped windows discard historical pedaling before a one-off bump; embedded YouTube Play restores RPM synchronization after manual Pause.
+
+Deferred minor: notification permission denial has no in-app result explanation; README provides the stop path. No hardware-level permission/lifecycle validation was claimed.
