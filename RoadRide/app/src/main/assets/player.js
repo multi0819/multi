@@ -6,7 +6,7 @@ class RideController{
  onError(code){this.state.setPlaying(false,this.clock());this.status='error';this.error=code;}
  pause(){this.state.setPlaying(false,this.clock());this.status='paused';this.player.pauseVideo();}
  elapsed(){return this.state.elapsed(this.clock());}
- setRate(wanted){const r=core.chooseRate(this.player.getAvailablePlaybackRates(),wanted);this.player.setPlaybackRate(r);return r;}
+ setRate(wanted){const rates=this.player.getAvailablePlaybackRates()||[];const actual=this.player.getPlaybackRate?.();if(!rates.length)return actual||1;const r=core.chooseRate(rates,wanted);if(r!==actual)this.player.setPlaybackRate(r);return r;}
  finish(){this.player.pauseVideo();return this.state.finish(this.clock());}
 }
 if(typeof module!=='undefined')module.exports={RideController};else root.RideController=RideController;

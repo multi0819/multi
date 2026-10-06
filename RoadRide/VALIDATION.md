@@ -25,3 +25,12 @@
 Final review regressions: sensor gaps invalidate the old reading immediately; stopped windows discard historical pedaling before a one-off bump; embedded YouTube Play restores RPM synchronization after manual Pause.
 
 Deferred minor: notification permission denial has no in-app result explanation; README provides the stop path. No hardware-level permission/lifecycle validation was claimed.
+
+## 1.2.0 update
+- Pairing/restart real JVM loopback: first short-code authentication receives a 128-bit-format saved token; restarted sender accepts that token at the same port with a different short code. Includes socket-generation regression and single-client bounds. UUID token has UUID-v4 entropy.
+- Metrics model: 60RPM→20km/h, distance and MET energy integration, pause/stale/no-cadence/long-gap exclusion, range-checked settings.
+- Rate policy: same current rate produces no command, buffering defers changes, 2s stability/5s hold, pending acknowledgement suppresses duplicate requests.
+- DOM integration: immersive dashboard values, clock/time, settings persistence; suite 26/26 before independent review.
+- Native YouTube full-screen stats column compiles; no actual device or layout validation available here. Android pairing storage and Wi-Fi IP-change fallback also require device confirmation.
+
+Independent 1.2.0 review found an incomplete-handshake persistence edge: saved pairing credentials now commit only after final OK. Malformed/EOF handshakes reproduce failure before fix and pass after fix, alongside successful saved-token restart.

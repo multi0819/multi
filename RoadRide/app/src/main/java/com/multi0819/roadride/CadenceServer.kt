@@ -1,6 +1,7 @@
 package com.multi0819.roadride
 
 import java.io.InputStream
+import java.net.InetSocketAddress
 import java.net.ServerSocket
 import java.net.Socket
 
@@ -11,17 +12,23 @@ internal fun boundedLine(input: InputStream): String? {
 class CadenceServer {
     @Volatile private var server: ServerSocket?=null
     @Volatile private var peer: Socket?=null
-    @Synchronized fun start(code: String, provider: () -> CadenceReading): Int {
-        stop(); val auth=CadenceProtocol.auth(code);val listener=ServerSocket(0);server=listener
+    fun start(code: String, provider: () -> CadenceReading): Int = start(code,provider,null,0)
+    @Synchronized fun start(code: String, provider: () -> CadenceReading, pairToken: String?, port: Int = 0): Int {
+        require(pairToken==null || pairToken.matches(Regex("[a-f0-9]{32}")))
+        stop(); val auth=CadenceProtocol.auth(code);val listener=ServerSocket().apply {reuseAddress=true;bind(InetSocketAddress(port))};server=listener
         Thread({
             var failures=0;var resetAt=System.nanoTime()
             while(server===listener) {
+                var currentSocket: Socket?=null
                 try {
-                    val socket=listener.accept(); peer=socket
+                    val socket=listener.accept();currentSocket=socket
+                    synchronized(this) {if(server===listener)peer=socket else socket.close()}
                     socket.use { s ->
                         s.soTimeout=3000
                         if(System.nanoTime()-resetAt>60_000_000_000L) { failures=0;resetAt=System.nanoTime() }
-                        if(failures>=10 || boundedLine(s.getInputStream())!=auth) { failures++;return@use }
+                        val request=boundedLine(s.getInputStream())
+                        if(failures>=10 || (request!=auth && (pairToken==null || request!=CadenceProtocol.auth(pairToken)))) { failures++;return@use }
+                        if(request==auth && pairToken!=null) s.getOutputStream().write(("PAIR\t"+pairToken+"\n").toByteArray(Charsets.US_ASCII))
                         s.getOutputStream().write("OK\n".toByteArray(Charsets.US_ASCII));s.getOutputStream().flush()
                         var seq=0L
                         // A single active receiver; stop closes this socket to unblock a write.
@@ -32,7 +39,7 @@ class CadenceServer {
                         }
                     }
                 } catch(_:Exception) { if(server!==listener) break }
-                finally { peer=null }
+                finally { synchronized(this) {if(peer===currentSocket)peer=null} }
             }
         },"RoadRide sender").apply {isDaemon=true;start()}
         return listener.localPort

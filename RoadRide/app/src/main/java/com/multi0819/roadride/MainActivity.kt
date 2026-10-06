@@ -19,6 +19,9 @@ class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var root: FrameLayout
     private var custom: View? = null
+    private var customLayout: android.widget.LinearLayout? = null
+    private var statsView: android.widget.TextView? = null
+    private var statsText="현재시간 —  |  라이딩 00:00  |  추정 — km/h  |  — km  |  — kcal"
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private val cadenceClient = CadenceClient()
     private var connectionEpoch = 0L
@@ -53,7 +56,7 @@ class MainActivity : Activity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(false)
-            userAgentString = userAgentString + " RoadRideAndroid/1.1.0"
+            userAgentString = userAgentString + " RoadRideAndroid/1.2.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
@@ -81,7 +84,9 @@ class MainActivity : Activity() {
                 if (uri.scheme == "roadride" && web.url?.startsWith("https://$appHost/") == true) {
                     when (uri.host) {
                         "measure" -> startActivity(Intent(this@MainActivity, CadenceActivity::class.java))
-                        "connect" -> showConnectionDialog()
+                        "connect" -> connectSaved()
+                        "connect-settings" -> showConnectionDialog()
+                        "stats" -> { val value=uri.getQueryParameter("text");if(value!=null && value.length<=300){statsText=value;statsView?.text=value} }
                         "disconnect" -> { connectionEpoch++; cadenceClient.close(); cadenceStatus("disconnected") }
                         "landscape" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE; fullscreen(true) }
                         "portrait" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; fullscreen(false) }
@@ -102,7 +107,11 @@ class MainActivity : Activity() {
                 if (custom != null) { callback.onCustomViewHidden(); return }
                 custom = view; customCallback = callback
                 web.visibility = View.GONE
-                root.addView(view, FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+                val column=android.widget.LinearLayout(this@MainActivity).apply {orientation=android.widget.LinearLayout.VERTICAL;setBackgroundColor(Color.BLACK)}
+                column.addView(view,android.widget.LinearLayout.LayoutParams(-1,0,1f))
+                statsView=android.widget.TextView(this@MainActivity).apply {text=statsText;textSize=14f;setTextColor(Color.rgb(210,235,130));setPadding(16,8,16,8);gravity=android.view.Gravity.CENTER;setBackgroundColor(Color.rgb(16,23,22))}
+                column.addView(statsView,android.widget.LinearLayout.LayoutParams(-1,-2));customLayout=column
+                root.addView(column,FrameLayout.LayoutParams(-1,-1))
                 fullscreen(true)
             }
             override fun onHideCustomView() { hideCustom() }
@@ -119,6 +128,27 @@ class MainActivity : Activity() {
     private fun cadenceStatus(status: String) {
         web.evaluateJavascript("window.onCadenceStatus && window.onCadenceStatus(${org.json.JSONObject.quote(status)})", null)
     }
+    private fun connectSaved() {
+        val prefs=getSharedPreferences("cadence",MODE_PRIVATE)
+        val value=prefs.getString("address","")?:"";val parts=value.split(':');val secret=prefs.getString("pair-token","")?:""
+        val host=parts.firstOrNull()?:"";val port=parts.getOrNull(1)?.toIntOrNull()?:0
+        if(parts.size==2 && secret.length==32 && CadenceClient.validEndpoint(host,port,secret)) connectCadence(host,port,secret)
+        else showConnectionDialog()
+    }
+    private fun connectCadence(host:String,port:Int,secret:String) {
+        val epoch=++connectionEpoch;cadenceStatus("connecting")
+        cadenceClient.connect(host,port,secret,{packet->runOnUiThread {
+            if(connectionEpoch==epoch && !isDestroyed) {
+                val json=org.json.JSONObject().put("seq",packet.seq).put("rpm",packet.rpm).put("confidence",packet.confidence).put("state",packet.state)
+                web.evaluateJavascript("window.onCadencePacket && window.onCadencePacket($json)",null)
+            }
+        }},{status->runOnUiThread {
+            if(connectionEpoch==epoch && !isDestroyed) {
+                cadenceStatus(status)
+                if(status=="auth_failed" || status=="disconnected") android.widget.Toast.makeText(this,"휴대폰 측정 시작과 Wi-Fi를 확인하세요. 주소가 바뀌면 연결 설정에서 다시 등록하세요.",android.widget.Toast.LENGTH_LONG).show()
+            }
+        }},{token->runOnUiThread {if(connectionEpoch==epoch && !isDestroyed)getSharedPreferences("cadence",MODE_PRIVATE).edit().putString("pair-token",token).apply()}})
+    }
     private fun showConnectionDialog() {
         val prefs=getSharedPreferences("cadence",MODE_PRIVATE)
         val form=android.widget.LinearLayout(this).apply {orientation=android.widget.LinearLayout.VERTICAL;setPadding(32,16,32,16)}
@@ -131,14 +161,8 @@ class MainActivity : Activity() {
             val value=address.text.toString().trim();val parts=value.split(':');val host=parts.firstOrNull()?:"";val port=parts.getOrNull(1)?.toIntOrNull()?:0;val secret=code.text.toString().trim()
             if(parts.size!=2 || !CadenceClient.validEndpoint(host,port,secret)) {address.error="올바른 Wi-Fi IPv4 주소·포트와 8자리 코드를 입력하세요";return@setOnClickListener}
             prefs.edit().putString("address",value).apply()
-            val epoch=++connectionEpoch
-            cadenceStatus("connecting")
-            cadenceClient.connect(host,port,secret,{packet->runOnUiThread {
-                if(connectionEpoch==epoch && !isDestroyed) {
-                    val json=org.json.JSONObject().put("seq",packet.seq).put("rpm",packet.rpm).put("confidence",packet.confidence).put("state",packet.state)
-                    web.evaluateJavascript("window.onCadencePacket && window.onCadencePacket($json)",null)
-                }
-            }},{status->runOnUiThread {if(connectionEpoch==epoch && !isDestroyed)cadenceStatus(status)}})
+            prefs.edit().remove("pair-token").apply()
+            connectCadence(host,port,secret)
             dialog.dismiss()
         }}
         dialog.show()
@@ -161,7 +185,7 @@ class MainActivity : Activity() {
         }
     }
     private fun hideCustom() {
-        custom?.let { root.removeView(it) }; custom = null
+        customLayout?.let {root.removeView(it);it.removeAllViews()};customLayout=null;statsView=null;custom=null
         web.visibility = View.VISIBLE
         customCallback?.onCustomViewHidden(); customCallback = null
     }

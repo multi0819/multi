@@ -19,3 +19,22 @@ CI: First GitHub run failed in setup-android before tests/build: removed SDK pac
 CI: Second GitHub run 37419808471 SUCCESS including SDK setup, npm ci, 12 tests, Gradle assembleDebug/lintDebug and APK artifact upload. GitHub APK/ZIP bytes independently matched local SHA-256.
 
 1.0.1: Startup data: URI was blocked by own request filter. Switched startup to HTTPS asset URL. AssetRouter regression RED blocked startup → GREEN 5 checks. JavaScript suite 12/12; signed APK rebuilt with existing key.
+
+## 1.1.0 RPM execution
+# SDD ledger — plan: docs/rpm-sync-plan.md
+Pre-flight: Task 1 reading/packet feeds Task 2 network and Task 3 numeric bridge; fields and state tokens agree. Task 3 uses local receipt time and resets sequence on connection.
+Task 1: complete (commits 55bec56..1463655, tests: scripts/test-cadence-core.sh → Cadence core: synthetic 5 rates, rotation, stop, noise, protocol PASS)
+Task 2: complete (commits 1463655..9edee4b, tests: scripts/test-cadence-network.sh → Cadence network: auth, bounds, packets, sequence, reconnect generation PASS)
+Task 3: complete (commits 9edee4b..b5be910, tests: npm test → ℹ duration_ms 423.442941)
+Final: fixed old RPM after sensor gap — gap regression RED→GREEN; new 3s window required.
+Final: fixed bump reviving historical pedaling — single-bump regression RED→GREEN; stopped windows discard old periodic evidence.
+Final: fixed embedded YouTube playback leaving manual suppression — iframe pause/play/disconnect DOM regression RED→GREEN; suite 20/20.
+Final: minor (deferred): notification permission denial lacks in-app result explanation; README describes stopping in measurement screen.
+Final: Ruling: Pocket accuracy, screen-off delivery, OEM battery behavior and physical Wi-Fi interoperability need unavailable hardware — deliver test APK with explicit limitations — cost: device-specific fixes may be needed.
+Final: Ruling: Permission dialog/notification behavior lacks device evidence — document manual stop path and do not claim runtime validation — cost: notification behavior may differ by device.
+Final: Ruling: Other platform-specific lifecycle timing lacks concrete reproduction — retain generation guards and background manual-pause handling — cost: device lifecycle defects may remain.
+Task 4: complete (commits b5be910..e4b0bc8, tests: bash -c 'scripts/test-cadence-core.sh && scripts/test-cadence-network.sh && scripts/test-asset-router.sh && npm test' → ℹ duration_ms 409.354518)
+
+CI: GitHub run 37424642650 SUCCESS on 3beb250b11bfdef98812e6a58a1679db270b5fe8: npm, Gradle assembleDebug/lintDebug, Kotlin core/network/router; signed APK certificate matches 1.0.1; remote APK/ZIP bytes match local.
+Integration: User already authorized delivery to roadride-app; preserve branch and workspace, no main merge.
+Scratch review workspace retained after cleanup command was rejected; no deletion retried.

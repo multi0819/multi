@@ -33,7 +33,9 @@ class CadenceService : Service(), SensorEventListener {
         try {
             code=String.format(java.util.Locale.US,"%08d",SecureRandom().nextInt(100_000_000))
             reading=CadenceReading(0.0,0.0,"ready");lastNs=0L
-            port=server.start(code) { val r=reading;if(SystemClock.elapsedRealtimeNanos()-lastNs>3_000_000_000L) CadenceReading(0.0,0.0,"unstable") else r.copy(rpm=(r.rpm*factor).coerceIn(0.0,300.0)) }
+            val prefs=getSharedPreferences("cadence-sender",MODE_PRIVATE)
+            val token=prefs.getString("pair-token",null)?:java.util.UUID.randomUUID().toString().replace("-","").also {prefs.edit().putString("pair-token",it).apply()}
+            port=server.start(code, { val r=reading;if(SystemClock.elapsedRealtimeNanos()-lastNs>3_000_000_000L) CadenceReading(0.0,0.0,"unstable") else r.copy(rpm=(r.rpm*factor).coerceIn(0.0,300.0)) }, token,39871)
             val cm=getSystemService(ConnectivityManager::class.java)
             address=cm.allNetworks.firstNotNullOfOrNull { n ->
                 if(cm.getNetworkCapabilities(n)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)==true) cm.getLinkProperties(n)?.linkAddresses?.firstOrNull {it.address is Inet4Address}?.address?.hostAddress else null

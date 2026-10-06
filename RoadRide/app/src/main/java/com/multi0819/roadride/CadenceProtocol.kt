@@ -3,7 +3,8 @@ package com.multi0819.roadride
 data class CadencePacket(val seq: Long, val rpm: Double, val confidence: Double, val state: String)
 object CadenceProtocol {
     const val MAX_LINE=512
-    fun auth(code: String): String { require(code.matches(Regex("[0-9]{8}"))); return "RR1\t$code" }
+    fun validSecret(code: String): Boolean = code.matches(Regex("[0-9]{8}")) || code.matches(Regex("[a-f0-9]{32}"))
+    fun auth(code: String): String { require(validSecret(code)); return (if(code.length==8) "RR1" else "RR2")+"\t$code" }
     fun encode(seq: Long, reading: CadenceReading): String = "RPM\t$seq\t${reading.rpm}\t${reading.confidence}\t${reading.state}"
     fun decode(line: String): CadencePacket? {
         if(line.length>MAX_LINE) return null

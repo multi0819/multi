@@ -32,6 +32,10 @@ class CadenceActivity : Activity() {
         val choices=LinearLayout(this);layout.addView(choices)
         for(f in listOf(.5,1.0,2.0)) choices.addView(Button(this).apply {text="$f 배";setOnClickListener{CadenceService.factor=f;Toast.makeText(this@CadenceActivity,"보정 $f 배",Toast.LENGTH_SHORT).show()}},LinearLayout.LayoutParams(0,-2,1f))
         text("두 기기를 같은 Wi-Fi에 연결하세요. 갤럭시탭의 ‘휴대폰 연결’에 주소와 코드를 입력한 뒤 휴대폰을 바지 앞주머니에 넣으세요.\n\n신뢰하는 가정 Wi-Fi를 사용하세요. 화면 꺼짐 후 값이 멈추면 휴대폰 설정에서 로드라이드의 배터리 제한을 확인하세요. 최대 4시간 측정하며 자동 재시작하지 않습니다.\n\n추정값은 주머니 위치와 움직임에 영향을 받습니다. 원본 센서 데이터는 저장하지 않습니다.",15f)
+        button("등록된 연결 초기화") {
+            android.app.AlertDialog.Builder(this).setMessage("등록된 탭이 다시 코드를 입력해야 합니다. 측정도 종료됩니다.")
+                .setPositiveButton("초기화") {_,_->stopService(Intent(this,CadenceService::class.java));getSharedPreferences("cadence-sender",MODE_PRIVATE).edit().remove("pair-token").apply();Toast.makeText(this,"초기화됨 · 측정을 다시 시작하세요",Toast.LENGTH_LONG).show()}.setNegativeButton("취소",null).show()
+        }
         button("코스 화면으로 돌아가기"){finish()}
         setContentView(ScrollView(this).apply {addView(layout)})
     }
