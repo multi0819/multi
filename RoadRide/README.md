@@ -21,7 +21,7 @@ Wi-Fi를 권장합니다. 원본이 4K여도 실제 화질은 인터넷·기기�
 - 테스트: `npm ci --ignore-scripts && npm test`.
 - 일반 빌드: JDK 17과 Android SDK 35에서 `./gradlew assembleDebug lintDebug`.
 - GitHub Actions: Actions → Build RoadRide APK → Run workflow → RoadRide-APK 아티팩트.
-- 제한된 로컬 환경에서는 설치된 Kotlin 컴파일러와 Android SDK 도구를 사용해 `scripts/build-sdk.sh`로 APK를 생성했습니다. 이 경로의 빌드·서명·zipalign 검사는 통과했지만 Gradle 의존성 다운로드가 차단되어 로컬 Gradle lint는 실행하지 못했습니다.
+- 제한된 로컬 환경에서는 설치된 Kotlin 컴파일러와 Android SDK 도구를 사용해 `scripts/build-sdk.sh`로 APK를 생성했습니다. 이 경로의 빌드·서명·zipalign 검사는 통과했지만 Gradle 의존성 다운로드가 차단되어 로컬 Gradle lint는 실행하지 못했습니다. 이후 GitHub Actions에서 Gradle 빌드 및 lintDebug까지 통과했습니다.
 - 제공 APK는 테스트용 인증서로 서명되어 있습니다. GitHub Actions에서 새로 생성한 debug 인증서는 제공 APK와 다를 수 있어 교체 설치 시 기존 앱 삭제가 필요할 수 있습니다. 계속 업데이트할 때는 동일 서명키를 안전하게 유지해야 합니다.
 - Android 실기기·에뮬레이터가 연결되지 않아 실제 설치와 영상 재생은 미검증입니다. JavaScript 모델 테스트와 별도의 브라우저 테스트 결과는 `VALIDATION.md`를 참고하세요.
 
