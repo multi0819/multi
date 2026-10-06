@@ -1,0 +1,20 @@
+const {chromium}=require('/opt/codex/runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright');
+const assert=require('node:assert/strict');
+(async()=>{
+ const browser=await chromium.launch({executablePath:process.env.ROADRIDE_BROWSER||'build/browser/chrome-headless-shell-linux64/chrome-headless-shell',headless:true,args:['--no-sandbox']});const page=await browser.newPage({viewport:{width:412,height:915},deviceScaleFactor:1});
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('https://www.youtube.com/iframe_api',route=>route.fulfill({contentType:'application/javascript',body:`window.YT={Player:function(id,opts){const node=document.getElementById(id);const iframe=document.createElement('iframe');iframe.id=id;iframe.title='YouTube test player';node.replaceWith(iframe);let state=5;let position=30;let rate=1;const target={playVideo(){state=1;opts.events.onStateChange({data:1})},pauseVideo(){state=2;opts.events.onStateChange({data:2})},getCurrentTime(){return position},getAvailablePlaybackRates(){return [.5,1,1.5]},setPlaybackRate(v){rate=v;opts.events.onPlaybackRateChange({data:v})},getPlaybackRate(){return rate},mute(){},unMute(){},destroy(){iframe.remove()}};window.testYT={error(c){opts.events.onError({data:c})},buffer(){opts.events.onStateChange({data:3})}};setTimeout(()=>opts.events.onReady({target}),30);return target}};window.onYouTubeIframeAPIReady();` }));
+ await page.goto('http://127.0.0.1:8765');await page.waitForSelector('.route-card');assert.equal(await page.locator('.route-card').count(),8);
+ await page.screenshot({path:'build/home-preview.png',fullPage:true});
+ await page.locator('.favorite').first().click();await page.locator('[data-filter="favorite"]').click();assert.equal(await page.locator('.route-card').count(),1);
+ await page.locator('[data-filter="all"]').click();await page.click('#heroStart');await page.waitForFunction(()=>document.getElementById('status').textContent==='달리는 중');
+ await page.setViewportSize({width:932,height:430});assert.equal(await page.locator('#rate option').count(),3);
+ await page.waitForTimeout(1100);await page.click('#playBtn');const before=await page.locator('#timer').textContent();await page.waitForTimeout(1100);assert.equal(await page.locator('#timer').textContent(),before);
+ await page.click('#playBtn');await page.click('#immersiveBtn');assert.equal(await page.locator('#rideControls').isVisible(),false);assert.equal(await page.locator('#showControls').isVisible(),true);
+ await page.click('#showControls');await page.screenshot({path:'build/ride-preview.png'});
+ await page.evaluate(()=>window.testYT.error(101));assert.equal(await page.locator('#playerNotice').isVisible(),true);assert.match(await page.locator('#noticeText').textContent(),/제작자/);
+ await page.click('#endBtn');assert.equal(await page.locator('.history-row').count(),1);assert.equal(await page.locator('#resumeBtn').isVisible(),true);
+ await page.reload();await page.waitForSelector('.route-card');assert.equal(await page.locator('.history-row').count(),1);
+ await page.click('#infoBtn');assert.equal(await page.locator('#infoDialog').isVisible(),true);await page.click('#closeInfo');
+ assert.deepEqual(errors,[]);console.log('UI PASS: 8 routes, favorite filter, controls, paused timer, immersive mode, errors, history, resume, info.');await browser.close();
+})().catch(e=>{console.error(e);process.exit(1)});
