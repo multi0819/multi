@@ -13,3 +13,5 @@ Final: minor (deferred): disable rate selection/no-op commands when advertised r
 Final: Ruling: Actual YouTube identity acceptance, full domain allowlist, Android background sequencing, native links/fullscreen lack device evidence — ship as test APK with these explicitly unverified rather than assert production readiness — cost: device-specific playback may require fixes.
 Ruling: Browser Chromium executable crashes with SIGSEGV — validate UI logic using Happy DOM; do not claim layout/stream verification — cost: visual or platform defects may remain.
 Ruling: User requested GitHub delivery without specifying new repository. Add RoadRide folder on a new roadride-app branch of owned multi repository, retaining base tree and leaving main untouched — cost: user may prefer moving app to a standalone repository later.
+
+CI: First GitHub run failed in setup-android before tests/build: removed SDK package tools. Explicit platforms;android-35/build-tools;35.0.0 packages added. Gradle manifest source now omits package attribute; direct build stages its own package-qualified manifest.

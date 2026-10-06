@@ -11,11 +11,13 @@ python3 - <<'PY'
 from pathlib import Path
 import zipfile
 base=Path('build/sdk')
+manifest=Path('app/src/main/AndroidManifest.xml').read_text().replace('<manifest xmlns:', '<manifest package="com.multi0819.roadride" xmlns:')
+(base/'AndroidManifest.xml').write_text(manifest)
 with zipfile.ZipFile(base/'classes.jar','w',zipfile.ZIP_DEFLATED) as z:
  for p in (base/'classes').rglob('*.class'): z.write(p,p.relative_to(base/'classes'))
 PY
 "$bt/aapt2" compile --dir app/src/main/res -o "$stage/res.zip"
-"$bt/aapt2" link -o "$stage/base.apk" --manifest app/src/main/AndroidManifest.xml -I "$ROADRIDE_SDK/platforms/android-35/android.jar" --min-sdk-version 26 --target-sdk-version 35 --version-code 1 --version-name 1.0.0 -A app/src/main/assets "$stage/res.zip"
+"$bt/aapt2" link -o "$stage/base.apk" --manifest "$stage/AndroidManifest.xml" -I "$ROADRIDE_SDK/platforms/android-35/android.jar" --min-sdk-version 26 --target-sdk-version 35 --version-code 1 --version-name 1.0.0 -A app/src/main/assets "$stage/res.zip"
 "$bt/d8" --min-api 26 --lib "$ROADRIDE_SDK/platforms/android-35/android.jar" --output "$stage/dex" "$stage/classes.jar" "$ROADRIDE_KOTLIN_LIB/kotlin-stdlib-2.0.20.jar"
 python3 - <<'PY'
 import zipfile
