@@ -61,7 +61,7 @@ class MainActivity : Activity() {
     if(uri.scheme=="https" && uri.host=="appassets.androidplatform.net") {
      val name=uri.path?.removePrefix("/")?.ifEmpty { "index.html" } ?: "index.html"
      if(name.matches(Regex("[a-zA-Z0-9._-]+"))) try {
-      val mime=when { name.endsWith(".js")->"application/javascript";name.endsWith(".html")->"text/html";else->"application/octet-stream" }
+      val mime=when { name.endsWith(".js")->"application/javascript";name.endsWith(".html")->"text/html";name.endsWith(".css")->"text/css";else->"application/octet-stream" }
       return WebResourceResponse(mime,"UTF-8",assets.open(name))
      } catch(_:Exception) {}
     }
@@ -123,7 +123,8 @@ class MainActivity : Activity() {
    }
   }
   @JavascriptInterface fun printPage() { runOnUiThread {
-   (getSystemService(PRINT_SERVICE) as PrintManager).print("학습기록",web.createPrintDocumentAdapter("학습기록"),PrintAttributes.Builder().build())
+   val attributes=PrintAttributes.Builder().setMediaSize(PrintAttributes.MediaSize.ISO_A4).setMinMargins(PrintAttributes.Margins.NO_MARGINS).setColorMode(PrintAttributes.COLOR_MODE_COLOR).build()
+   (getSystemService(PRINT_SERVICE) as PrintManager).print("학습기록",web.createPrintDocumentAdapter("학습기록"),attributes)
   } }
  }
  override fun onActivityResult(request:Int,result:Int,data:Intent?) {

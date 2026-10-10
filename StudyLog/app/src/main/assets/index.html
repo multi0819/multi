@@ -11,6 +11,8 @@
 <link rel="manifest" href="#" id="pwaManifest" />
 <title>학습기록</title>
 <script src="native.js"></script>
+<link rel="stylesheet" href="pdf-layout.css">
+<script src="pdf-layout.js"></script>
 <script src="chart.umd.js"></script>
 <style>
 /* ============================================================
@@ -5387,61 +5389,84 @@ window.exportNoteText = function() {
 };
 
 window.exportNotePdf = async function() {
-  try {
-    $('pdfPreviewOverlay')?.remove();
-    $('pdfPreviewPrintStyle')?.remove();
-    const sourceRecords = getFilteredRecords();
-    if (!sourceRecords.length) { showToast('PDF로 저장할 기록이 없습니다.'); return; }
-    const imageIds = normalizeStringList(sourceRecords.flatMap(r => r.imageIds||[]));
-    const imageMap = await getImagesByIds(imageIds);
-    const printable = sourceRecords.map((item) => {
-      const dateText    = formatDateTime(item.studiedAt||item.createdAt);
-      const minuteText  = `${Number(item.minutes||0)}분`;
-      const tagText     = (item.tags||[]).length ? `<div style="margin-top:10px;font-size:18px;color:#475569;font-weight:700;">태그: ${escapeHtml((item.tags||[]).join(', '))}</div>` : '';
-      const favoriteText= item.favorite ? `<span style="margin-left:10px;font-size:18px;font-weight:800;color:#b45309;">중요</span>` : '';
-      const contentHtml = item.contentHtml || escapeHtml(item.contentText||'').replace(/\n/g,'<br>');
-      const imagesHtml  = (item.imageIds||[]).map(id => {
-        const src = imageMap[id]||'';
-        return src ? `<div style="margin-top:16px;"><img src="${src}" style="display:block;max-width:100%;height:auto;border-radius:12px;"></div>` : '';
-      }).join('');
-      return `<section style="page-break-inside:avoid;margin:0 0 18px;padding:0 0 18px;border-bottom:1px solid #d7deea;">
-        <div style="font-size:20px;font-weight:800;color:#0f172a;">${escapeHtml(dateText)} <span style="color:#334155;">${escapeHtml(minuteText)}</span>${favoriteText}</div>
-        ${tagText}
-        <div style="margin-top:14px;padding:18px 16px;background:#fff;color:#111;font-size:24px;line-height:1.9;border-radius:12px;border:1px solid #e5eaf2;">${contentHtml}</div>
-        ${imagesHtml}
-      </section>`;
-    }).join('');
+  if (!records.length) { showToast('PDF로 저장할 기록이 없습니다.'); return; }
+  $('pdfPreviewOverlay')?.remove();
+  $('pdfPreviewPrintStyle')?.remove();
+  const selected = new Set(getFilteredRecords().map(r => r.id));
+  const state = { selected, title:'학습기록', includeImages:true, order:'oldest' };
+  let previewGeneration = 0;
+  const overlay = document.createElement('div');
+  overlay.id = 'pdfPreviewOverlay';
+  document.body.appendChild(overlay);
+  const close = () => overlay.remove();
+  overlay.addEventListener('click', e => { if (e.target === overlay) close(); });
 
-    const styleEl = document.createElement('style');
-    styleEl.id = 'pdfPreviewPrintStyle';
-    styleEl.textContent = `@page{size:A4;margin:10mm}@media print{body *{visibility:hidden!important}#pdfPreviewOverlay,#pdfPreviewOverlay *{visibility:visible!important}#pdfPreviewOverlay{position:absolute!important;inset:0!important;background:#fff!important}#pdfPreviewToolbar{display:none!important}}`;
-    document.head.appendChild(styleEl);
-
-    const overlay = document.createElement('div');
-    overlay.id = 'pdfPreviewOverlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:21000;background:rgba(15,23,42,.82);overflow:auto;padding:16px;box-sizing:border-box;';
-    overlay.innerHTML = `
-      <div style="max-width:980px;margin:0 auto;background:#fff;color:#111;border-radius:18px;overflow:hidden;box-shadow:0 22px 60px rgba(0,0,0,.35);">
-        <div id="pdfPreviewToolbar" style="position:sticky;top:0;z-index:2;display:flex;justify-content:flex-end;gap:8px;padding:12px;background:#fff;border-bottom:1px solid #e5e7eb;">
-          <button type="button" id="pdfPreviewCloseBtn" style="height:44px;padding:0 16px;border:none;border-radius:12px;background:#475569;color:#fff;font-weight:800;">닫기</button>
-          <button type="button" id="pdfPreviewPrintBtn" style="height:44px;padding:0 16px;border:none;border-radius:12px;background:#2563eb;color:#fff;font-weight:800;">PDF 저장</button>
-        </div>
-        <div style="padding:16px 14px 40px;font-family:'Noto Sans KR',sans-serif;">${printable}</div>
-      </div>`;
-    document.body.appendChild(overlay);
-    const closePdfOverlay = () => { $('pdfPreviewOverlay')?.remove(); $('pdfPreviewPrintStyle')?.remove(); };
-    $('pdfPreviewCloseBtn')?.addEventListener('click', closePdfOverlay);
-    $('pdfPreviewPrintBtn')?.addEventListener('click', () => window.print());
-    overlay.addEventListener('click', e => { if (e.target===overlay) closePdfOverlay(); });
-  } catch(err) {
-    showToast('PDF 생성 중 오류가 발생했습니다.');
-    console.error(err);
+  function toolbar(label, preview) {
+    return `<div id="pdfPreviewToolbar" class="pdf-toolbar"><strong>${label}</strong><button id="pdfPreviewCloseBtn" type="button">닫기</button>${preview ? '<button id="pdfChangeSelectionBtn" type="button">기록 선택</button><button id="pdfPreviewPrintBtn" class="pdf-primary" type="button" disabled>사진 준비 중…</button>' : ''}</div>`;
   }
+  function capture() {
+    state.title = $('pdfTitleInput')?.value.trim() || '학습기록';
+    state.includeImages = !!$('pdfIncludeImages')?.checked;
+    state.order = $('pdfOrder')?.value || 'oldest';
+    state.selected = new Set(Array.from(overlay.querySelectorAll('.pdf-record-check:checked')).map(el => records[Number(el.dataset.index)].id));
+  }
+  function updateCount() {
+    const count = overlay.querySelectorAll('.pdf-record-check:checked').length;
+    $('pdfSelectionCount').textContent = `${count}건 선택 / 전체 ${records.length}건`;
+    $('pdfBuildBtn').disabled = count === 0;
+  }
+  function renderSelector() {
+    previewGeneration++;
+    overlay.innerHTML = toolbar('PDF 출력 설정', false) + `<div class="pdf-selection">
+      <p>출력할 기록을 선택하세요. 짧은 기록은 같은 페이지에 이어서 배치하고, 긴 본문은 다음 페이지로 이어집니다.</p>
+      <label for="pdfTitleInput">문서 제목</label><input class="pdf-title-input" id="pdfTitleInput" maxlength="60" value="${escapeHtml(state.title)}">
+      <div class="pdf-options"><label><input id="pdfIncludeImages" type="checkbox" ${state.includeImages?'checked':''}>첨부 사진 포함</label>
+      <label>기록 순서 <select id="pdfOrder"><option value="oldest" ${state.order==='oldest'?'selected':''}>오래된 순</option><option value="latest" ${state.order==='latest'?'selected':''}>최근 순</option></select></label></div>
+      <div class="pdf-options"><button id="pdfSelectAllBtn" type="button">전체 선택</button><button id="pdfDeselectAllBtn" type="button">선택 해제</button><span id="pdfSelectionCount" aria-live="polite"></span></div>
+      <button id="pdfBuildBtn" type="button" class="pdf-primary">미리보기 만들기</button>
+      <div class="pdf-list">${records.map((r,index) => `<label class="pdf-record-option"><input class="pdf-record-check" type="checkbox" data-index="${index}" ${state.selected.has(r.id)?'checked':''}><span><strong>${escapeHtml(formatDateTime(r.studiedAt||r.createdAt))}</strong><small>${Number(r.minutes||0)}분${(r.imageIds||[]).length?' · 사진 '+r.imageIds.length+'장':''}${r.favorite?' · 중요':''}</small><small class="pdf-record-snippet">${escapeHtml((r.contentText||stripHtml(r.contentHtml||'')||'내용 없음').slice(0,140))}</small></span></label>`).join('')}</div>
+      <p>PDF 저장·인쇄 화면에서 필요한 페이지 번호를 선택할 수 있습니다.</p>
+    </div>`;
+    $('pdfPreviewCloseBtn').onclick = close;
+    overlay.querySelectorAll('.pdf-record-check').forEach(el => el.onchange = updateCount);
+    $('pdfSelectAllBtn').onclick = () => { overlay.querySelectorAll('.pdf-record-check').forEach(el => el.checked=true);updateCount(); };
+    $('pdfDeselectAllBtn').onclick = () => { overlay.querySelectorAll('.pdf-record-check').forEach(el => el.checked=false);updateCount(); };
+    $('pdfBuildBtn').onclick = async () => {
+      capture();
+      if (!state.selected.size) return;
+      $('pdfBuildBtn').disabled = true;
+      try { await renderPreview(); } catch(e) { if (overlay.isConnected) { renderSelector();showToast('PDF 준비에 실패했습니다. 다시 시도해 주세요.'); } console.error(e); }
+    };
+    updateCount();
+    overlay.scrollTop=0;
+  }
+  async function renderPreview() {
+    const generation = ++previewGeneration;
+    const list = records.filter(r => state.selected.has(r.id)).sort((a,b) => {
+      const delta = (new Date(a.studiedAt||a.createdAt).getTime()||0) - (new Date(b.studiedAt||b.createdAt).getTime()||0);
+      return state.order==='latest' ? -delta : delta;
+    });
+    const ids = state.includeImages ? normalizeStringList(list.flatMap(r => r.imageIds||[])) : [];
+    const images = await getImagesByIds(ids);
+    if (!overlay.isConnected || generation !== previewGeneration) return;
+    overlay.innerHTML = toolbar(`미리보기 · ${list.length}건`, true) + `<div class="pdf-paper">${StudyPdf.build(list,images,{title:state.title,includeImages:state.includeImages,formatDate:formatDateTime})}</div>`;
+    $('pdfPreviewCloseBtn').onclick = close;
+    $('pdfChangeSelectionBtn').onclick = renderSelector;
+    overlay.scrollTop=0;
+    await Promise.all(Array.from(overlay.querySelectorAll('.study-pdf-photo img')).map(async img => {
+      try { await img.decode(); } catch(e) {
+        const message = document.createElement('div');message.className='pdf-photo-missing';message.textContent='사진을 불러오지 못했습니다. 원본을 확인해 주세요.';img.replaceWith(message);
+      }
+    }));
+    if (!overlay.isConnected || generation !== previewGeneration || !$('pdfPreviewPrintBtn')) return;
+    const button = $('pdfPreviewPrintBtn');
+    button.textContent='PDF 저장 · 인쇄';button.disabled=false;
+    button.onclick = () => window.print();
+  }
+  renderSelector();
 };
 
-/* ============================================================
-   17. 저장공간 확인
-   ============================================================ */
+/* 저장공간 확인 */
 function setStorageStatus(message) {
   const el = $('storageStatusText');
   if (!el) return;

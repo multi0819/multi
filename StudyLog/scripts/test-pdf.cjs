@@ -1,0 +1,11 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const context={window:{}};vm.createContext(context);vm.runInContext(fs.readFileSync(path.join(__dirname,'../app/src/main/assets/pdf-layout.js'),'utf8'),context);
+const report=context.window.StudyPdf.build([{id:'saved',minutes:30,nodes:[{type:'text',text:'First paragraph'},{type:'newline'},{type:'newline'},{type:'text',text:'Heading',fontSize:'28px',color:'#edf3fb'},{type:'newline'},{type:'text',text:'1. List item'},{type:'br'},{type:'text',text:'continuation <script>'}],imageIds:['photo']}],{photo:'data:image/png;base64,AA=='},{title:'My Journal',formatDate:()=> '2026-10-10'});
+assert.ok(report.includes('First paragraph</p><p><br></p>'),'blank paragraph preserved');
+assert.ok(report.includes('class="pdf-node-emphasis"'),'heading emphasis preserved');
+assert.ok(!report.includes('#edf3fb'),'light screen text normalized for white paper');
+assert.ok(report.includes('pdf-list-marker">1.</span>'),'list marker separated from wrapping text');
+assert.ok(report.includes('List item<br>continuation &lt;script&gt;'),'soft break and literal text preserved');
+assert.ok(report.includes('<img'),'registered photo included');
+assert.ok(!context.window.StudyPdf.build([{id:'saved',minutes:0,nodes:[],imageIds:['photo']}],{photo:'data:image/png;base64,AA=='},{includeImages:false}).includes('<img'));
+console.log('PASS: canonical node paragraphs, blank lines, readable emphasis, list wrapping, escaping, photo option');

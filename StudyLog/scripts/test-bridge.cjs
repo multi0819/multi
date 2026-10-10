@@ -1,7 +1,8 @@
 const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/strict');
+const bridgePath=require('node:path').join(__dirname,'../app/src/main/assets/native.js');
 const calls=[]; const context={window:null,Blob,Uint8Array,btoa:s=>Buffer.from(s,'binary').toString('base64'),AndroidStudy:{speak:(...a)=>calls.push(a),stop:()=>calls.push('stop'),saveStart:()=>{},saveChunk:()=>{},saveFinish:()=>{},printPage:()=>{}}}; context.window=context;
-assert.ok(fs.existsSync('app/src/main/assets/native.js'),'Android integration must exist');
-vm.createContext(context);vm.runInContext(fs.readFileSync('app/src/main/assets/native.js','utf8'),context);
+assert.ok(fs.existsSync(bridgePath),'Android integration must exist');
+vm.createContext(context);vm.runInContext(fs.readFileSync(bridgePath,'utf8'),context);
 let ended=0;const u=new context.SpeechSynthesisUtterance('학습 내용');u.onend=()=>ended++;context.speechSynthesis.speak(u);const id=calls[0][2];
 context.studySpeechEvent(id,'done');assert.equal(ended,1);
 context.speechSynthesis.speak(u);context.speechSynthesis.cancel();context.studySpeechEvent(calls[1][2],'done');assert.equal(ended,1,'cancelled utterance must not advance playback');
