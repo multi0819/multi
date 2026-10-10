@@ -1,0 +1,10 @@
+plugins { id 'com.android.application'; id 'org.jetbrains.kotlin.android' }
+android {
+ namespace 'com.multi0819.studylog'
+ compileSdk 35
+ defaultConfig { applicationId 'com.multi0819.studylog'; minSdk 26; targetSdk 35; versionCode 1; versionName '1.0.0' }
+ signingConfigs { study { storeFile file('../signing/studylog.jks'); storePassword 'android'; keyAlias 'studylog'; keyPassword 'android' } }
+ buildTypes { debug { signingConfig signingConfigs.study }; release { signingConfig signingConfigs.study; minifyEnabled false } }
+ compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+ kotlinOptions { jvmTarget = '17' }
+}

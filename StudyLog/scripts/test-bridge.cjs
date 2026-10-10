@@ -1,0 +1,14 @@
+const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/strict');
+const calls=[]; const context={window:null,Blob,Uint8Array,btoa:s=>Buffer.from(s,'binary').toString('base64'),AndroidStudy:{speak:(...a)=>calls.push(a),stop:()=>calls.push('stop'),saveStart:()=>{},saveChunk:()=>{},saveFinish:()=>{},printPage:()=>{}}}; context.window=context;
+assert.ok(fs.existsSync('app/src/main/assets/native.js'),'Android integration must exist');
+vm.createContext(context);vm.runInContext(fs.readFileSync('app/src/main/assets/native.js','utf8'),context);
+let ended=0;const u=new context.SpeechSynthesisUtterance('학습 내용');u.onend=()=>ended++;context.speechSynthesis.speak(u);const id=calls[0][2];
+context.studySpeechEvent(id,'done');assert.equal(ended,1);
+context.speechSynthesis.speak(u);context.speechSynthesis.cancel();context.studySpeechEvent(calls[1][2],'done');assert.equal(ended,1,'cancelled utterance must not advance playback');
+console.log('PASS: Korean speech completion and cancelled callbacks');
+const parts=[];let finished=false;
+context.AndroidStudy.saveStart=(name,type)=>{assert.equal(name,'backup.json');assert.equal(type,'application/json');};
+context.AndroidStudy.saveChunk=data=>parts.push(Buffer.from(data,'base64'));
+context.AndroidStudy.saveFinish=()=>finished=true;
+const bytes=Buffer.from(JSON.stringify({records:[{text:'사진 포함 백업'.repeat(15000)}]}));
+context.saveNativeBlob(new Blob([bytes],{type:'application/json'}),'backup.json').then(()=>{assert.ok(finished);assert.ok(parts.length>1);assert.deepEqual(Buffer.concat(parts),bytes);console.log('PASS: chunked backup preserves all UTF-8 bytes');});
