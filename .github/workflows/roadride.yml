@@ -31,6 +31,11 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm test
       - run: chmod +x gradlew && ./gradlew assembleDebug lintDebug
+      - name: Print lint report on failure
+        if: failure()
+        run: |
+          report=app/build/intermediates/lint_intermediate_text_report/debug/lintReportDebug/lint-results-debug.txt
+          if [ -f "$report" ]; then cat "$report"; fi
       - name: Kotlin cadence and routing checks
         run: |
           compiler=$(find "$HOME/.gradle/wrapper/dists" -name kotlin-compiler-embeddable-2.0.20.jar -print -quit)

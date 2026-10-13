@@ -42,3 +42,6 @@ Independent 1.2.0 review found an incomplete-handshake persistence edge: saved p
 - No raw CSC data/address is passed to WebView or uploaded. Android 8~11 location permission is for BLE scanning only; Android12+ neverForLocation.
 - Actual S314/Android hardware is unavailable; BLE radio discovery, subscription behavior, permission prompts and physical accuracy are not device-validated.
 - Local cached Kotlin compiler JAR was truncated; local tests/build use a separate recovered 2.0.20 compiler cache, without changing shared toolchains.
+
+Final 1.3.0 review fixes: wheel-only data invalidates the current BLE epoch and invokes the connection-release path before the mode-change dialog; home now offers connection settings/release and agrees with the ride screen on stale data. Added RED→GREEN gate/release and DOM regressions (29 Node tests). Android permission revocation handlers explicitly catch SecurityException so the runtime behavior is visible to lint.
+Deferred minor: a full executable Android BLE lifecycle harness remains absent; gate/mode-release logic, packet math and DOM are tested, native callbacks are reviewed and compiled, but no radio/Activity instrumentation is claimed.
