@@ -34,3 +34,11 @@ Deferred minor: notification permission denial has no in-app result explanation;
 - Native YouTube full-screen stats column compiles; no actual device or layout validation available here. Android pairing storage and Wi-Fi IP-change fallback also require device confirmation.
 
 Independent 1.2.0 review found an incomplete-handshake persistence edge: saved pairing credentials now commit only after final OK. Malformed/EOF handshakes reproduce failure before fix and pass after fix, alongside successful saved-token restart.
+
+## 1.3.0 direct BLE cadence
+- CSC synthetic binary tests: 60/90/120RPM; optional wheel fields; short/unknown fields; 16-bit counter and time rollover; duplicate/3s stop; >5s gap; zero-time/implausible RPM/sensor reset recovery.
+- Pure BLE session gate/API-specific permissions tests; native scan and GATT callbacks use generation plus GATT identity checks.
+- DOM integration: direct sensor vs phone labels, input switch clears previous packets and accepts a reset sequence, manual pause survives switching, wrong mode/stale values pause auto playback. Full Node suite 28/28 before final review.
+- No raw CSC data/address is passed to WebView or uploaded. Android 8~11 location permission is for BLE scanning only; Android12+ neverForLocation.
+- Actual S314/Android hardware is unavailable; BLE radio discovery, subscription behavior, permission prompts and physical accuracy are not device-validated.
+- Local cached Kotlin compiler JAR was truncated; local tests/build use a separate recovered 2.0.20 compiler cache, without changing shared toolchains.

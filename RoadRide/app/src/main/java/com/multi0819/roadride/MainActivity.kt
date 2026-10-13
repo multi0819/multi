@@ -24,7 +24,10 @@ class MainActivity : Activity() {
     private var statsText="현재시간 —  |  라이딩 00:00  |  추정 — km/h  |  — km  |  — kcal"
     private var customCallback: WebChromeClient.CustomViewCallback? = null
     private val cadenceClient = CadenceClient()
+    private var bleCadence: BleCadenceClient?=null
+    private var resumed=false
     private var connectionEpoch = 0L
+    private var cadenceSource="phone"
     private val appHost = AssetRouter.HOST
     private val remoteDomains = listOf("youtube.com", "youtube-nocookie.com", "ytimg.com", "googlevideo.com", "google.com", "gstatic.com", "googleusercontent.com", "doubleclick.net", "googleadservices.com", "googlesyndication.com")
     private fun trusted(host: String?): Boolean = host != null && remoteDomains.any { host == it || host.endsWith(".$it") }
@@ -56,7 +59,7 @@ class MainActivity : Activity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(false)
-            userAgentString = userAgentString + " RoadRideAndroid/1.2.0"
+            userAgentString = userAgentString + " RoadRideAndroid/1.3.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
@@ -84,10 +87,13 @@ class MainActivity : Activity() {
                 if (uri.scheme == "roadride" && web.url?.startsWith("https://$appHost/") == true) {
                     when (uri.host) {
                         "measure" -> startActivity(Intent(this@MainActivity, CadenceActivity::class.java))
+                        "ble-connect" -> connectBle(false)
+                        "ble-settings" -> showInputSettings()
+                        "cadence-disconnect" -> disconnectInput()
                         "connect" -> connectSaved()
                         "connect-settings" -> showConnectionDialog()
                         "stats" -> { val value=uri.getQueryParameter("text");if(value!=null && value.length<=300){statsText=value;statsView?.text=value} }
-                        "disconnect" -> { connectionEpoch++; cadenceClient.close(); cadenceStatus("disconnected") }
+                        "disconnect" -> disconnectInput()
                         "landscape" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE; fullscreen(true) }
                         "portrait" -> { requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT; fullscreen(false) }
                         "immersive", "controls" -> fullscreen(true)
@@ -125,8 +131,38 @@ class MainActivity : Activity() {
         }
         web.loadUrl(AssetRouter.startUrl)
     }
-    private fun cadenceStatus(status: String) {
-        web.evaluateJavascript("window.onCadenceStatus && window.onCadenceStatus(${org.json.JSONObject.quote(status)})", null)
+    private fun cadenceStatus(status: String, source:String=cadenceSource) {
+        web.evaluateJavascript("window.onCadenceStatus && window.onCadenceStatus(${org.json.JSONObject.quote(status)},${org.json.JSONObject.quote(source)})", null)
+    }
+    private fun disconnectInput() {
+        connectionEpoch++;cadenceClient.close();bleCadence?.close();bleCadence=null
+        cadenceStatus("disconnected")
+    }
+    private fun beginInput(source:String):Long {
+        connectionEpoch++;cadenceClient.close();bleCadence?.close();bleCadence=null;cadenceSource=source
+        cadenceStatus("connecting",source)
+        return connectionEpoch
+    }
+    private fun connectBle(search:Boolean) {
+        if(!resumed)return
+        val epoch=beginInput("ble");var seq=0L
+        val client=BleCadenceClient(this,{reading->
+            if(connectionEpoch==epoch && cadenceSource=="ble" && !isDestroyed)sendCadencePacket(CadencePacket(seq++,reading.rpm,reading.confidence,reading.state))
+        },{status->
+            if(connectionEpoch==epoch && cadenceSource=="ble" && !isDestroyed){if(status=="connecting")seq=0;cadenceStatus(status,"ble")}
+        })
+        bleCadence=client;client.onResume()
+        if(search)client.showPicker()else client.connectSaved()
+    }
+    private fun showInputSettings() {
+        android.app.AlertDialog.Builder(this).setTitle("RPM 연결 설정")
+            .setItems(arrayOf("블루투스 센서 연결","센서 다시 검색","휴대폰 Wi-Fi 연결","연결 해제")) {_,choice->
+                when(choice){0->connectBle(false);1->connectBle(true);2->showConnectionDialog();3->disconnectInput()}
+            }.setNegativeButton("닫기",null).show()
+    }
+    private fun sendCadencePacket(packet:CadencePacket) {
+        val json=org.json.JSONObject().put("seq",packet.seq).put("rpm",packet.rpm).put("confidence",packet.confidence).put("state",packet.state)
+        web.evaluateJavascript("window.onCadencePacket && window.onCadencePacket($json)",null)
     }
     private fun connectSaved() {
         val prefs=getSharedPreferences("cadence",MODE_PRIVATE)
@@ -136,11 +172,10 @@ class MainActivity : Activity() {
         else showConnectionDialog()
     }
     private fun connectCadence(host:String,port:Int,secret:String) {
-        val epoch=++connectionEpoch;cadenceStatus("connecting")
+        val epoch=beginInput("phone")
         cadenceClient.connect(host,port,secret,{packet->runOnUiThread {
             if(connectionEpoch==epoch && !isDestroyed) {
-                val json=org.json.JSONObject().put("seq",packet.seq).put("rpm",packet.rpm).put("confidence",packet.confidence).put("state",packet.state)
-                web.evaluateJavascript("window.onCadencePacket && window.onCadencePacket($json)",null)
+                if(cadenceSource=="phone")sendCadencePacket(packet)
             }
         }},{status->runOnUiThread {
             if(connectionEpoch==epoch && !isDestroyed) {
@@ -156,7 +191,7 @@ class MainActivity : Activity() {
         val code=android.widget.EditText(this).apply {hint="8자리 임시 코드";setSingleLine();inputType=android.text.InputType.TYPE_CLASS_NUMBER or android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD}
         form.addView(android.widget.TextView(this).apply {text="두 기기를 같은 가정 Wi-Fi에 연결하세요. 휴대폰에서 측정을 시작한 뒤 표시되는 값을 입력하세요."})
         form.addView(address);form.addView(code)
-        val dialog=android.app.AlertDialog.Builder(this).setTitle("휴대폰 RPM 연결").setView(form).setPositiveButton("연결",null).setNegativeButton("취소",null).setNeutralButton("연결 해제") {_,_-> connectionEpoch++;cadenceClient.close();cadenceStatus("disconnected") }.create()
+        val dialog=android.app.AlertDialog.Builder(this).setTitle("휴대폰 RPM 연결").setView(form).setPositiveButton("연결",null).setNegativeButton("취소",null).setNeutralButton("연결 해제") {_,_-> disconnectInput() }.create()
         dialog.setOnShowListener {dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
             val value=address.text.toString().trim();val parts=value.split(':');val host=parts.firstOrNull()?:"";val port=parts.getOrNull(1)?.toIntOrNull()?:0;val secret=code.text.toString().trim()
             if(parts.size!=2 || !CadenceClient.validEndpoint(host,port,secret)) {address.error="올바른 Wi-Fi IPv4 주소·포트와 8자리 코드를 입력하세요";return@setOnClickListener}
@@ -194,16 +229,22 @@ class MainActivity : Activity() {
         if (custom != null) { hideCustom(); return }
         web.evaluateJavascript("window.handleBack ? window.handleBack() : false") { value -> if (value != "true") finish() }
     }
+    override fun onRequestPermissionsResult(requestCode:Int,permissions:Array<out String>,grantResults:IntArray) {
+        super.onRequestPermissionsResult(requestCode,permissions,grantResults)
+        bleCadence?.onRequestPermissionsResult(requestCode)
+    }
     override fun onPause() {
+        resumed=false;bleCadence?.onPause()
         web.evaluateJavascript("window.pauseRide && window.pauseRide()", null)
         web.onPause()
         super.onPause()
     }
     override fun onResume() {
         super.onResume()
+        resumed=true;bleCadence?.onResume()
         if (::web.isInitialized) { web.onResume(); web.evaluateJavascript("window.foregroundRide && window.foregroundRide()", null) }
     }
     override fun onDestroy() {
-        connectionEpoch++; cadenceClient.close(); hideCustom(); web.stopLoading(); web.destroy(); super.onDestroy()
+        connectionEpoch++; cadenceClient.close(); bleCadence?.close();bleCadence=null; hideCustom(); web.stopLoading(); web.destroy(); super.onDestroy()
     }
 }

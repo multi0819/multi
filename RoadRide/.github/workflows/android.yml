@@ -37,6 +37,8 @@ jobs:
           compiler=$(find "$HOME/.gradle/wrapper/dists" -name kotlin-compiler-embeddable-2.0.20.jar -print -quit)
           test -n "$compiler"
           export ROADRIDE_KOTLIN_LIB="$(dirname "$compiler")"
+          scripts/test-csc-cadence.sh
+          scripts/test-ble-connection.sh
           scripts/test-cadence-core.sh
           scripts/test-cadence-network.sh
           scripts/test-asset-router.sh

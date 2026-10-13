@@ -1,7 +1,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 let routes=[],filter='all',data=RoadCore.restoreData(readStored()),player=null,controller=null,current=null,generation=0,apiPromise=null,ready=false,muted=false,suspended=false,hideTimer=null,noticeTimer=null,startupTimer=null;
-let cadenceConnection='disconnected',manualRate=1;
+let cadenceConnection='disconnected',cadenceSource='phone',manualRate=1;
 const cadence=new CadenceSync({rates:()=>ready&&player?player.getAvailablePlaybackRates():[],currentRate:()=>ready&&player?player.getPlaybackRate():null,canChangeRate:()=>controller?.status==='playing',rate:n=>{if(ready&&player){player.setPlaybackRate(n);$('rate').value=String(n)}},pause:()=>{if(controller){controller.pause();setStatus('paused')}},play:()=>{if(ready&&!suspended&&!document.hidden)player.playVideo()}});
 let metricPreferences={};try{metricPreferences=JSON.parse(localStorage.getItem('roadride-metrics'))||{}}catch(e){}
 let metrics=new RideMetrics(metricPreferences);
@@ -18,10 +18,15 @@ $('metricSettingsBtn').onclick=()=>{for(const [id,key] of [['metricWeight','weig
 for(const id of ['metricWeight','metricReferenceSpeed','metricIntensity'])$(id).onchange=saveMetricSettings;
 $('closeMetrics').onclick=()=>{saveMetricSettings();$('metricsDialog').close()};
 function cadenceTick(){if(ready&&controller&&!suspended&&!document.hidden&&controller.status!=='error')cadence.tick(performance.now())}
-function renderCadence(){const p=cadence.packet;$('cadenceRpm').textContent=p?`${Math.round(p.rpm)} RPM`:'— RPM';const label=({connecting:'연결 중',connected:p?({tracking:'추정 RPM 측정 중',ready:'움직임 분석 중',stopped:'페달 정지',unstable:'측정 불안정'})[p.state]:'센서 수신 대기',disconnected:'연결 끊김 · 수동 재생 가능',auth_failed:'코드가 다르거나 측정기가 응답하지 않습니다'})[cadenceConnection]||'휴대폰 연결 대기';$('cadenceStatus').textContent=label;$('homeCadenceStatus').textContent=label;$('rate').disabled=!ready||cadence.enabled}
-window.onCadenceStatus=status=>{cadenceConnection=status;cadence.resetConnection();cadenceTick();renderCadence();renderDashboard()};
+function renderCadence(){
+ const p=cadence.packet;const ble=cadenceSource==='ble';$('cadenceHeading').textContent=ble?'센서 RPM':'추정 RPM';
+ $('cadenceRpm').textContent=p?`${Math.round(p.rpm)} RPM`:'— RPM';
+ const label=({connecting:ble?'센서 연결 중':'휴대폰 연결 중',connected:p?({tracking:ble?'센서 RPM 수신 중':'추정 RPM 측정 중',ready:ble?'페달을 돌려 RPM 확인':'움직임 분석 중',stopped:'페달 정지',unstable:'측정 불안정'})[p.state]:'센서 수신 대기',disconnected:'연결 끊김 · 수동 재생 가능',auth_failed:'코드가 다르거나 측정기가 응답하지 않습니다',scanning:'센서 검색 중 · 페달을 돌려주세요',scan_complete:'검색 완료 · S314를 선택하세요',scan_empty:'검색 결과 없음 · 페달을 돌린 뒤 다시 검색하세요',scan_failed:'검색 실패 · 권한과 Bluetooth를 확인하세요',mode_required:'센서를 케이던스 모드로 변경하세요',permission_required:'근처 기기 권한을 허용하세요',location_permission_required:'이 Android 버전은 BLE 검색에 위치 권한이 필요합니다 · 위치는 수집하지 않습니다',permission_denied:'센서 연결 권한이 필요합니다 · 앱 설정에서 허용하세요',permission_granted:'권한 허용됨 · 센서 연결을 다시 누르세요',bluetooth_off:'탭의 Bluetooth를 켜고 다시 연결하세요',location_off:'Android 11 이하는 위치 기능을 켜야 BLE 검색이 됩니다',ble_unavailable:'이 기기는 BLE 연결을 사용할 수 없습니다',subscription_failed:'센서 알림 수신 실패 · 다시 검색하세요',unsupported_sensor:'케이던스 데이터를 지원하지 않는 장치입니다',connection_timeout:'연결 시간 초과 · 다른 앱 연결을 종료하고 다시 검색하세요',connection_failed:'센서 연결 실패 · 연결 설정에서 다시 검색하세요'})[cadenceConnection]||'RPM 연결 대기';
+ $('cadenceStatus').textContent=label;$('homeCadenceStatus').textContent=label;$('rate').disabled=!ready||cadence.enabled;
+}
+window.onCadenceStatus=(status,source='phone')=>{cadenceSource=source==='ble'?'ble':'phone';cadenceConnection=status;cadence.resetConnection();cadenceTick();renderCadence();renderDashboard()};
 window.onCadencePacket=packet=>{if(cadence.update(packet,performance.now())){cadenceTick();renderCadence();renderDashboard()}};
-$('measureBtn').onclick=()=>nativeCommand('measure');$('connectBtn').onclick=()=>nativeCommand('connect');$('rideConnect').onclick=()=>nativeCommand('connect-settings');
+$('measureBtn').onclick=()=>nativeCommand('measure');$('bleConnectBtn').onclick=()=>nativeCommand('ble-connect');$('connectBtn').onclick=()=>nativeCommand('connect');$('rideConnect').onclick=()=>nativeCommand('ble-settings');
 $('cadenceAuto').onchange=()=>{cadence.setEnabled($('cadenceAuto').checked);if(!cadence.enabled&&controller)controller.setRate(manualRate);cadenceTick();renderCadence();renderDashboard()};
 $('cadenceBaseline').onchange=()=>{cadence.baseline=Number($('cadenceBaseline').value);cadenceTick()};
 function readStored(){try{return localStorage.getItem('roadride-v1')}catch(e){return null}}
