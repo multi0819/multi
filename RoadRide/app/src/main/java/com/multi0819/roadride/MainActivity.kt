@@ -18,6 +18,10 @@ import java.io.ByteArrayInputStream
 class MainActivity : Activity() {
     private lateinit var web: WebView
     private lateinit var root: FrameLayout
+    private var backupPageReady = false
+    private var deliveringBackup = false
+    private val pendingExportFile get() = java.io.File(filesDir, "pending-export.json")
+    private val pendingImportFile get() = java.io.File(filesDir, "pending-import.json")
     private var custom: View? = null
     private var customLayout: android.widget.LinearLayout? = null
     private var statsView: android.widget.TextView? = null
@@ -59,11 +63,14 @@ class MainActivity : Activity() {
             mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(false)
-            userAgentString = userAgentString + " RoadRideAndroid/1.3.0"
+            userAgentString = userAgentString + " RoadRideAndroid/1.5.0"
         }
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true)
         web.webViewClient = object : WebViewClient() {
+            override fun onPageFinished(view: WebView, url: String) {
+                if (url.startsWith("https://$appHost/")) { backupPageReady = true; deliverPendingBackup() }
+            }
             override fun shouldInterceptRequest(view: WebView, request: WebResourceRequest): WebResourceResponse? {
                 val uri = request.url
                 if (uri.host == appHost && uri.scheme == "https") {
@@ -86,6 +93,8 @@ class MainActivity : Activity() {
                 if (!request.isForMainFrame) return uri.scheme != "https" || !trusted(uri.host)
                 if (uri.scheme == "roadride" && web.url?.startsWith("https://$appHost/") == true) {
                     when (uri.host) {
+                        "backup-export" -> exportBackup()
+                        "backup-import" -> importBackup()
                         "measure" -> startActivity(Intent(this@MainActivity, CadenceActivity::class.java))
                         "ble-connect" -> connectBle(false)
                         "ble-settings" -> showInputSettings()
@@ -123,13 +132,88 @@ class MainActivity : Activity() {
             override fun onHideCustomView() { hideCustom() }
             override fun onJsConfirm(view: WebView, url: String, message: String, result: JsResult): Boolean {
                 android.app.AlertDialog.Builder(this@MainActivity).setMessage(message)
-                    .setPositiveButton("삭제") { _, _ -> result.confirm() }
+                    .setPositiveButton("확인") { _, _ -> result.confirm() }
                     .setNegativeButton("취소") { _, _ -> result.cancel() }
                     .setOnCancelListener { result.cancel() }.show()
                 return true
             }
         }
         web.loadUrl(AssetRouter.startUrl)
+    }
+    private fun backupStatus(message: String) {
+        if (!isDestroyed) web.evaluateJavascript("window.onRoadRideBackupStatus && window.onRoadRideBackupStatus(${org.json.JSONObject.quote(message)})", null)
+    }
+    private fun exportBackup() {
+        web.evaluateJavascript("window.createRoadRideBackup && window.createRoadRideBackup()") { result ->
+            try {
+                val text = org.json.JSONTokener(result).nextValue() as? String ?: throw IllegalArgumentException()
+                if (text.toByteArray(Charsets.UTF_8).size > 5_000_000) {
+                    backupStatus("백업 파일은 5MB까지 지원합니다."); return@evaluateJavascript
+                }
+                pendingExportFile.writeText(text, Charsets.UTF_8)
+                val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+                startActivityForResult(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "application/json"
+                    putExtra(Intent.EXTRA_TITLE, "RoadRide-backup-$date.json")
+                }, 701)
+            } catch (_: Exception) { pendingExportFile.delete(); backupStatus("백업 저장 화면을 열지 못했습니다.") }
+        }
+    }
+    private fun importBackup() {
+        try {
+            startActivityForResult(Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+                addCategory(Intent.CATEGORY_OPENABLE)
+                type = "*/*"
+                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("application/json", "text/plain", "application/octet-stream"))
+            }, 702)
+        } catch (_: Exception) { backupStatus("백업 파일 선택 화면을 열지 못했습니다.") }
+    }
+    @Deprecated("Activity result API retained for platform Activity")
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != 701 && requestCode != 702) return
+        if (resultCode != RESULT_OK || data?.data == null) { if (requestCode == 701) pendingExportFile.delete(); return }
+        val uri = data.data ?: return
+        Thread {
+            try {
+                if (requestCode == 701) {
+                    val backup = pendingExportFile.readText(Charsets.UTF_8)
+                    contentResolver.openOutputStream(uri, "wt")?.use { it.write(backup.toByteArray(Charsets.UTF_8)) } ?: throw java.io.IOException()
+                    pendingExportFile.delete()
+                    runOnUiThread { backupStatus("백업 파일을 저장했습니다.") }
+                } else {
+                    val bytes = contentResolver.openInputStream(uri)?.use { input ->
+                        val output = java.io.ByteArrayOutputStream()
+                        val buffer = ByteArray(8192)
+                        while (output.size() <= 5_000_000) {
+                            val count = input.read(buffer, 0, minOf(buffer.size, 5_000_001 - output.size()))
+                            if (count < 0) break
+                            output.write(buffer, 0, count)
+                        }
+                        output.toByteArray() } ?: throw java.io.IOException()
+                    if (bytes.size > 5_000_000) throw IllegalArgumentException()
+                    pendingImportFile.writeBytes(bytes)
+                    runOnUiThread { deliverPendingBackup() }
+                }
+            } catch (_: Exception) { runOnUiThread { backupStatus(if (requestCode == 701) "백업 저장에 실패했습니다. 다시 시도해 주세요." else "백업 파일을 읽지 못했습니다. 5MB 이하의 JSON 백업을 선택해 주세요.") } }
+        }.start()
+    }
+    private fun deliverPendingBackup() {
+        if (isDestroyed || !backupPageReady || deliveringBackup || !pendingImportFile.isFile) return
+        deliveringBackup = true
+        Thread {
+            try {
+                val raw = pendingImportFile.readText(Charsets.UTF_8)
+                runOnUiThread {
+                    if (isDestroyed) { deliveringBackup = false; return@runOnUiThread }
+                    web.evaluateJavascript("(function(){if(typeof window.onRoadRideBackupRead!=='function')return false;window.onRoadRideBackupRead(${org.json.JSONObject.quote(raw)});return true;})()") { handled ->
+                        if (handled == "true") pendingImportFile.delete()
+                        deliveringBackup = false
+                    }
+                }
+            } catch (_: Exception) { runOnUiThread { deliveringBackup = false; backupStatus("백업 파일을 다시 선택해 주세요.") } }
+        }.start()
     }
     private fun cadenceStatus(status: String, source:String=cadenceSource) {
         web.evaluateJavascript("window.onCadenceStatus && window.onCadenceStatus(${org.json.JSONObject.quote(status)},${org.json.JSONObject.quote(source)})", null)
