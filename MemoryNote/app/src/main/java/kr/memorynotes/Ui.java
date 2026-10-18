@@ -4,8 +4,8 @@ public final class Ui {
  public final Activity a;public final int bg,surface,ink,muted,green,line;public final float scale;
  public Ui(Activity a){this.a=a;boolean dark=a.getPreferences(0).getBoolean("dark",false);bg=Color.parseColor(dark?"#121C19":"#F5F7F3");surface=Color.parseColor(dark?"#1F2D27":"#FFFFFF");ink=Color.parseColor(dark?"#EEF6F1":"#203B32");muted=Color.parseColor(dark?"#AEC1B5":"#74867B");green=Color.parseColor(dark?"#76CFAB":"#257967");line=Color.parseColor(dark?"#36473F":"#DBE5DC");scale=a.getPreferences(0).getFloat("font",1f);}
  public int dp(float n){return (int)(n*a.getResources().getDisplayMetrics().density+.5f);}
- public LinearLayout col(){LinearLayout l=new LinearLayout(a);l.setOrientation(1);return l;}
- public LinearLayout row(){LinearLayout l=new LinearLayout(a);l.setOrientation(0);l.setGravity(Gravity.CENTER_VERTICAL);return l;}
+ public LinearLayout col(){LinearLayout l=new LinearLayout(a);l.setOrientation(LinearLayout.VERTICAL);return l;}
+ public LinearLayout row(){LinearLayout l=new LinearLayout(a);l.setOrientation(LinearLayout.HORIZONTAL);l.setGravity(Gravity.CENTER_VERTICAL);return l;}
  public GradientDrawable shape(int color,int radius){GradientDrawable g=new GradientDrawable();g.setColor(color);g.setCornerRadius(dp(radius));return g;}
  public TextView text(String s,int size,int color){TextView t=new TextView(a);t.setText(s);t.setTextColor(color);t.setTextSize(size*scale);t.setLineSpacing(dp(3),1);return t;}
  public TextView title(String s){TextView t=text(s,27,ink);t.setTypeface(null,Typeface.BOLD);t.setPadding(0,dp(8),0,dp(10));return t;}
