@@ -1,13 +1,16 @@
 package kr.memorynotes;
 import android.app.*;import android.content.*;import android.graphics.Color;import android.graphics.Typeface;import android.graphics.drawable.GradientDrawable;import android.view.*;import android.widget.*;
 public final class Ui {
- public final Activity a;public final int bg,surface,ink,muted,green,line;public final float scale;
- public Ui(Activity a){this.a=a;boolean dark=a.getPreferences(0).getBoolean("dark",false);bg=Color.parseColor(dark?"#121C19":"#F5F7F3");surface=Color.parseColor(dark?"#1F2D27":"#FFFFFF");ink=Color.parseColor(dark?"#EEF6F1":"#203B32");muted=Color.parseColor(dark?"#AEC1B5":"#74867B");green=Color.parseColor(dark?"#76CFAB":"#257967");line=Color.parseColor(dark?"#36473F":"#DBE5DC");scale=a.getPreferences(0).getFloat("font",1f);}
+ public final Activity a;public final int bg,surface,ink,muted,green,line,answerColor,clozeColor,clozeTint;public final float scale;
+ public Ui(Activity a){this.a=a;boolean dark=a.getPreferences(0).getBoolean("dark",false);bg=Color.parseColor(dark?"#121C19":"#F5F7F3");surface=Color.parseColor(dark?"#1F2D27":"#FFFFFF");ink=Color.parseColor(dark?"#EEF6F1":"#203B32");muted=Color.parseColor(dark?"#AEC1B5":"#74867B");green=Color.parseColor(dark?"#76CFAB":"#257967");line=Color.parseColor(dark?"#36473F":"#DBE5DC");answerColor=Color.parseColor(dark?"#8ABEFF":"#195CAC");clozeColor=Color.parseColor(dark?"#FFBF75":"#A64900");clozeTint=Color.parseColor(dark?"#49341E":"#FFF0DB");scale=a.getPreferences(0).getFloat("font",1f);}
  public int dp(float n){return (int)(n*a.getResources().getDisplayMetrics().density+.5f);}
  public LinearLayout col(){LinearLayout l=new LinearLayout(a);l.setOrientation(LinearLayout.VERTICAL);return l;}
  public LinearLayout row(){LinearLayout l=new LinearLayout(a);l.setOrientation(LinearLayout.HORIZONTAL);l.setGravity(Gravity.CENTER_VERTICAL);return l;}
  public GradientDrawable shape(int color,int radius){GradientDrawable g=new GradientDrawable();g.setColor(color);g.setCornerRadius(dp(radius));return g;}
  public TextView text(String s,int size,int color){TextView t=new TextView(a);t.setText(s);t.setTextColor(color);t.setTextSize(size*scale);t.setLineSpacing(dp(3),1);return t;}
+ public TextView study(String source,int size,boolean answer,boolean masked){return StudyTextRenderer.create(this,source,size,answer,masked);}
+ public void studyEditor(EditText e,boolean answer){StudyTextRenderer.editor(this,e,answer);}
+ public LinearLayout studyLegend(){LinearLayout legend=col();legend.addView(text("제목·문제",12,ink));legend.addView(text("답 전체  ·  파랑",12,answerColor));legend.addView(text("가림 문구  ·  주황",12,clozeColor));return legend;}
  public TextView title(String s){TextView t=text(s,27,ink);t.setTypeface(null,Typeface.BOLD);t.setPadding(0,dp(8),0,dp(10));return t;}
  public void gap(LinearLayout l,int h){View v=new View(a);l.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  public LinearLayout card(LinearLayout parent){LinearLayout c=col();c.setPadding(dp(18),dp(16),dp(18),dp(16));c.setBackground(shape(surface,18));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(0,dp(5),0,dp(7));parent.addView(c,p);return c;}
