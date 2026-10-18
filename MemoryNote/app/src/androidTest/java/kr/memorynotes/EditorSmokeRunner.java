@@ -6,7 +6,7 @@ public class EditorSmokeRunner extends Instrumentation {
  void check(boolean value,String message){assertions++;if(!value)throw new AssertionError(message);}
  public void onCreate(Bundle args){super.onCreate(args);start();}
  void ui(Runnable action){runOnMainSync(action);waitForIdleSync();}
- void capture(String name)throws Exception{Bitmap image=getUiAutomation().takeScreenshot();if(image==null)throw new IOException("Screenshot unavailable");try(OutputStream out=new FileOutputStream(new File(getContext().getFilesDir(),name))){image.compress(Bitmap.CompressFormat.PNG,100,out);}image.recycle();}
+ void capture(String name)throws Exception{Bitmap image=getUiAutomation().takeScreenshot();if(image==null)throw new IOException("Screenshot unavailable");try(OutputStream out=new FileOutputStream(new File(getTargetContext().getExternalFilesDir(null),name))){image.compress(Bitmap.CompressFormat.PNG,100,out);}image.recycle();}
  public void onStart(){Bundle result=new Bundle();try{
   Context c=getTargetContext();db=new NoteDb(c);before=db.snapshot();
   Intent i=new Intent(c,MainActivity.class).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);activity=(MainActivity)startActivitySync(i);waitForIdleSync();originalDraft=activity.getPreferences(0).getString("draft","");
