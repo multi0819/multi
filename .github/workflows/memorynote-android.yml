@@ -27,7 +27,7 @@ jobs:
         run: chmod +x gradlew && ./gradlew --no-daemon testDebugUnitTest assembleDebug
       - uses: actions/upload-artifact@v4
         with:
-          name: MemoryNote-1.3.1-test-apk
+          name: MemoryNote-1.4.0-test-apk
           path: MemoryNote/app/build/outputs/apk/debug/app-debug.apk
       - uses: actions/upload-artifact@v4
         if: always()

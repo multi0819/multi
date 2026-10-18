@@ -18,8 +18,8 @@ public class EditorSmokeRunner extends Instrumentation {
   ui(()->{Note n=activity.db.query("표면적 공식은?").get(0);check(n.title.equals("표면적 공식은?"),"QA title derived automatically");check(n.answer.equals("πdL"),"QA answer saved");});
   for(int k=0;k<120;k++){Note n=new Note();n.subject="hvac";n.title="스크롤 확인 "+k;n.body="긴 목록 검사";db.save(n);}
   ui(()->activity.show("검색"));
-  ui(()->{ScrollView scroll=(ScrollView)activity.root.getChildAt(1);check(scroll.canScrollVertically(1),"120-note list scrolls down");scroll.fullScroll(View.FOCUS_DOWN);});
-  ui(()->{ScrollView scroll=(ScrollView)activity.root.getChildAt(1);check(scroll.canScrollVertically(-1),"120-note list reaches below first screen");});
+  ui(()->{ScrollView scroll=activity.root.findViewWithTag("note.list");check(scroll.canScrollVertically(1),"120-note list scrolls down");scroll.fullScroll(View.FOCUS_DOWN);});
+  ui(()->{ScrollView scroll=activity.root.findViewWithTag("note.list");check(scroll.canScrollVertically(-1),"120-note list reaches below first screen");});
   ui(()->{activity.getPreferences(0).edit().remove("draft").commit();Note n=new Note();n.subject="hvac";n.title="긴 내용";StringBuilder body=new StringBuilder();for(int k=0;k<150;k++)body.append("내용 ").append(k).append('\n');n.body=body.toString();activity.openEditor(n);});
   ui(()->{ScrollView scroll=(ScrollView)activity.root.getChildAt(1);check(scroll.canScrollVertically(1),"long content editor scrolls");activity.editor.type.setSelection(2);});
   ui(()->check(activity.editor.mistakeFields.getVisibility()==View.VISIBLE,"mistake fields only for mistake type"));
