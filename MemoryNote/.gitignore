@@ -1,0 +1,10 @@
+.gradle/
+local.properties
+build/
+**/build/
+*.apk
+*.keystore
+*.jks
+.superpowers/
+*.deb
+.codex/
