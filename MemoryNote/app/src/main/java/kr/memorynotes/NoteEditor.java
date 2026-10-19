@@ -19,6 +19,7 @@ public class NoteEditor {
   body=u.edit(generalFields,"내용",note.body,5);addStudyControls(generalFields,body);
   ((PictureEditText)body).receiver=this::pastePictures;
   generalFields.addView(u.button("그림 붙여넣기",()->{if(!((PictureEditText)body).pastePicture())u.message("먼저 갤러리 등에서 그림을 복사한 다음 붙여넣어 주세요.");}));
+  generalFields.addView(u.button("본문 그림 확대 · 가림 · 삭제",this::manageInlinePictures));
   extras=u.col();c.addView(extras);
   question=u.edit(extras,"문제 *",note.question,3);
   answer=u.edit(extras,"답 *",note.answer,5);u.studyEditor(answer,true);
@@ -70,6 +71,17 @@ public class NoteEditor {
  void persistDraft(){if(!ready)return;collect();try{a.getPreferences(0).edit().putString("draft",note.json().toString()).apply();}catch(Exception e){android.util.Log.e("MemoryNote","draft",e);}}
  void save(){if(a.busy){a.u.message("사진을 가져오는 중입니다. 잠시 후 저장하세요.");return;}collect();if(EditorPolicy.isGeneral(note.type)&&note.title.trim().isEmpty()){title.setError("제목을 입력하세요");title.requestFocus();return;}if(!note.type.equals("일반 노트")&&(note.question.trim().isEmpty()||note.answer.trim().isEmpty())){a.u.message("문답 카드와 오답노트에는 문제와 정답을 입력하세요.");return;}try{a.db.save(note);a.getPreferences(0).edit().remove("draft").apply();a.detail(note);}catch(Exception e){a.error(e);}}
  void leave(){persistDraft();new AlertDialog.Builder(a).setTitle("작성을 마칠까요?").setMessage("임시 저장하면 홈에서 이어 쓸 수 있습니다.").setNegativeButton("계속 작성",null).setNeutralButton("임시 저장 후 나가기",(d,w)->a.show("홈")).setPositiveButton("초안 버리기",(d,w)->{a.getPreferences(0).edit().remove("draft").apply();a.show("홈");}).show();}
+ void manageInlinePictures(){
+  ArrayList<JSONObject> pictures=new ArrayList<>();ArrayList<String> labels=new ArrayList<>();
+  for(int i=0;i<note.images.length();i++){JSONObject im=note.images.optJSONObject(i);if(im!=null&&InlineImageText.isReferenced(body.getText().toString(),answer.getText().toString(),im.optString("file"))){pictures.add(im);labels.add("본문 그림 "+pictures.size());}}
+  if(pictures.isEmpty()){a.u.message("내용에 붙여넣은 그림이 없습니다.");return;}
+  new AlertDialog.Builder(a).setTitle("본문 그림 선택").setItems(labels.toArray(new String[0]),(d,which)->{
+   JSONObject image=pictures.get(which);new AlertDialog.Builder(a).setTitle(labels.get(which)).setItems(new String[]{"확대 · 가림 설정","본문에서 그림 삭제"},(dialog,action)->{
+    if(action==0)ImageMaskView.dialog(a,image,true,()->{persistDraft();InlineImages.apply(a.u,body,body.getText(),false);body.invalidate();});
+    else a.u.confirm("본문 그림 삭제","이 그림을 본문에서 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));body.setText(body.getText().toString().replace(token,""));answer.setText(answer.getText().toString().replace(token,""));for(int i=note.images.length()-1;i>=0;i--)if(note.images.optJSONObject(i)==image)note.images.remove(i);persistDraft();drawImages();});
+   }).show();
+  }).show();
+ }
  void pastePictures(java.util.List<android.net.Uri> uris,Runnable release){
   if(a.busy){release.run();a.u.message("사진을 가져오는 중입니다. 잠시 후 다시 붙여넣어 주세요.");return;}
   int from=Math.max(0,body.getSelectionStart()),to=Math.max(from,body.getSelectionEnd());
@@ -87,5 +99,5 @@ public class NoteEditor {
   }).start();
  }
  void addImage(String file){try{JSONObject image=new JSONObject();image.put("file",file);image.put("masks",new JSONArray());note.images.put(image);persistDraft();if(a.editor==this)drawImages();}catch(Exception e){a.error(e);}}
- void drawImages(){images.removeAllViews();for(int i=0;i<note.images.length();i++){final int index=i;try{JSONObject image=note.images.getJSONObject(i);ImageMaskView view=new ImageMaskView(a,image,false,false);images.addView(view,new LinearLayout.LayoutParams(-1,a.u.dp(230)));LinearLayout row=a.u.row();a.u.weighted(row,a.u.button("확대 · 가림 설정",()->ImageMaskView.dialog(a,image,true,()->{persistDraft();drawImages();})));a.u.weighted(row,a.u.button("첨부 제거",()->a.u.confirm("사진 제거","이 노트에서 사진을 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));body.setText(body.getText().toString().replace(token,""));answer.setText(answer.getText().toString().replace(token,""));note.images.remove(index);persistDraft();drawImages();})));images.addView(row);}catch(Exception e){a.error(e);}}}
+ void drawImages(){images.removeAllViews();for(int i=0;i<note.images.length();i++){final int index=i;try{JSONObject image=note.images.getJSONObject(i);if(InlineImageText.isReferenced(body.getText().toString(),answer.getText().toString(),image.optString("file")))continue;ImageMaskView view=new ImageMaskView(a,image,false,false);images.addView(view,new LinearLayout.LayoutParams(-1,a.u.dp(230)));LinearLayout row=a.u.row();a.u.weighted(row,a.u.button("확대 · 가림 설정",()->ImageMaskView.dialog(a,image,true,()->{persistDraft();drawImages();})));a.u.weighted(row,a.u.button("첨부 제거",()->a.u.confirm("사진 제거","이 노트에서 사진을 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));body.setText(body.getText().toString().replace(token,""));answer.setText(answer.getText().toString().replace(token,""));note.images.remove(index);persistDraft();drawImages();})));images.addView(row);}catch(Exception e){a.error(e);}}}
 }
