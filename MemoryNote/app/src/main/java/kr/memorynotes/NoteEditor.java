@@ -22,8 +22,8 @@ public class NoteEditor {
   extras.addView(u.text("복습할 때는 문제가 먼저 나오고 답은 가려집니다.",13,u.muted));
   mineFields=u.col();extras.addView(mineFields);mine=u.edit(mineFields,"내가 쓴 답",note.mine,2);
   mistakeFields=u.col();c.addView(mistakeFields);
-  reason=u.edit(mistakeFields,"틀린 이유 · 헷갈린 점",note.reason,2);
-  caution=u.edit(mistakeFields,"다음에 확인할 것",note.caution,2);
+  reason=u.edit(mistakeFields,"틀린 점 · 헷갈린 이유 (선택)",note.reason,2);
+  caution=u.edit(mistakeFields,"주의사항 · 다음에 확인할 것 (선택)",note.caution,2);
   LinearLayout optional=u.card(p),optionalBody=u.col();
   Button toggle=u.button("사진 · 태그 · 즐겨찾기  ▾",()->{boolean open=optionalBody.getVisibility()!=View.VISIBLE;optionalBody.setVisibility(open?View.VISIBLE:View.GONE);});optional.addView(toggle);optional.addView(optionalBody);optionalBody.setVisibility(note.images.length()>0?View.VISIBLE:View.GONE);
   tags=u.edit(optionalBody,"태그 (쉼표로 구분)",note.tags,1);
@@ -38,7 +38,7 @@ public class NoteEditor {
   favorite.setOnCheckedChangeListener((b,on)->persistDraft());
   ready=true;applyVisibility();persistDraft();
  }
- void applyVisibility(){boolean general=EditorPolicy.isGeneral(activeType);generalFields.setVisibility(general?View.VISIBLE:View.GONE);extras.setVisibility(general?View.GONE:View.VISIBLE);boolean mistake="오답노트".equals(activeType);mineFields.setVisibility(mistake?View.VISIBLE:View.GONE);mistakeFields.setVisibility(mistake?View.VISIBLE:View.GONE);}
+ void applyVisibility(){boolean general=EditorPolicy.isGeneral(activeType);generalFields.setVisibility(general?View.VISIBLE:View.GONE);extras.setVisibility(general?View.GONE:View.VISIBLE);boolean mistake="오답노트".equals(activeType);mineFields.setVisibility(mistake?View.VISIBLE:View.GONE);mistakeFields.setVisibility(general||mistake?View.VISIBLE:View.GONE);}
  void switchType(String next){
   if(next.equals(activeType))return;
   collectFields();EditorPolicy.prepareSwitch(note,activeType,next);

@@ -14,6 +14,19 @@ public final class Ui {
  public TextView title(String s){TextView t=text(s,27,ink);t.setTypeface(null,Typeface.BOLD);t.setPadding(0,dp(8),0,dp(10));return t;}
  public void gap(LinearLayout l,int h){View v=new View(a);l.addView(v,new LinearLayout.LayoutParams(1,dp(h)));}
  public LinearLayout card(LinearLayout parent){LinearLayout c=col();c.setPadding(dp(18),dp(16),dp(18),dp(16));c.setBackground(shape(surface,18));LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,-2);p.setMargins(0,dp(5),0,dp(7));parent.addView(c,p);return c;}
+ public LinearLayout section(LinearLayout parent,String label,int kind){
+  boolean dark=a.getPreferences(0).getBoolean("dark",false);
+  String[] light={"#195CAC","#B12B35","#935000","#596775"};
+  String[] night={"#8ABEFF","#FF9DA7","#FFBF75","#BDCBD8"};
+  int accent=Color.parseColor((dark?night:light)[kind]);
+  LinearLayout box=col();GradientDrawable border=shape(surface,14);border.setStroke(dp(2),accent);box.setBackground(border);
+  LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,-2);params.setMargins(0,dp(5),0,dp(12));parent.addView(box,params);
+  LinearLayout header=col();header.setPadding(dp(16),dp(12),dp(16),dp(12));
+  header.setBackgroundColor((accent&0x00FFFFFF)|(dark?0x24000000:0x10000000));
+  TextView title=text(label,16,accent);title.setTypeface(null,Typeface.BOLD);header.addView(title);box.addView(header);
+  View divider=new View(a);divider.setBackgroundColor(accent);box.addView(divider,new LinearLayout.LayoutParams(-1,dp(1)));
+  LinearLayout body=col();body.setPadding(dp(16),dp(14),dp(16),dp(16));box.addView(body);return body;
+ }
  private Button styledButton(String label,int foreground,int fill,int edge,Runnable action){
   Button b=new Button(a);b.setAllCaps(false);b.setText(label);b.setTextSize(15*scale);b.setTextColor(foreground);b.setMinHeight(dp(52));b.setPadding(dp(12),dp(10),dp(12),dp(10));
   android.graphics.drawable.StateListDrawable states=new android.graphics.drawable.StateListDrawable();
@@ -30,9 +43,17 @@ public final class Ui {
  public EditText edit(LinearLayout p,String label,String value,int lines){p.addView(text(label,13,muted));EditText e=new EditText(a);e.setTextColor(ink);e.setHintTextColor(muted);e.setTextSize(16*scale);e.setText(value);e.setGravity(Gravity.TOP);e.setMinLines(lines);e.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_FLAG_MULTI_LINE|android.text.InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);GradientDrawable field=shape(a.getPreferences(0).getBoolean("dark",false)?Color.parseColor("#172820"):Color.parseColor("#F4F8F5"),10);field.setStroke(dp(1),line);e.setBackground(field);e.setPadding(dp(12),dp(12),dp(12),dp(12));p.addView(e,new LinearLayout.LayoutParams(-1,-2));gap(p,10);return e;}
  public void setOptions(Spinner spinner,String[] values,int selected){
   ArrayAdapter<String> adapter=new ArrayAdapter<String>(a,android.R.layout.simple_spinner_item,values){
-   private View paint(View view,boolean popup){TextView t=(TextView)view;t.setTextColor(ink);t.setTextSize(16*scale);t.setPadding(dp(12),dp(14),dp(12),dp(14));if(popup)t.setBackgroundColor(surface);return t;}
-   public View getView(int pos,View old,ViewGroup parent){return paint(super.getView(pos,old,parent),false);}
-   public View getDropDownView(int pos,View old,ViewGroup parent){return paint(super.getDropDownView(pos,old,parent),true);}
+   private View item(String value,View recycled){
+    TextView t=recycled instanceof TextView?(TextView)recycled:new TextView(a);
+    t.setLayoutParams(new android.widget.AbsListView.LayoutParams(-1,-2));
+    t.setText(value);t.setTextColor(ink);t.setTextSize(16*scale);
+    t.setSingleLine(false);t.setMaxLines(Integer.MAX_VALUE);t.setEllipsize(null);
+    t.setIncludeFontPadding(true);t.setGravity(Gravity.CENTER_VERTICAL);
+    t.setMinHeight(dp(52));t.setPadding(dp(12),dp(12),dp(12),dp(12));
+    t.setBackgroundColor(surface);return t;
+   }
+   public View getView(int pos,View old,ViewGroup parent){return item(getItem(pos),old);}
+   public View getDropDownView(int pos,View old,ViewGroup parent){return item(getItem(pos),old);}
   };
   adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);spinner.setAdapter(adapter);spinner.setSelection(Math.max(0,selected));spinner.setPopupBackgroundDrawable(shape(surface,12));
   if(spinner.getBackground()!=null)spinner.getBackground().mutate().setTint(green);
