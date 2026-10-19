@@ -12,7 +12,7 @@ import java.util.*;
 final class StudyTextRenderer {
  static TextView create(Ui u,String source,int size,boolean answer,boolean masked){
   TextView view=u.text("",size,u.ink);Set<Integer> opened=new HashSet<>();
-  render(u,view,source,answer,masked,opened);return view;
+  render(u,view,source,answer,masked,opened);InlineImages.bind(u,view,masked);return view;
  }
  private static void render(Ui u,TextView view,String source,boolean answer,boolean masked,Set<Integer> opened){
   SpannableStringBuilder text=new SpannableStringBuilder();
@@ -27,7 +27,7 @@ final class StudyTextRenderer {
      text.setSpan(new ClickableSpan(){public void onClick(View v){opened.add(part.sourceStart);render(u,view,source,answer,masked,opened);}public void updateDrawState(TextPaint p){p.setColor(u.clozeColor);p.setUnderlineText(false);}},start,end,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);}
    }
   }
-  view.setText(text);if(masked)view.setMovementMethod(LinkMovementMethod.getInstance());
+  view.setText(text,TextView.BufferType.SPANNABLE);InlineImages.apply(u,view,(Spannable)view.getText(),masked);if(masked)view.setMovementMethod(LinkMovementMethod.getInstance());
  }
  static void editor(Ui u,EditText e,boolean defaultAnswer){
   Runnable paint=()->{
@@ -39,7 +39,9 @@ final class StudyTextRenderer {
     text.setSpan(new ForegroundColorSpan(part.kind==StudyText.CLOZE?u.clozeColor:part.kind==StudyText.ANSWER?u.answerColor:u.ink),part.sourceStart,part.sourceEnd,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     if(part.kind==StudyText.CLOZE)text.setSpan(new StyleSpan(Typeface.BOLD),part.sourceStart,part.sourceEnd,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
    }
+   InlineImages.apply(u,e,text,false);
   };
+  InlineImages.bind(u,e,false);
   e.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int b,int c){}public void afterTextChanged(Editable text){paint.run();}});paint.run();
  }
 }
