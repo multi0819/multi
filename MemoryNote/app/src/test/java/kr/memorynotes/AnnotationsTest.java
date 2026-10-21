@@ -1,0 +1,12 @@
+package kr.memorynotes;
+import org.junit.Test;import org.json.*;import static org.junit.Assert.*;
+public class AnnotationsTest {
+ @Test public void legacyNoteDefaultsToEmptyAnnotations()throws Exception{Note n=new Note();JSONObject o=n.json();o.remove("ink");o.remove("textColors");Note restored=Note.from(o);assertEquals(0,restored.ink.length());assertEquals(0,restored.textColors.length());}
+ @Test public void inkAndColorsSurviveNoteRoundTrip()throws Exception{Note n=new Note();JSONObject stroke=new JSONObject();stroke.put("key","body");stroke.put("color",123);stroke.put("width",.003);stroke.put("points",new JSONArray("[[0.2,0.4],[0.3,0.5]]"));n.ink.put(stroke);JSONArray colors=new JSONArray();ColorRanges.add(colors,2,8,456);n.textColors.put("body",colors);Note restored=Note.from(new JSONObject(n.json().toString()));assertEquals(.3,restored.ink.getJSONObject(0).getJSONArray("points").getJSONArray(1).getDouble(0),.00001);assertEquals(456,restored.textColors.getJSONArray("body").getJSONObject(0).getInt("color"));}
+ @Test public void partialRecolorPreservesBothSides()throws Exception{JSONArray ranges=new JSONArray();ColorRanges.add(ranges,0,10,1);JSONArray result=ColorRanges.replace(ranges,3,7,2);assertEquals(3,result.length());assertEquals(3,result.getJSONObject(0).getInt("end"));assertEquals(7,result.getJSONObject(1).getInt("start"));assertEquals(2,result.getJSONObject(2).getInt("color"));}
+ @Test public void resetOnlyRemovesSelectedColor()throws Exception{JSONArray ranges=new JSONArray();ColorRanges.add(ranges,0,10,1);JSONArray result=ColorRanges.replace(ranges,3,7,null);assertEquals(2,result.length());assertEquals(0,result.getJSONObject(0).getInt("start"));assertEquals(10,result.getJSONObject(1).getInt("end"));}
+ @Test public void recolorDoesNotTouchOtherRanges()throws Exception{JSONArray ranges=new JSONArray();ColorRanges.add(ranges,0,2,1);ColorRanges.add(ranges,7,9,3);JSONArray result=ColorRanges.replace(ranges,3,6,2);assertEquals(3,result.length());assertEquals(3,result.getJSONObject(1).getInt("color"));}
+ @Test public void eraserHitsBetweenSamplePoints(){assertTrue(InkGeometry.nearSegment(.5f,.51f,0,.5f,1,.5f,.03f));assertFalse(InkGeometry.nearSegment(.5f,.8f,0,.5f,1,.5f,.03f));}
+ @Test public void eraserHandlesSinglePoint(){assertTrue(InkGeometry.nearSegment(.2f,.2f,.2f,.2f,.2f,.2f,.01f));assertFalse(InkGeometry.nearSegment(.4f,.2f,.2f,.2f,.2f,.2f,.01f));}
+ @Test public void eraserDoesNotExtendPastStroke(){assertFalse(InkGeometry.nearSegment(2,0,0,0,1,0,.1f));}
+}

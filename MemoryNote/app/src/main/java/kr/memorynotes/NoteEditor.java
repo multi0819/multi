@@ -40,16 +40,18 @@ public class NoteEditor {
   chapter.setOnItemSelectedListener(MainActivity.listener(this::persistDraft));
   for(EditText field:new EditText[]{title,body,question,answer,mine,reason,caution,tags})field.addTextChangedListener(MainActivity.watcher(this::persistDraft));
   favorite.setOnCheckedChangeListener((b,on)->persistDraft());
-  ready=true;applyVisibility();persistDraft();
+  for(int i=0;i<8;i++){EditText field=new EditText[]{title,body,question,answer,mine,reason,caution,tags}[i];String key=new String[]{"title","body","question","answer","mine","reason","caution","tags"}[i];ColorText.bind(a,note,key,field,this::persistDraft,field!=body);}
+  ready=true;applyVisibility();persistDraft();InkPage.attach(a,note,"editor",this::persistDraft);
  }
  void applyVisibility(){boolean general=EditorPolicy.isGeneral(activeType);generalFields.setVisibility(general?View.VISIBLE:View.GONE);extras.setVisibility(general?View.GONE:View.VISIBLE);boolean mistake="오답노트".equals(activeType);mineFields.setVisibility(mistake?View.VISIBLE:View.GONE);mistakeFields.setVisibility(general||mistake?View.VISIBLE:View.GONE);}
  void switchType(String next){
   if(next.equals(activeType))return;
   collectFields();EditorPolicy.prepareSwitch(note,activeType,next);
-  ready=false;title.setText(note.title);body.setText(note.body);question.setText(note.question);answer.setText(note.answer);activeType=next;ready=true;
+  ready=false;ColorText.replaceText(title,note.title);ColorText.replaceText(body,note.body);ColorText.replaceText(question,note.question);ColorText.replaceText(answer,note.answer);activeType=next;ready=true;
   applyVisibility();persistDraft();
  }
  void collectFields(){
+  for(int i=0;i<8;i++)ColorText.collect(note,new String[]{"title","body","question","answer","mine","reason","caution","tags"}[i],new EditText[]{title,body,question,answer,mine,reason,caution,tags}[i]);
   note.title=title.getText().toString();note.body=body.getText().toString();note.question=question.getText().toString();note.answer=answer.getText().toString();note.mine=mine.getText().toString();note.reason=reason.getText().toString();note.caution=caution.getText().toString();note.tags=tags.getText().toString();note.favorite=favorite.isChecked();
  }
  void refreshChapters(){String id=subjectIds.get(subject.getSelectedItemPosition());LinkedHashMap<String,String> cm=a.db.groups("chapters",id);chapterIds.clear();chapterIds.add("");chapterIds.addAll(cm.keySet());ArrayList<String> names=new ArrayList<>();names.add("단원 없음");names.addAll(cm.values());a.u.setOptions(chapter,names.toArray(new String[0]),Math.max(0,chapterIds.indexOf(note.chapter)));}
@@ -59,13 +61,13 @@ public class NoteEditor {
   parent.addView(a.u.clozeButton("가림 문구 여러 개 설정",()->new PhraseSelectionDialog(a,target).show()));
   parent.addView(a.u.text("답은 파랑, 가림 문구는 주황으로 표시됩니다. 여러 문구를 선택한 후 한 번에 적용하세요.",12,a.u.muted));
   target.setCustomSelectionActionModeCallback(new ActionMode.Callback(){
-   public boolean onCreateActionMode(ActionMode mode,Menu menu){menu.add(0,901,0,"답 지정");menu.add(0,902,1,"가림 설정");return true;}
+   public boolean onCreateActionMode(ActionMode mode,Menu menu){menu.add(0,901,0,"답 지정");menu.add(0,902,1,"가림 설정");menu.add(0,903,2,"글자색");return true;}
    public boolean onPrepareActionMode(ActionMode mode,Menu menu){return false;}
-   public boolean onActionItemClicked(ActionMode mode,MenuItem item){if(item.getItemId()==901){markAnswer(target);mode.finish();return true;}if(item.getItemId()==902){new PhraseSelectionDialog(a,target).show();mode.finish();return true;}return false;}
+   public boolean onActionItemClicked(ActionMode mode,MenuItem item){if(item.getItemId()==903){ColorText.choose(a,note,"body",target,NoteEditor.this::persistDraft);mode.finish();return true;}if(item.getItemId()==901){markAnswer(target);mode.finish();return true;}if(item.getItemId()==902){new PhraseSelectionDialog(a,target).show();mode.finish();return true;}return false;}
    public void onDestroyActionMode(ActionMode mode){}
   });
  }
- void markAnswer(EditText target){try{int start=target.getSelectionStart(),end=target.getSelectionEnd();target.setText(PhraseSelection.markAnswer(target.getText().toString(),start,end));target.setSelection(Math.min(end+4,target.length()));}catch(IllegalArgumentException e){a.u.message(e.getMessage());}}
+ void markAnswer(EditText target){try{int start=target.getSelectionStart(),end=target.getSelectionEnd();String marked=PhraseSelection.markAnswer(target.getText().toString(),start,end);if(!marked.equals(target.getText().toString())){target.getText().insert(end,"]]");target.getText().insert(start,"[[");}target.setSelection(Math.min(end+4,target.length()));}catch(IllegalArgumentException e){a.u.message(e.getMessage());}}
  void wrap(EditText e){int start=e.getSelectionStart(),end=e.getSelectionEnd();if(start<0||end<=start){a.u.message("먼저 외울 문구를 길게 눌러 선택하세요.");return;}String selected=e.getText().subSequence(start,end).toString();if(selected.contains("{{")||selected.contains("}}")){a.u.message("이미 빈칸으로 지정한 부분은 제외하고 선택하세요.");return;}e.getText().replace(start,end,"{{"+selected+"}}");}
  void collect(){if(!ready)return;collectFields();note.type=activeType;note.title=EditorPolicy.titleFor(activeType,note.title,note.question);note.subject=subjectIds.get(subject.getSelectedItemPosition());note.chapter=chapterIds.get(Math.max(0,chapter.getSelectedItemPosition()));}
  void persistDraft(){if(!ready)return;collect();try{a.getPreferences(0).edit().putString("draft",note.json().toString()).apply();}catch(Exception e){android.util.Log.e("MemoryNote","draft",e);}}
@@ -78,7 +80,7 @@ public class NoteEditor {
   new AlertDialog.Builder(a).setTitle("본문 그림 선택").setItems(labels.toArray(new String[0]),(d,which)->{
    JSONObject image=pictures.get(which);new AlertDialog.Builder(a).setTitle(labels.get(which)).setItems(new String[]{"확대 · 가림 설정","본문에서 그림 삭제"},(dialog,action)->{
     if(action==0)ImageMaskView.dialog(a,image,true,()->{persistDraft();InlineImages.apply(a.u,body,body.getText(),false);body.invalidate();});
-    else a.u.confirm("본문 그림 삭제","이 그림을 본문에서 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));body.setText(body.getText().toString().replace(token,""));answer.setText(answer.getText().toString().replace(token,""));for(int i=note.images.length()-1;i>=0;i--)if(note.images.optJSONObject(i)==image)note.images.remove(i);persistDraft();drawImages();});
+    else a.u.confirm("본문 그림 삭제","이 그림을 본문에서 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));ColorText.replaceText(body,body.getText().toString().replace(token,""));ColorText.replaceText(answer,answer.getText().toString().replace(token,""));for(int i=note.images.length()-1;i>=0;i--)if(note.images.optJSONObject(i)==image)note.images.remove(i);persistDraft();drawImages();});
    }).show();
   }).show();
  }
@@ -99,5 +101,5 @@ public class NoteEditor {
   }).start();
  }
  void addImage(String file){try{JSONObject image=new JSONObject();image.put("file",file);image.put("masks",new JSONArray());note.images.put(image);persistDraft();if(a.editor==this)drawImages();}catch(Exception e){a.error(e);}}
- void drawImages(){images.removeAllViews();for(int i=0;i<note.images.length();i++){final int index=i;try{JSONObject image=note.images.getJSONObject(i);if(InlineImageText.isReferenced(body.getText().toString(),answer.getText().toString(),image.optString("file")))continue;ImageMaskView view=new ImageMaskView(a,image,false,false);images.addView(view,new LinearLayout.LayoutParams(-1,a.u.dp(230)));LinearLayout row=a.u.row();a.u.weighted(row,a.u.button("확대 · 가림 설정",()->ImageMaskView.dialog(a,image,true,()->{persistDraft();drawImages();})));a.u.weighted(row,a.u.button("첨부 제거",()->a.u.confirm("사진 제거","이 노트에서 사진을 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));body.setText(body.getText().toString().replace(token,""));answer.setText(answer.getText().toString().replace(token,""));note.images.remove(index);persistDraft();drawImages();})));images.addView(row);}catch(Exception e){a.error(e);}}}
+ void drawImages(){images.removeAllViews();for(int i=0;i<note.images.length();i++){final int index=i;try{JSONObject image=note.images.getJSONObject(i);if(InlineImageText.isReferenced(body.getText().toString(),answer.getText().toString(),image.optString("file")))continue;ImageMaskView view=new ImageMaskView(a,image,false,false);view.setTag("ink:image:"+image.optString("file"));images.addView(view,new LinearLayout.LayoutParams(-1,a.u.dp(230)));LinearLayout row=a.u.row();a.u.weighted(row,a.u.button("확대 · 가림 설정",()->ImageMaskView.dialog(a,image,true,()->{persistDraft();drawImages();})));a.u.weighted(row,a.u.button("첨부 제거",()->a.u.confirm("사진 제거","이 노트에서 사진을 제거할까요?",()->{String token=InlineImageText.marker(image.optString("file"));ColorText.replaceText(body,body.getText().toString().replace(token,""));ColorText.replaceText(answer,answer.getText().toString().replace(token,""));note.images.remove(index);persistDraft();drawImages();})));images.addView(row);}catch(Exception e){a.error(e);}}}
 }

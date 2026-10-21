@@ -10,15 +10,16 @@ import java.util.*;
 
 /** One consistent palette for reading, review and the editor. */
 final class StudyTextRenderer {
- static TextView create(Ui u,String source,int size,boolean answer,boolean masked){
+ static TextView create(Ui u,String source,int size,boolean answer,boolean masked){return create(u,source,size,answer,masked,new org.json.JSONArray());}
+ static TextView create(Ui u,String source,int size,boolean answer,boolean masked,org.json.JSONArray colors){
   TextView view=u.text("",size,u.ink);Set<Integer> opened=new HashSet<>();
-  render(u,view,source,answer,masked,opened);InlineImages.bind(u,view,masked);return view;
+  render(u,view,source,answer,masked,opened,colors);InlineImages.bind(u,view,masked);return view;
  }
- private static void render(Ui u,TextView view,String source,boolean answer,boolean masked,Set<Integer> opened){
-  SpannableStringBuilder text=format(u,source,answer,masked,opened,()->render(u,view,source,answer,masked,opened));
+ private static void render(Ui u,TextView view,String source,boolean answer,boolean masked,Set<Integer> opened,org.json.JSONArray colors){
+  SpannableStringBuilder text=format(u,source,answer,masked,opened,()->render(u,view,source,answer,masked,opened,colors),colors);
   view.setText(text,TextView.BufferType.SPANNABLE);InlineImages.apply(u,view,(Spannable)view.getText(),masked);if(masked)view.setMovementMethod(LinkMovementMethod.getInstance());
  }
- private static SpannableStringBuilder format(Ui u,String source,boolean answer,boolean masked,Set<Integer> opened,Runnable refresh){
+ private static SpannableStringBuilder format(Ui u,String source,boolean answer,boolean masked,Set<Integer> opened,Runnable refresh,org.json.JSONArray colors){
   SpannableStringBuilder text=new SpannableStringBuilder();
   for(StudyText.Part part:StudyText.parts(source,false,answer)){
    boolean conceal=masked&&part.kind==StudyText.CLOZE&&!opened.contains(part.sourceStart);
@@ -30,15 +31,17 @@ final class StudyTextRenderer {
     if(conceal){text.setSpan(new BackgroundColorSpan(u.clozeTint),start,end,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
      text.setSpan(new ClickableSpan(){public void onClick(View v){opened.add(part.sourceStart);refresh.run();}public void updateDrawState(TextPaint p){p.setColor(u.clozeColor);p.setUnderlineText(false);}},start,end,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);}
    }
+   if(!conceal)ColorText.append(text,colors,part.sourceStart,part.sourceEnd,start);
   }
   return text;
  }
  /** Read-only content uses actual image views so image height participates in layout. */
- static View content(Ui u,String source,int size,boolean answer,boolean masked){
-  if(InlineImageText.files(source).isEmpty())return create(u,source,size,answer,masked);
+ static View content(Ui u,String source,int size,boolean answer,boolean masked){return content(u,source,size,answer,masked,new org.json.JSONArray());}
+ static View content(Ui u,String source,int size,boolean answer,boolean masked,org.json.JSONArray colors){
+  if(InlineImageText.files(source).isEmpty())return create(u,source,size,answer,masked,colors);
   LinearLayout document=u.col();Set<Integer> opened=new HashSet<>();Runnable[] rebuild=new Runnable[1];
   rebuild[0]=()->{
-   document.removeAllViews();SpannableStringBuilder text=format(u,source,answer,masked,opened,()->rebuild[0].run());
+   document.removeAllViews();SpannableStringBuilder text=format(u,source,answer,masked,opened,()->rebuild[0].run(),colors);
    java.util.regex.Matcher matcher=InlineImageText.PATTERN.matcher(text);int from=0;
    while(matcher.find()){
     appendText(u,document,text.subSequence(from,matcher.start()),size);
@@ -47,7 +50,7 @@ final class StudyTextRenderer {
     if(image==null){image=new org.json.JSONObject();try{image.put("file",file);image.put("masks",new org.json.JSONArray());}catch(org.json.JSONException ignored){}}
     final org.json.JSONObject selected=image;
     ImageMaskView picture=new ImageMaskView(u.a,image,masked,false);
-    picture.fitContentWidth=true;
+    picture.fitContentWidth=true;picture.setTag("ink:image:"+file);
     document.addView(picture,new LinearLayout.LayoutParams(-1,-2));
     if(u.a instanceof MainActivity)document.addView(u.button("사진 확대",()->ImageMaskView.dialog((MainActivity)u.a,selected,false,()->{},masked)));
     from=matcher.end();
@@ -69,7 +72,7 @@ final class StudyTextRenderer {
     text.setSpan(new ForegroundColorSpan(part.kind==StudyText.CLOZE?u.clozeColor:part.kind==StudyText.ANSWER?u.answerColor:u.ink),part.sourceStart,part.sourceEnd,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
     if(part.kind==StudyText.CLOZE)text.setSpan(new StyleSpan(Typeface.BOLD),part.sourceStart,part.sourceEnd,Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
    }
-   InlineImages.apply(u,e,text,false);
+   InlineImages.apply(u,e,text,false);ColorText.refresh(text);
   };
   InlineImages.bind(u,e,false);
   e.addTextChangedListener(new TextWatcher(){public void beforeTextChanged(CharSequence s,int st,int c,int a){}public void onTextChanged(CharSequence s,int st,int b,int c){}public void afterTextChanged(Editable text){paint.run();}});paint.run();

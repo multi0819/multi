@@ -3,7 +3,7 @@ android {
  namespace 'kr.memorynotes'
  compileSdk 35
  buildToolsVersion "35.0.0"
- defaultConfig { applicationId 'kr.memorynotes'; minSdk 26; targetSdk 35; versionCode 13; versionName '1.4.6'; testInstrumentationRunner 'kr.memorynotes.SmokeRunner' }
+ defaultConfig { applicationId 'kr.memorynotes'; minSdk 26; targetSdk 35; versionCode 14; versionName '1.5.0'; testInstrumentationRunner 'kr.memorynotes.SmokeRunner' }
  compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
  testOptions { unitTests.returnDefaultValues = true }
 }

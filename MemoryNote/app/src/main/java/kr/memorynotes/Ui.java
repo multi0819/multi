@@ -11,6 +11,7 @@ public final class Ui {
  public TextView text(String s,int size,int color){TextView t=new TextView(a);t.setText(s);t.setTextColor(color);t.setTextSize(size*scale);t.setLineSpacing(dp(3),1);return t;}
  public TextView study(String source,int size,boolean answer,boolean masked){return StudyTextRenderer.create(this,source,size,answer,masked);}
  public View studyContent(String source,int size,boolean answer,boolean masked){return StudyTextRenderer.content(this,source,size,answer,masked);}
+ public View noteContent(Note n,String key,String source,int size,boolean answer,boolean masked){View view=StudyTextRenderer.content(this,source,size,answer,masked,ColorText.ranges(n,key));view.setTag("ink:"+key);return view;}
  public void studyEditor(EditText e,boolean answer){StudyTextRenderer.editor(this,e,answer);}
  public LinearLayout studyLegend(){LinearLayout legend=col();legend.addView(text("제목·문제",12,ink));legend.addView(text("답 전체  ·  파랑",12,answerColor));legend.addView(text("가림 문구  ·  주황",12,clozeColor));return legend;}
  public TextView title(String s){TextView t=text(s,27,ink);t.setTypeface(null,Typeface.BOLD);t.setPadding(0,dp(8),0,dp(10));return t;}
