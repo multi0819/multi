@@ -12,7 +12,8 @@ final class InlineImages {
    JSONObject image=null;for(int i=0;i<u.pictures.length();i++){JSONObject im=u.pictures.optJSONObject(i);if(im!=null&&m.group(1).equals(im.optString("file"))){image=im;break;}}
    if(image==null){image=new JSONObject();try{image.put("file",m.group(1));image.put("masks",new JSONArray());}catch(JSONException ignored){}}
    final JSONObject selected=image;
-   Bitmap b=load(u,m.group(1));if(b==null)continue;float ratio=Math.min((float)available/b.getWidth(),(float)u.dp(320)/b.getHeight());int w=Math.max(1,(int)(b.getWidth()*ratio)),h=Math.max(1,(int)(b.getHeight()*ratio));
+   Bitmap b=load(u,m.group(1));if(b==null)continue;// Fit the content width consistently, including portrait pictures and saved notes.
+   int w=available,h=Math.max(1,(int)Math.round((double)b.getHeight()*available/b.getWidth()));
    Drawable d=new MaskedPicture(b,image.optJSONArray("masks"),masked);d.setBounds(0,0,w,h);text.setSpan(new Picture(d),m.start(),m.end(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
    if(!(view instanceof EditText)&&u.a instanceof MainActivity){text.setSpan(new OpenPicture(()->ImageMaskView.dialog((MainActivity)u.a,selected,false,()->{},masked)),m.start(),m.end(),Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);view.setMovementMethod(LinkMovementMethod.getInstance());}
   }

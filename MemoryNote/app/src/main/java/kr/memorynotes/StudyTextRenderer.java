@@ -47,7 +47,8 @@ final class StudyTextRenderer {
     if(image==null){image=new org.json.JSONObject();try{image.put("file",file);image.put("masks",new org.json.JSONArray());}catch(org.json.JSONException ignored){}}
     final org.json.JSONObject selected=image;
     ImageMaskView picture=new ImageMaskView(u.a,image,masked,false);
-    document.addView(picture,new LinearLayout.LayoutParams(-1,u.dp(280)));
+    picture.fitContentWidth=true;
+    document.addView(picture,new LinearLayout.LayoutParams(-1,-2));
     if(u.a instanceof MainActivity)document.addView(u.button("사진 확대",()->ImageMaskView.dialog((MainActivity)u.a,selected,false,()->{},masked)));
     from=matcher.end();
    }
