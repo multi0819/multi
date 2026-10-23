@@ -1,0 +1,1 @@
+package kr.memorynotes;public class PhraseSelectionDialog {PhraseSelectionDialog(MainActivity a,android.widget.EditText t){}void show(){}}

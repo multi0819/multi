@@ -1,0 +1,1 @@
+package kr.memorynotes;public class NoteEditor {MainActivity a;android.widget.EditText question,answer;}
