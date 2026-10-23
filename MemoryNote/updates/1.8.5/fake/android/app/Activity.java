@@ -1,0 +1,1 @@
+package android.app;public class Activity {public android.view.Window window=new android.view.Window();public android.content.res.Resources resources=new android.content.res.Resources();public android.view.Window getWindow(){return window;}public android.content.res.Resources getResources(){return resources;}}

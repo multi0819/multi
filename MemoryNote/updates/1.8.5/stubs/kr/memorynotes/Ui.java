@@ -1,0 +1,3 @@
+package kr.memorynotes;
+import android.widget.*;
+public class Ui {MainActivity a;public final int muted;public Ui(MainActivity a){this.a=a;muted=0;}public LinearLayout row(){return new LinearLayout(a);}public Button button(String s,final Runnable r){Button b=new Button(a);b.setText(s);b.setOnClickListener(new android.view.View.OnClickListener(){public void onClick(android.view.View v){r.run();}});b.setLayoutParams(new LinearLayout.LayoutParams(-1,-2));return b;}public TextView text(String s,int size,int color){TextView t=new TextView(a);t.setText(s);return t;}public int dp(float n){return (int)n;}}

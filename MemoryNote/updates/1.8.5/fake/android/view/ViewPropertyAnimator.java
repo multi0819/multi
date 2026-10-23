@@ -1,0 +1,1 @@
+package android.view;public class ViewPropertyAnimator {View v;float x;public ViewPropertyAnimator(View v){this.v=v;}public void cancel(){}public ViewPropertyAnimator translationX(float n){x=n;return this;}public ViewPropertyAnimator setDuration(long n){return this;}public void start(){v.setTranslationX(x);}}
