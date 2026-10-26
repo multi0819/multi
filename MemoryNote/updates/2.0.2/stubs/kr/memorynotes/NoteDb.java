@@ -1,0 +1,1 @@
+package kr.memorynotes;public class NoteDb {public java.util.ArrayList<Note> query(String s){return null;}public void save(Note n)throws org.json.JSONException{}public void delete(Note n){}public java.util.LinkedHashMap<String,String> groups(String t,String s){return null;}}
