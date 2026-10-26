@@ -1,0 +1,32 @@
+package kr.memorynotes;
+import android.content.*;import android.graphics.*;import android.graphics.pdf.PdfRenderer;import android.os.*;import android.view.*;import android.widget.*;import java.io.*;import java.lang.reflect.*;import java.util.*;import java.util.concurrent.*;
+/** Native PDF text-range selection; separate from rectangle capture and AI Select clipboard. */
+public final class PdfTextSelection implements StudyPdfCanvas.TextSelectionListener {
+ final PdfStudy s;final Handler handler=new Handler(Looper.getMainLooper());final ExecutorService worker=Executors.newSingleThreadExecutor();volatile int generation;boolean disposed;Future<?> task;Runnable pending;LinearLayout bar;TextView label;Button copy,add;String text="";int selectedPage=-1;String selectedDoc="";
+ PdfTextSelection(PdfStudy owner){s=owner;}
+ static Class<?> boundary()throws Exception{return Class.forName("android.graphics.pdf.models.selection.SelectionBoundary");}
+ static boolean supported(){try{PdfRenderer.Page.class.getMethod("selectContent",boundary(),boundary());return true;}catch(Exception e){return false;}}
+ void attach(){bar=s.row();label=s.a.u.text("글자를 탭하거나 드래그하세요.",12,s.a.u.ink);label.setMaxLines(1);label.setEllipsize(android.text.TextUtils.TruncateAt.END);bar.addView(label,new LinearLayout.LayoutParams(0,-2,1));copy=s.button("복사",0,new Runnable(){public void run(){copy();}});bar.addView(copy);bar.addView(s.button("×",0,new Runnable(){public void run(){s.setMode(0);}}));s.screen.addView(bar,Math.min(2,s.screen.getChildCount()));bar.setVisibility(View.GONE);update();s.canvas.setTextSelectionListener(this);}
+ void mode(int value){cancel();clear();if(bar!=null)bar.setVisibility(value==4?View.VISIBLE:View.GONE);if(value==4){label.setText("글자를 탭하거나 드래그하세요.");}}
+ void cancel(){generation++;if(pending!=null){handler.removeCallbacks(pending);pending=null;}if(task!=null){task.cancel(true);task=null;}}
+ void clear(){text="";selectedPage=-1;selectedDoc="";if(s.canvas!=null)s.canvas.clearTextSelection();update();}
+ void navigation(){cancel();clear();if(label!=null)label.setText("글자를 탭하거나 드래그하세요.");}
+ void dispose(){cancel();clear();disposed=true;worker.shutdownNow();bar=null;}
+ void detach(){navigation();bar=null;label=null;copy=null;add=null;}
+ boolean ready(){return !text.isEmpty()&&!disposed&&s.mode==4&&selectedPage==s.page&&s.doc!=null&&selectedDoc.equals(s.doc.optString("id"))&&s.screen==s.a.root&&!s.loading&&!s.a.busy;}
+ void update(){if(copy!=null)copy.setEnabled(ready());if(add!=null)add.setEnabled(ready());}
+ void copy(){if(!ready()){s.message("먼저 글자를 선택해 주세요.");return;}android.content.ClipboardManager clipboard=(android.content.ClipboardManager)s.a.getSystemService(Context.CLIPBOARD_SERVICE);if(clipboard==null)return;clipboard.setPrimaryClip(ClipData.newPlainText("PDF 선택 글자",text));s.message("선택한 글자를 복사했습니다.");}
+ void add(){if(!ready()){s.message("먼저 글자를 선택해 주세요.");return;}s.chooseRole(null,text);}
+ public void onCancelled(){navigation();}
+ boolean live(int token,String id,int page){return !disposed&&generation==token&&s.mode==4&&s.screen==s.a.root&&s.doc!=null&&id.equals(s.doc.optString("id"))&&page==s.page&&!s.loading;}
+ public void onSelection(final float sx,final float sy,final float ex,final float ey,final boolean finished){if(disposed||s.loading||s.a.busy||s.mode!=4)return;cancel();text="";update();if(label!=null)label.setText("글자 선택 중…");final int token=generation,number=s.page;final org.json.JSONObject doc=s.doc;final String id=doc.optString("id");pending=new Runnable(){public void run(){pending=null;if(!live(token,id,number))return;task=worker.submit(new Runnable(){public void run(){try{
+  final Result result;try(ParcelFileDescriptor fd=PdfDocuments.open(s.a,s.folder,doc);PdfRenderer pdf=new PdfRenderer(fd);PdfRenderer.Page page=pdf.openPage(number)){result=read(page,sx,sy,ex,ey);}
+  s.a.runOnUiThread(new Runnable(){public void run(){if(!live(token,id,number))return;text=result.text;selectedPage=number;selectedDoc=id;s.canvas.setTextSelection(result.bounds,result.start,result.stop);if(label!=null)label.setText(text.trim().isEmpty()?(finished?"이 위치에는 선택할 글자가 없습니다.":"글자 선택 중…"):(text.length()+"자 · "+text.replace('\n',' ')));if(text.trim().isEmpty())text="";update();}});
+ }catch(final Exception e){s.a.runOnUiThread(new Runnable(){public void run(){if(!live(token,id,number))return;clear();if(label!=null)label.setText("글자를 선택하지 못했습니다. 다시 드래그해 주세요.");if(finished)s.a.error(new IOException("PDF 글자 선택 실패",e));}});}}});}};handler.postDelayed(pending,finished?0:100);}
+ static final class Result{String text="";ArrayList<RectF> bounds=new ArrayList<RectF>();PointF start,stop;}
+ static Result read(PdfRenderer.Page page,float sx,float sy,float ex,float ey)throws Exception{int w=page.getWidth(),h=page.getHeight();Class<?> b=boundary();Constructor<?> ctor=b.getConstructor(Point.class);Object start=ctor.newInstance(new Point(PdfTextRules.coordinate(sx,w),PdfTextRules.coordinate(sy,h))),stop=ctor.newInstance(new Point(PdfTextRules.coordinate(ex,w),PdfTextRules.coordinate(ey,h)));Object selection=PdfRenderer.Page.class.getMethod("selectContent",b,b).invoke(page,start,stop);Result result=new Result();if(selection==null)return result;
+  Object raw=selection.getClass().getMethod("getSelectedTextContents").invoke(selection);ArrayList<String> chunks=new ArrayList<String>();if(raw instanceof List)for(Object part:(List<?>)raw){chunks.add((String)part.getClass().getMethod("getText").invoke(part));Object ranges=part.getClass().getMethod("getBounds").invoke(part);if(ranges instanceof List)for(Object value:(List<?>)ranges){if(!(value instanceof RectF))continue;RectF r=(RectF)value;if(!PdfTextRules.finite(r.left)||!PdfTextRules.finite(r.top)||!PdfTextRules.finite(r.right)||!PdfTextRules.finite(r.bottom))continue;RectF n=new RectF(PdfTextRules.unit(r.left/w),PdfTextRules.unit(r.top/h),PdfTextRules.unit(r.right/w),PdfTextRules.unit(r.bottom/h));if(n.width()>0&&n.height()>0)result.bounds.add(n);}}
+  result.text=PdfTextRules.join(chunks);result.start=point(selection,"getStart",w,h,new PointF(sx,sy));result.stop=point(selection,"getStop",w,h,new PointF(ex,ey));return result;
+ }
+ static PointF point(Object selected,String method,int w,int h,PointF fallback)throws Exception{Object edge=selected.getClass().getMethod(method).invoke(selected);Object p=edge.getClass().getMethod("getPoint").invoke(edge);if(p instanceof Point)return new PointF(PdfTextRules.unit(((Point)p).x/(float)w),PdfTextRules.unit(((Point)p).y/(float)h));return fallback;}
+}
