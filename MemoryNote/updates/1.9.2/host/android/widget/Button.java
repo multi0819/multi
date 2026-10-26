@@ -1,0 +1,1 @@
+package android.widget;public class Button extends TextView {public Button(android.app.Activity a){super(a);}public void setAllCaps(boolean b){}public void setMinWidth(int n){}public void setMinimumWidth(int n){}public void setMinHeight(int n){}}

@@ -1,0 +1,1 @@
+package android.widget;public class Spinner extends android.view.View {int selection;public int changes;public Spinner(android.app.Activity a){}public void setSelection(int n){selection=n;changes++;}public int getSelectedItemPosition(){return selection;}}

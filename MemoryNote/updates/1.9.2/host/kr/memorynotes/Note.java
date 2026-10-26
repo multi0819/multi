@@ -1,0 +1,1 @@
+package kr.memorynotes;public class Note {String type="문답 카드",title="노트";}

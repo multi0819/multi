@@ -1,0 +1,1 @@
+package kr.memorynotes;public class InkPage {MainActivity a;float thickness=2.5f;boolean enabled,eraser;int clears;void clear(){clears++;}}

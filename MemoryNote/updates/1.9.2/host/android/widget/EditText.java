@@ -1,0 +1,1 @@
+package android.widget;public class EditText extends TextView {public int minLines;public EditText(android.app.Activity a){super(a);}public void setMinLines(int n){minLines=n;}}

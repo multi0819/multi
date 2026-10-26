@@ -1,0 +1,1 @@
+package kr.memorynotes;public class MainActivity extends android.app.Activity {android.widget.LinearLayout root,content;Ui u;Runnable backAction;String meta(Note n){return "공조냉동 · 단원 없음 · "+n.type;}int gallery;void chooseImages(){gallery++;}}
