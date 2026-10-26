@@ -1,0 +1,1 @@
+package android.view;public class MenuItem {int id;public MenuItem(int n){id=n;}public int getItemId(){return id;}}

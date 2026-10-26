@@ -1,0 +1,1 @@
+package android.content;public class SharedPreferences {public boolean dark;public boolean getBoolean(String s,boolean fallback){return dark;}}
