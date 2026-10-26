@@ -1,0 +1,5 @@
+smali/
+MainActivity.smali
+NoteEditor.smali
+
+__pycache__/
