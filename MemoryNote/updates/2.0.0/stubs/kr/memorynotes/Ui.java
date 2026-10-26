@@ -1,0 +1,1 @@
+package kr.memorynotes;public class Ui {public int bg,ink,muted;public float scale;public android.widget.LinearLayout col(){return null;}public android.widget.Button button(String s,Runnable r){return null;}public android.widget.TextView text(String s,int size,int color){return null;}public int dp(float n){return (int)n;}public void confirm(String a,String b,Runnable r){}}
