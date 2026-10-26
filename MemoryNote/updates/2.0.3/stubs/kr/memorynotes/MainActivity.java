@@ -1,0 +1,1 @@
+package kr.memorynotes;public class MainActivity extends android.app.Activity {Ui u;android.widget.LinearLayout root,content;NoteDb db;NoteEditor editor;ReviewScreen review;Runnable backAction;boolean busy;void shell(String s,String t,boolean n){}void edit(Note n){}void detail(Note n){}void error(Exception e){}void startBusy(String s){}void endBusy(){}}
