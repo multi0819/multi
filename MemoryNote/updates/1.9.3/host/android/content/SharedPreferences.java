@@ -1,0 +1,1 @@
+package android.content;public class SharedPreferences {public boolean dark;Float width;public boolean getBoolean(String s,boolean b){return dark;}public float getFloat(String k,float fallback){return width==null?fallback:width;}public Editor edit(){return new Editor();}public class Editor {public Editor putFloat(String k,float v){width=v;return this;}public void apply(){}}}

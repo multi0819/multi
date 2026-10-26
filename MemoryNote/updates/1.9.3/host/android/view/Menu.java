@@ -1,0 +1,1 @@
+package android.view;public class Menu {public MenuItem add(int g,int id,int order,String text){return new MenuItem(id);}}

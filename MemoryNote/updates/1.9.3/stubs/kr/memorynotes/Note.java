@@ -1,0 +1,1 @@
+package kr.memorynotes;public class Note {String type,title;}
