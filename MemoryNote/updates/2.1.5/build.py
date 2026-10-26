@@ -28,13 +28,9 @@ with tempfile.TemporaryDirectory(prefix='memorynote-editor-') as name:
  assert editor.read_text().count('Lkr/memorynotes/PdfStudy;->addEntry')==1
  assert main.read_text().count('Lkr/memorynotes/CaptureRoleBoxes;->apply')==1
  assert 'Lkr/memorynotes/DraftArchive;->archive' in main.read_text()
- text=editor.read_text();start=text.index('.method persistDraft()V');pos=text.index('    invoke-virtual {p0}, Lkr/memorynotes/NoteEditor;->collect()V',start)+len('    invoke-virtual {p0}, Lkr/memorynotes/NoteEditor;->collect()V')
- text=text[:pos]+"\n    invoke-static {p0}, Lkr/memorynotes/DraftArchive;->clearEmpty(Lkr/memorynotes/NoteEditor;)Z\n    move-result v1\n    if-eqz v1, :nonempty_draft\n    return-void\n    :nonempty_draft\n"+text[pos:]
- start=text.index('.method leave()V');pos=text.index('    .locals 3',start)+len('    .locals 3');text=text[:pos]+"\n    invoke-static {p0}, Lkr/memorynotes/DraftArchive;->leaveEmpty(Lkr/memorynotes/NoteEditor;)Z\n    move-result v0\n    if-eqz v0, :confirm_edited_note\n    return-void\n    :confirm_edited_note\n"+text[pos:];editor.write_text(text)
- text=main.read_text()
- for signature in ['.method home()V','.method edit(Lkr/memorynotes/Note;)V']:
-  start=text.index(signature);pos=text.index('\n',text.index('    .locals ',start));text=text[:pos]+"\n    invoke-static {p0}, Lkr/memorynotes/DraftArchive;->cleanEmpty(Lkr/memorynotes/MainActivity;)V\n"+text[pos:]
- main.write_text(text)
+ assert editor.read_text().count('Lkr/memorynotes/DraftArchive;->clearEmpty')==1
+ assert editor.read_text().count('Lkr/memorynotes/DraftArchive;->leaveEmpty')==1
+ assert main.read_text().count('Lkr/memorynotes/DraftArchive;->cleanEmpty')==2
  run('java','-jar',apktool,'b',w/'app','-o',w/'rebuilt.apk')
  run(sys.executable,HERE/'package.py',base,w/'rebuilt.apk',w/'unsigned.apk')
  run('java','-jar',signer,'sign','--ks',key,'--ks-key-alias','androiddebugkey','--ks-pass','env:MEMORYNOTE_SIGN_PASSWORD','--key-pass','env:MEMORYNOTE_SIGN_PASSWORD','--out',output,w/'unsigned.apk')
