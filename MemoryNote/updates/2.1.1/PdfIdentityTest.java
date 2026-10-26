@@ -1,0 +1,6 @@
+package kr.memorynotes;
+import java.io.*;import java.util.*;
+public class PdfIdentityTest{
+ static String hash(byte[] b)throws Exception{long[] n={0};String h=PdfDocuments.hash(new ByteArrayInputStream(b),null,n);if(n[0]!=b.length)throw new AssertionError();return h;}
+ public static void main(String[] args)throws Exception{byte[] first="PDF original content".getBytes("UTF-8"),second="PDF other content".getBytes("UTF-8");if(!hash(first).equals(hash(first.clone()))||hash(first).equals(hash(second)))throw new AssertionError("content identity");final long amount=400L*1024*1024;InputStream stream=new InputStream(){long remaining=amount;public int read(){if(remaining==0)return -1;remaining--;return 0;}public int read(byte[] b,int off,int len){if(remaining==0)return -1;int n=(int)Math.min(remaining,len);Arrays.fill(b,off,off+n,(byte)0);remaining-=n;return n;}};long[] n={0};PdfDocuments.hash(stream,null,n);if(n[0]!=amount)throw new AssertionError("large PDF streamed length");Thread.currentThread().interrupt();try{hash(first);throw new AssertionError("cancel ignored");}catch(InterruptedIOException expected){}finally{Thread.interrupted();}System.out.println("PASS: streamed 400MB identity, same/different content and cancellation");}
+}

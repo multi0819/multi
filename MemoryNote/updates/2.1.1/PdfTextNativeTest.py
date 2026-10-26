@@ -1,0 +1,27 @@
+"""Exercise actual reflection extraction code against API35-shaped host doubles, not a device."""
+from pathlib import Path
+import subprocess,tempfile,os
+HERE=Path(__file__).resolve().parent
+ROOT=next(p for p in HERE.parents if (p/'tools/json.jar').exists())
+TOOLS=ROOT/'tools';ANDROID=TOOLS/'sdk/usr/share/java/com.android.android-23.jar'
+fakes={
+'android/graphics/Point.java':'package android.graphics;public class Point {public int x,y;public Point(int x,int y){this.x=x;this.y=y;}}',
+'android/graphics/PointF.java':'package android.graphics;public class PointF {public float x,y;public PointF(float x,float y){this.x=x;this.y=y;}}',
+'android/graphics/RectF.java':'package android.graphics;public class RectF {public float left,top,right,bottom;public RectF(float l,float t,float r,float b){left=l;top=t;right=r;bottom=b;}public float width(){return right-left;}public float height(){return bottom-top;}}',
+'android/graphics/pdf/models/selection/SelectionBoundary.java':'package android.graphics.pdf.models.selection;import android.graphics.Point;public class SelectionBoundary {private final Point p;public SelectionBoundary(Point p){this.p=p;}public Point getPoint(){return p;}}',
+'android/graphics/pdf/content/PdfPageTextContent.java':'package android.graphics.pdf.content;import android.graphics.RectF;import java.util.*;public class PdfPageTextContent {String text;List<RectF> rects;public PdfPageTextContent(String s,RectF...r){text=s;rects=Arrays.asList(r);}public String getText(){return text;}public List<RectF> getBounds(){return rects;}}',
+'android/graphics/pdf/models/selection/PageSelection.java':'package android.graphics.pdf.models.selection;import android.graphics.pdf.content.*;import java.util.*;public class PageSelection {public SelectionBoundary start,stop;public List<PdfPageTextContent> parts;public PageSelection(SelectionBoundary s,SelectionBoundary e,PdfPageTextContent...p){start=s;stop=e;parts=Arrays.asList(p);}public SelectionBoundary getStart(){return start;}public SelectionBoundary getStop(){return stop;}public List<PdfPageTextContent> getSelectedTextContents(){return parts;}}',
+'android/graphics/pdf/PdfRenderer.java':'package android.graphics.pdf;import android.graphics.pdf.models.selection.*;public class PdfRenderer {public class Page {public PageSelection result;public SelectionBoundary start,stop;public int getWidth(){return 600;}public int getHeight(){return 800;}public PageSelection selectContent(SelectionBoundary s,SelectionBoundary e){start=s;stop=e;return result;}}}',
+'kr/memorynotes/PdfTextNativeHost.java':'''package kr.memorynotes;import android.graphics.*;import android.graphics.pdf.*;import android.graphics.pdf.models.selection.*;import android.graphics.pdf.content.*;public class PdfTextNativeHost {
+static int checks;static void ok(boolean b){checks++;if(!b)throw new AssertionError("check "+checks);}static boolean near(float a,float b){return Math.abs(a-b)<.0001f;}
+public static void main(String[] args)throws Exception{ok(PdfTextSelection.supported());PdfRenderer.Page p=new PdfRenderer().new Page();p.result=new PageSelection(new SelectionBoundary(new Point(61,160)),new SelectionBoundary(new Point(421,321)),new PdfPageTextContent("냉동기\\n",new RectF(60,160,420,180)),new PdfPageTextContent("용량 제어",new RectF(60,200,300,220)));PdfTextSelection.Result r=PdfTextSelection.read(p,.1f,.2f,.7f,.4f);ok(p.start.getPoint().x==60&&p.start.getPoint().y==160);ok(p.stop.getPoint().x==420&&p.stop.getPoint().y==320);ok(r.text.equals("냉동기\\n용량 제어"));ok(r.bounds.size()==2);ok(near(r.bounds.get(0).left,.1f)&&near(r.bounds.get(0).top,.2f));ok(near(r.start.x,61/600f)&&near(r.stop.y,321/800f));PdfTextSelection.read(p,.8f,.7f,.2f,.1f);ok(p.start.getPoint().x==480&&p.stop.getPoint().x==120);p.result=null;r=PdfTextSelection.read(p,.1f,.2f,.1f,.2f);ok(r.text.isEmpty()&&r.bounds.isEmpty());ok(p.start.getPoint().x==p.stop.getPoint().x&&p.start.getPoint().y==p.stop.getPoint().y);p.result=new PageSelection(new SelectionBoundary(new Point(0,0)),new SelectionBoundary(new Point(600,800)),new PdfPageTextContent("a",new RectF(-1,0,601,800),new RectF(Float.NaN,0,100,100),new RectF(50,50,40,60)));r=PdfTextSelection.read(p,0,0,1,1);ok(r.bounds.size()==1&&r.bounds.get(0).left==0&&r.bounds.get(0).right==1);ok(p.stop.getPoint().x==599&&p.stop.getPoint().y==799);System.out.println("PASS "+checks+" native-shaped selection reflection/extraction checks");}}
+'''
+}
+with tempfile.TemporaryDirectory(prefix='pdf-text-native-') as temp:
+ w=Path(temp);source=w/'src';classes=w/'classes';classes.mkdir()
+ for name,content in fakes.items():p=source/name;p.parent.mkdir(parents=True,exist_ok=True);p.write_text(content)
+ # Compile actual product sources and app API stubs against Android23; no API35 class leaks into APK.
+ sources=list((HERE/'java').rglob('*.java'))+list((HERE/'stubs').rglob('*.java'))+list((HERE.parent/'1.9.0/compiler-stubs').rglob('*.java'))+[HERE.parent/'1.9.0/java/kr/memorynotes/EditorPalette.java',HERE.parent/'1.9.2/java/kr/memorynotes/WidthPolicy.java',HERE.parents[1]/'app/src/main/java/kr/memorynotes/InlineImageText.java']
+ subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(ANDROID),'-d',str(classes),*map(str,sources)],check=True)
+ subprocess.run(['javac','--release','8','-encoding','UTF-8','-cp',str(classes)+':'+str(ANDROID),'-d',str(classes),*map(str,source.rglob('*.java'))],check=True)
+ subprocess.run(['java','-cp',str(classes)+':'+str(TOOLS/'json.jar')+':'+str(ANDROID),'kr.memorynotes.PdfTextNativeHost'],check=True)
