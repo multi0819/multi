@@ -1,0 +1,1 @@
+package kr.memorynotes;public class ColorText {static int calls;static void choose(MainActivity a,Note n,String k,android.widget.EditText e,Runnable r){calls++;r.run();}}

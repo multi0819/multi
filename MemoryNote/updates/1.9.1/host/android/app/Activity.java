@@ -1,0 +1,1 @@
+package android.app;public class Activity {public android.content.SharedPreferences prefs=new android.content.SharedPreferences();public android.content.SharedPreferences getPreferences(int n){return prefs;}}
